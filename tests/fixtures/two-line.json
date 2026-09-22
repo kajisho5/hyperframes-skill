@@ -1,0 +1,13 @@
+{
+  "scene_version": 1,
+  "id": "two-line",
+  "width": 320,
+  "height": 180,
+  "duration": 1,
+  "fps": 30,
+  "background": "#000000",
+  "layers": [
+    { "type": "text", "id": "line1", "start": 0, "duration": 0.5, "text": "Line one", "style": { "font_size": 28 } },
+    { "type": "text", "id": "line2", "start": 0.5, "duration": 0.5, "text": "Line two", "style": { "font_size": 28, "color": "#ffcc00" } }
+  ]
+}
