@@ -1,0 +1,14 @@
+{
+  "scene_version": 1,
+  "id": "title-card",
+  "width": 640,
+  "height": 360,
+  "duration": 2,
+  "fps": 30,
+  "background": "#101820",
+  "layers": [
+    { "type": "image", "id": "logo", "start": 0, "duration": 2, "src": "logo.svg", "box": { "x": 40, "y": 40, "width": 80, "height": 80 } },
+    { "type": "text", "id": "title", "start": 0.5, "duration": 1.5, "text": "Session 3\nImaging in Practice", "style": { "font_size": 40, "font_weight": 700 } },
+    { "type": "text", "id": "lower", "start": 1, "duration": 1, "text": "Room B · 14:00", "box": { "x": 0, "y": 280, "width": 640, "height": 60 }, "style": { "font_size": 24, "color": "#ffcc00", "background": "rgba(0,0,0,0.6)" } }
+  ]
+}

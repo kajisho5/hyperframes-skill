@@ -1,0 +1,175 @@
+{
+  "hyperframes-skill/doctor": {
+    "positional": [],
+    "required": [],
+    "args": {
+      "chromiumProbe": {
+        "cli": "--no-chromium-probe",
+        "type": "boolean"
+      },
+      "dryRun": {
+        "cli": "--dry-run",
+        "type": "boolean"
+      },
+      "json": {
+        "cli": "--json",
+        "type": "boolean"
+      }
+    }
+  },
+  "hyperframes-skill/preview": {
+    "positional": [
+      "scene_dir"
+    ],
+    "required": [
+      "output",
+      "scene_dir"
+    ],
+    "args": {
+      "dryRun": {
+        "cli": "--dry-run",
+        "type": "boolean"
+      },
+      "fps": {
+        "cli": "--fps",
+        "type": "integer"
+      },
+      "json": {
+        "cli": "--json",
+        "type": "boolean"
+      },
+      "maxDuration": {
+        "cli": "--max-duration",
+        "type": "number"
+      },
+      "output": {
+        "cli": "--output",
+        "type": "string"
+      },
+      "overwrite": {
+        "cli": "--overwrite",
+        "type": "boolean"
+      },
+      "scene_dir": {
+        "cli": "<scene_dir>",
+        "type": "string"
+      },
+      "timeout": {
+        "cli": "--timeout",
+        "type": "number"
+      },
+      "workers": {
+        "cli": "--workers",
+        "type": "integer|auto"
+      }
+    }
+  },
+  "hyperframes-skill/probe": {
+    "positional": [
+      "file"
+    ],
+    "required": [
+      "file"
+    ],
+    "args": {
+      "countFrames": {
+        "cli": "--no-count-frames",
+        "type": "boolean"
+      },
+      "dryRun": {
+        "cli": "--dry-run",
+        "type": "boolean"
+      },
+      "file": {
+        "cli": "<file>",
+        "type": "string"
+      },
+      "json": {
+        "cli": "--json",
+        "type": "boolean"
+      }
+    }
+  },
+  "hyperframes-skill/render": {
+    "positional": [
+      "scene_dir"
+    ],
+    "required": [
+      "output",
+      "scene_dir"
+    ],
+    "args": {
+      "codec": {
+        "cli": "--codec",
+        "type": "string"
+      },
+      "dryRun": {
+        "cli": "--dry-run",
+        "type": "boolean"
+      },
+      "fps": {
+        "cli": "--fps",
+        "type": "integer"
+      },
+      "json": {
+        "cli": "--json",
+        "type": "boolean"
+      },
+      "output": {
+        "cli": "--output",
+        "type": "string"
+      },
+      "overwrite": {
+        "cli": "--overwrite",
+        "type": "boolean"
+      },
+      "quality": {
+        "cli": "--quality",
+        "type": "integer"
+      },
+      "scene_dir": {
+        "cli": "<scene_dir>",
+        "type": "string"
+      },
+      "timeout": {
+        "cli": "--timeout",
+        "type": "number"
+      },
+      "workers": {
+        "cli": "--workers",
+        "type": "integer|auto"
+      }
+    }
+  },
+  "hyperframes-skill/scene": {
+    "positional": [
+      "request"
+    ],
+    "required": [
+      "output",
+      "request"
+    ],
+    "args": {
+      "dryRun": {
+        "cli": "--dry-run",
+        "type": "boolean"
+      },
+      "json": {
+        "cli": "--json",
+        "type": "boolean"
+      },
+      "output": {
+        "cli": "--output",
+        "type": "string"
+      },
+      "overwrite": {
+        "cli": "--overwrite",
+        "type": "boolean"
+      },
+      "request": {
+        "cli": "<request>",
+        "type": "string"
+      }
+    }
+  }
+}
