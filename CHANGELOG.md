@@ -3,7 +3,20 @@
 All notable changes. The stability guarantee and deprecation policy are in
 [docs/contract.md](docs/contract.md).
 
-## 0.6.0 (unreleased)
+## 0.7.0 (unreleased)
+
+### Added
+
+- Audio: `audio` layers (`src` .wav/.mp3/.m4a/.aac/.ogg/.opus/.flac, `volume` linear gain 0-3.98,
+  `fade_in`, `fade_out`, `media_start`; no box) and `volume` on video layers, which unmutes them.
+  Measured on renders: unity at 1, -6.02 dB at 0.5, linear fades, silence before a layer starts.
+  Additive to `scene_version: 1`: requests without them render byte-identical markup (a video
+  without `volume` stays muted, as before).
+- `render` / `preview` / `batch` verification gains an `audio` step when the scene has an
+  `<audio>` or an unmuted `<video>`: the output must carry an audio stream. `expected.audio`
+  says whether that step applies.
+
+## 0.6.0
 
 ### Added
 
