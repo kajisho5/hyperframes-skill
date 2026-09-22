@@ -1,7 +1,7 @@
 {
   "name": "hyperframes-skill",
-  "version": "0.2.0",
-  "description": "A contract-first CLI toolset and agent skill that turns structured scene requests into HyperFrames HTML, renders them to video with headless Chrome + ffmpeg, and reports verified results. 5 tools.",
+  "version": "0.3.0",
+  "description": "A contract-first CLI toolset and agent skill that turns structured scene requests into HyperFrames HTML, renders them to video with headless Chrome + ffmpeg, and reports verified results. 6 tools.",
   "license": "MIT",
   "type": "module",
   "bin": {
@@ -22,6 +22,7 @@
     "lib",
     "scripts",
     "docs",
+    "templates",
     "references",
     "SKILL.md",
     "README.md",

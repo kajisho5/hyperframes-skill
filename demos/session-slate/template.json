@@ -1,0 +1,10 @@
+{
+  "template": "session-slate",
+  "values": {
+    "session": "Session 3",
+    "title": "Imaging in Practice:\nWhat Changed in 2026",
+    "speaker": "Hanako Sato, National Center for Imaging",
+    "time_room": "14:00-14:30 / Room B",
+    "duration": 4
+  }
+}

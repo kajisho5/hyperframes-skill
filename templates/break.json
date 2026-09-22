@@ -1,0 +1,88 @@
+{
+  "template_version": 1,
+  "name": "break",
+  "description": "Break / intermission screen: a message and an optional resume line, centred. Loopable: no transitions, so the first and last frames match.",
+  "values": {
+    "message": {
+      "type": "string",
+      "required": true,
+      "max_length": 60,
+      "description": "e.g. 'Coffee Break'"
+    },
+    "resume": {
+      "type": "string",
+      "required": false,
+      "max_length": 80,
+      "description": "e.g. 'Resuming at 15:30'; omitted when absent"
+    },
+    "background": {
+      "type": "color",
+      "default": "#1b2631",
+      "description": "background colour"
+    },
+    "duration": {
+      "type": "number",
+      "default": 10,
+      "min": 1,
+      "max": 3600,
+      "description": "seconds (loop it in the playout)"
+    },
+    "lang": {
+      "type": "string",
+      "default": "en",
+      "max_length": 16,
+      "description": "BCP 47 language tag of the text (e.g. ja): lets the browser pick that language's glyph forms from the installed fonts"
+    }
+  },
+  "request": {
+    "scene_version": 1,
+    "id": "break",
+    "width": 1920,
+    "height": 1080,
+    "duration": "{{duration}}",
+    "fps": 30,
+    "background": "{{background}}",
+    "lang": "{{lang}}",
+    "layers": [
+      {
+        "type": "text",
+        "id": "message",
+        "start": 0,
+        "duration": "{{duration}}",
+        "text": "{{message}}",
+        "box": {
+          "x": 160,
+          "y": 300,
+          "width": 1600,
+          "height": 300
+        },
+        "style": {
+          "font_size": 120,
+          "font_weight": 700,
+          "valign": "bottom",
+          "color": "#ffffff"
+        }
+      },
+      {
+        "when": "resume",
+        "type": "text",
+        "id": "resume",
+        "start": 0,
+        "duration": "{{duration}}",
+        "text": "{{resume}}",
+        "box": {
+          "x": 160,
+          "y": 640,
+          "width": 1600,
+          "height": 120
+        },
+        "style": {
+          "font_size": 56,
+          "font_weight": 400,
+          "valign": "top",
+          "color": "#b0bec5"
+        }
+      }
+    ]
+  }
+}

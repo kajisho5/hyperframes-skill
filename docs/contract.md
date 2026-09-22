@@ -17,7 +17,7 @@ The contract is derived from the code that runs, not maintained beside it:
   behaviour, repeatability) live in each tool module's `meta` object, next to the code they
   describe, and are checked against the implementation and the docs by `tests/contract.test.mjs`.
 
-There are 5 tools. README, `SKILL.md`, `references/scripts.md` and this file restate the
+There are 6 tools. README, `SKILL.md`, `references/scripts.md` and this file restate the
 contract; `tests/contract.test.mjs` checks every one of them against it (tool ids, every flag,
 the tool count, the requirement list), so a stale restatement fails CI instead of drifting.
 
@@ -26,7 +26,7 @@ the tool count, the requirement list), so a stale restatement fails CI instead o
 | Field | Meaning | Changes when |
 |---|---|---|
 | `contract_version` | shape of this document (`0.1`) | a key is renamed, removed or changes meaning |
-| `skill.version` | package.json version (`0.2.0`) | any release |
+| `skill.version` | package.json version (`0.3.0`) | any release |
 
 ## Stability guarantee
 
@@ -77,7 +77,7 @@ CHANGELOG line.
 {
   "contract_version": "0.1",
   "deprecated": [],
-  "skill": {"id": "hyperframes-skill", "version": "0.2.0", "execution_mode": "local", "kind": "execution",
+  "skill": {"id": "hyperframes-skill", "version": "0.3.0", "execution_mode": "local", "kind": "execution",
             "entrypoints": {"cli": "...", "scripts": "...", "contract": "...", "doctor": "..."},
             "not_provided": ["AI reasoning", "creative or compositional decisions", "..."]},
   "requirements": {"node": ">=22", "hyperframes": "0.8.61", "chromium": "...", "ffmpeg": ">=5.0", "ffprobe": ">=5.0"},
@@ -112,7 +112,7 @@ One entry per tool under `tools`, sorted by id.
 | Field | Meaning |
 |---|---|
 | `id`, `name`, `version`, `executable` | `hyperframes-skill/render`, `render`, skill version, `scripts/render.mjs` |
-| `role` | `analysis` (measures, writes nothing: doctor, probe), `analysis_and_execution` (none yet), `execution` (writes an artifact: scene, render, preview) |
+| `role` | `analysis` (measures, writes nothing: doctor, probe), `analysis_and_execution` (none yet), `execution` (writes an artifact: template, scene, render, preview) |
 | `capabilities.required` | capabilities (names below) the tool always needs |
 | `capabilities.optional[]` | `{capability, when}`: needed only for that flag, e.g. `{capability: "encoder:libvpx-vp9", when: "--codec vp9"}` |
 | `inputs`, `outputs` | in words |
@@ -159,6 +159,7 @@ tool: `{"render": {"usable": "yes"|"no"|"unknown", "missing": [...], "unknown": 
 |---|---|---|
 | doctor | analysis | – |
 | probe | analysis | – (it is the verification) |
+| template | execution | scene (validates the request again and writes the markup) |
 | scene | execution | preview (the markup is only proven by rendering it) |
 | render | execution | probe (already run inside; `verified` carries it) |
 | preview | execution | probe (already run inside) |

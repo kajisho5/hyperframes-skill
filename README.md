@@ -5,11 +5,12 @@ A contract-first CLI toolset and agent skill around [HyperFrames](https://hyperf
 headless Chrome and encoded to video by ffmpeg. It is modelled on
 [ffmpeg-skill](https://github.com/kajisho5/ffmpeg-skill): the calling agent decides what a scene
 says; this toolset turns that already-decided, structured description into valid HyperFrames
-markup, renders it, verifies the result and reports back. 5 tools, v0.2.0.
+markup, renders it, verifies the result and reports back. 6 tools, v0.3.0.
 
 ```
-scene request (JSON) --scene--> scene dir (index.html + assets) --render--> video --probe--> verified numbers
-                                                     \--preview--> fast proxy
+template + values --template--> scene request (JSON) --scene--> scene dir (index.html + assets)
+                                                                    --render--> video --probe--> verified numbers
+                                                                    \--preview--> fast proxy
 ```
 
 ## Requirements
@@ -41,6 +42,16 @@ node scripts/render.mjs /tmp/two-line -o /tmp/two-line.mp4 --json
 node scripts/probe.mjs /tmp/two-line.mp4
 ```
 
+From a template instead of a hand-written request (a transparent lower third to key over a live
+feed; `--codec prores` keeps the alpha channel):
+
+```bash
+node scripts/template.mjs --list
+node scripts/template.mjs lower-third --set "name=Hanako Sato" --set "affiliation=Imaging Center" -o /tmp/lt.json
+node scripts/scene.mjs /tmp/lt.json -o /tmp/lt
+node scripts/render.mjs /tmp/lt -o /tmp/lt.mov --codec prores --json
+```
+
 As an agent skill, point the agent at `SKILL.md` (it names the scripts relative to itself).
 
 ## Tools
@@ -48,6 +59,7 @@ As an agent skill, point the agent at `SKILL.md` (it names the scripts relative 
 | Tool | Id | Role | What it does |
 |---|---|---|---|
 | `doctor` | `hyperframes-skill/doctor` | analysis | probes Node, hyperframes, ffmpeg/ffprobe + encoders, a headless Chromium launch, temp space |
+| `template` | `hyperframes-skill/template` | execution | fills a shipped template (lower-third, title-card, session-slate, break) with caller values → scene request |
 | `scene` | `hyperframes-skill/scene` | execution | structured scene request → HyperFrames scene directory (index.html + copied assets), linted |
 | `render` | `hyperframes-skill/render` | execution | scene directory → .mp4 (h264) / .webm (vp9) / .mov (ProRes 4444), probed and verified |
 | `probe` | `hyperframes-skill/probe` | analysis | ffprobe read-back: duration, resolution, fps, frame count, codecs |
@@ -106,6 +118,9 @@ and macOS:
   expected frames (per-frame luma), in clip-local time; `--codec vp9`, `--codec prores`, `--quality`;
 - `preview` with `--max-duration`; every failure kind above except `internal`, including a
   real timeout and a real SIGTERM;
+- every shipped template fills into a valid request (with only its required values and with all of
+  them); the lower third renders to ProRes 4444 with alpha exactly 0 outside the bar and the bar at
+  the 75% opacity the template sets (read from the raw alpha plane, FFmpeg 6.1 and 7.0);
 - `--dry-run` of every tool behind recording fake binaries;
 - docs ↔ contract consistency and the frozen CLI surface.
 
@@ -117,8 +132,12 @@ Not verified (said plainly rather than claimed):
 - **macOS**: covered only by CI (installs ffmpeg with Homebrew and chrome-headless-shell with
   `hyperframes browser ensure`); never run on a macOS machine by hand.
 - Determinism **across machines** is not promised (fonts, Chrome build, ffmpeg build).
-- Audio, free-form animation (anything beyond fade / slide / zoom transitions), sub-compositions,
-  captions and templates are not implemented. `zoom` is checked in the markup and by lint only,
+- **Fonts for Japanese and other CJK text** come from the machine; `doctor` does not check them yet.
+  Rendering Japanese was checked by eye on one machine whose only CJK font was WenQuanYi Zen Hei
+  (a Chinese font); install a Japanese font (e.g. Noto Sans CJK JP) and set `lang` to `ja` for
+  Japanese glyph forms.
+- Audio, free-form animation (anything beyond fade / slide / zoom transitions), sub-compositions
+  and captions are not implemented. `zoom` is checked in the markup and by lint only,
   not by a pixel test.
 
 ## Development
