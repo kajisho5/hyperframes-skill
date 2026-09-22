@@ -26,7 +26,7 @@ the tool count, the requirement list), so a stale restatement fails CI instead o
 | Field | Meaning | Changes when |
 |---|---|---|
 | `contract_version` | shape of this document (`0.1`) | a key is renamed, removed or changes meaning |
-| `skill.version` | package.json version (`0.6.0`) | any release |
+| `skill.version` | package.json version (`0.7.0`) | any release |
 
 ## Stability guarantee
 
@@ -43,7 +43,7 @@ major.
 | Exit codes (0 success, 1 failure, 2 `doctor` undecidable, 124 timeout, 127 missing tool, 128+signal interrupted) | unchanged |
 | `error.kind` values (`input`, `render`, `encode`, `missing_tool`, `timeout`, `verification`, `interrupted`, `internal`) | never removed or renamed; new kinds may be added |
 | `contract_version` | unchanged; a ToolSpec shape change bumps it and is a major |
-| Scene request `scene_version: 1` | a request that validates today keeps validating and renders the same markup; a new request shape gets a new `scene_version`. New optional keys may be added (0.2.0: `transition_in` / `transition_out`; 0.5.0: top-level `fonts`); a request without them renders byte-identical markup, pinned by `tests/fixtures/*.index.html` |
+| Scene request `scene_version: 1` | a request that validates today keeps validating and renders the same markup; a new request shape gets a new `scene_version`. New optional keys may be added (0.2.0: `transition_in` / `transition_out`; 0.5.0: top-level `fonts`; 0.7.0: `audio` layers and video `volume`); a request without them renders byte-identical markup, pinned by `tests/fixtures/*.index.html` |
 | MCP `tools/list` names and `inputSchema` property names (`mcp/server.mjs`, 0.6.0) | derived from the above, so covered by the same promise; frozen by `tests/fixtures/mcp_tools.json` |
 | Behaviour of a tool for the same input and arguments | may change only to fix a defect or to track a HyperFrames / Chrome / FFmpeg change, and every such change gets a CHANGELOG line |
 
@@ -77,7 +77,7 @@ CHANGELOG line.
 {
   "contract_version": "0.1",
   "deprecated": [],
-  "skill": {"id": "hyperframes-skill", "version": "0.6.0", "execution_mode": "local", "kind": "execution",
+  "skill": {"id": "hyperframes-skill", "version": "0.7.0", "execution_mode": "local", "kind": "execution",
             "entrypoints": {"cli": "...", "scripts": "...", "contract": "...", "doctor": "..."},
             "not_provided": ["AI reasoning", "creative or compositional decisions", "..."]},
   "requirements": {"node": ">=22", "hyperframes": "0.8.61", "chromium": "...", "ffmpeg": ">=5.0", "ffprobe": ">=5.0"},
@@ -206,7 +206,7 @@ from the CLI or any later MCP server.
 | `status` | `"completed"` only from `emit()`; every failure path goes through `fail()` | a Chrome capture error reported as success |
 | `exit_code` | the process exit code, repeated | – |
 | `verified` | computed inside `emit()` as the conjunction of the `verification[]` steps this run performed; never passed in; `false` on a dry run and on every failure | `true` for a file never probed |
-| `verification[]` | `{step, ok, expected?, actual?, detail?}`: render/preview: `exists`, `probe`, `codec`, `resolution`, `fps`, `frames`, `duration`, `input_preserved`; scene: `exists`, `assets_copied` (only with assets), `declared_values`, `hyperframes_lint` | a step listed that did not run |
+| `verification[]` | `{step, ok, expected?, actual?, detail?}`: render/preview: `exists`, `probe`, `codec`, `resolution`, `fps`, `frames`, `duration`, `audio` (only when the scene has an `<audio>` or an unmuted `<video>`: the output must carry an audio stream), `input_preserved`; scene: `exists`, `assets_copied` (only with assets), `declared_values`, `hyperframes_lint` | a step listed that did not run |
 | `error.kind` | see below | a generic catch-all |
 | `error.retryable` | always `false` | `true` invites a blind retry loop |
 | `commands[]` | `{program, argv, exit_code, via?, role?}` for every process that ran, in start order: the hyperframes CLI, then each chrome/ffmpeg/ffprobe process it started (`via: "hyperframes"`, `role` = which shim), then this skill's own ffprobe | a command that wasn't the one executed |

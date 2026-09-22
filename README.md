@@ -5,7 +5,7 @@ A contract-first CLI toolset and agent skill around [HyperFrames](https://hyperf
 headless Chrome and encoded to video by ffmpeg. It is modelled on
 [ffmpeg-skill](https://github.com/kajisho5/ffmpeg-skill): the calling agent decides what a scene
 says; this toolset turns that already-decided, structured description into valid HyperFrames
-markup, renders it, verifies the result and reports back. 7 tools, v0.6.0.
+markup, renders it, verifies the result and reports back. 7 tools, v0.7.0.
 
 ```
 template + values --template--> scene request (JSON) --scene--> scene dir (index.html + assets)
@@ -97,7 +97,7 @@ Every flag of every tool: [`references/scripts.md`](references/scripts.md). Ever
 ```
 
 Optional top-level `fonts` ships font files with the scene (`[{"family", "src", "weight"?,
-"style"?}]`), so text does not depend on the machine's fonts. Layers: `text`, `image`, `video` (muted), each with `start`/`duration` in seconds, an optional
+"style"?}]`), so text does not depend on the machine's fonts. Layers: `text`, `image`, `video` (muted unless it has `volume`), `audio` (`volume`, `fade_in`, `fade_out`, `media_start`), each with `start`/`duration` in seconds, an optional
 pixel `box`, painted in array order, and optional `transition_in` / `transition_out` (`fade`,
 `slide` with `direction` + `distance`, `zoom` with `scale`; `easing` linear / ease_in / ease_out /
 ease_in_out). Transitions are CSS animations that HyperFrames seeks frame by frame, so they
@@ -146,6 +146,10 @@ and macOS:
 - the MCP server over real stdio: initialize, tools/list equal to the contract, tools/call results
   equal to the tools' own documents, `isError` on failures, notifications unanswered, unknown
   arguments refused;
+- audio measured on the rendered file (RMS per window): an audio layer is silent before its
+  start, `volume` 1 is unity and 0.5 is -6.02 dB (within 0.2 dB), fades rise and fall, a video
+  with `volume` carries its sound at unity and a muted one adds no audio stream; `render` fails
+  verification when a scene with sound produces a file without an audio stream;
 - `--dry-run` of every tool behind recording fake binaries;
 - docs ↔ contract consistency and the frozen CLI surface.
 
@@ -164,9 +168,10 @@ Not verified (said plainly rather than claimed):
   `batch`): with IPAGothic shipped that way the same text rendered in Japanese forms (checked by
   eye). `doctor` reports what fontconfig picks per language and warns when Japanese and Chinese
   get the same font.
-- Audio, free-form animation (anything beyond fade / slide / zoom transitions), sub-compositions
-  and captions are not implemented. `zoom` is checked in the markup and by lint only,
-  not by a pixel test.
+- Free-form animation (anything beyond fade / slide / zoom transitions), sub-compositions and
+  captions are not implemented. `zoom` is checked in the markup and by lint only, not by a pixel
+  test. Audio has gain and linear fades only: no loudness normalisation, ducking or mixing
+  controls (use ffmpeg-skill on the output).
 
 ## MCP server
 

@@ -30,7 +30,7 @@ test("end to end: scene -> render -> probe on the two-line fixture", { skip: SKI
     d.verification.map((s) => [s.step, s.ok]),
     [["exists", true], ["probe", true], ["codec", true], ["resolution", true], ["fps", true], ["frames", true], ["duration", true], ["input_preserved", true]],
   );
-  assert.deepEqual(d.expected, { width: 320, height: 180, duration: 1, fps: 30, frames: 30, codec: "h264", fps_source: "data-fps" });
+  assert.deepEqual(d.expected, { width: 320, height: 180, duration: 1, fps: 30, frames: 30, codec: "h264", fps_source: "data-fps", audio: false });
   // commands: the hyperframes CLI, then what it really started, then our own probe
   assert.equal(d.commands[0].argv[2], "render");
   assert.equal(d.commands[0].exit_code, 0);
