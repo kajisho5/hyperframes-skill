@@ -25,6 +25,10 @@
         "cli": "--fail-fast",
         "type": "boolean"
       },
+      "font": {
+        "cli": "--font",
+        "type": "string"
+      },
       "json": {
         "cli": "--json",
         "type": "boolean"
@@ -245,6 +249,10 @@
       "dryRun": {
         "cli": "--dry-run",
         "type": "boolean"
+      },
+      "font": {
+        "cli": "--font",
+        "type": "string"
       },
       "json": {
         "cli": "--json",

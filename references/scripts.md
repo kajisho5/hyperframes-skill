@@ -19,6 +19,7 @@ Usage: `node scripts/batch.mjs <rows> [options]`
 | `--template` | string | required | template every row fills (see `template --list`); the columns are its value names |
 | `-o, --output` | string | required | output directory (created) |
 | `--name-field` | string |  | column whose value names each file (<row number>-<value>); default: the row number only |
+| `--font` | string |  | font file shipped with every row's scene and used first for all text (see template --font) |
 | `--encoding` | utf-8 \| shift_jis | `utf-8` | text encoding of a CSV file |
 | `--codec` | h264 \| vp9 \| prores | `h264` | h264 (.mp4), vp9 (.webm) or prores (.mov, keeps alpha) |
 | `--quality` | integer |  | CRF, as render's --quality |
@@ -136,6 +137,7 @@ Usage: `node scripts/template.mjs [name] [options]`
 | `-o, --output` | string |  | scene request JSON to write |
 | `--values` | string |  | JSON object of template values |
 | `--set` | string[] |  | one template value; repeatable; overrides --values |
+| `--font` | string |  | font file (.otf/.ttf/.woff2) shipped with the scene and used first for all text, e.g. a Japanese font for Japanese glyph forms |
 | `--list` | boolean |  | list the templates and the values each takes |
 | `--overwrite` | boolean |  | replace an existing output file |
 

@@ -3,7 +3,25 @@
 All notable changes. The stability guarantee and deprecation policy are in
 [docs/contract.md](docs/contract.md).
 
-## 0.4.0 (unreleased)
+## 0.5.0 (unreleased)
+
+### Added
+
+- Fonts shipped with the scene: optional top-level `fonts` in a scene request
+  (`[{family, src, weight?, style?}]`, local .otf/.ttf/.woff/.woff2), copied to
+  `assets/fonts/` and declared with `@font-face`; omitting `weight` makes the file serve every
+  weight (no synthesized bold). `--font FILE` on `template` and `batch` ships one font and puts
+  it first in every text layer's font list. Additive to `scene_version: 1`.
+- `doctor --json` `fonts`: fontconfig coverage and pick per CJK language, with advice when
+  Japanese and Chinese get the same font. Informational only.
+
+### Fixed
+
+- Docs said setting `lang` to `ja` gives Japanese glyph forms. It does not when fontconfig serves
+  Japanese from a Chinese font (seen on Ubuntu: 直 骨 写 in Chinese forms with `lang=ja`). The docs
+  now say to ship the font.
+
+## 0.4.0
 
 ### Added
 
