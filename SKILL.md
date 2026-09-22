@@ -7,13 +7,13 @@ description: 'Render video from HTML scenes with HyperFrames (headless Chrome ca
 
 Tools live in `scripts/` next to this file: `node <skill-dir>/scripts/<name>.mjs` (or `npx hyperframes-skill <name>`). There are 7 tools: `doctor`, `template`, `scene`, `render`, `probe`, `preview`, `batch`. `--help` on the tool about to run is the cheapest full flag list; `references/scripts.md` has every flag of all seven.
 
-Shared flags, on every tool: `--json` (one result document on stdout: `status`, `verified`, `verification[]`, `commands[]`, `error.kind` on failure) and `--dry-run` (validate and plan; `scene`, `render`, `preview` and `doctor` run nothing and write nothing; `probe` is read-only and still runs ffprobe). Contract: `node <skill-dir>/bin/hyperframes-skill.mjs contract --json`.
+Shared flags, on every tool: `--json` (one result document on stdout: `status`, `verified`, `verification[]`, `commands[]`, `error.kind` on failure) and `--dry-run` (validate and plan; `scene`, `render`, `preview` and `doctor` run nothing and write nothing; `probe` is read-only and still runs ffprobe). Contract: `node <skill-dir>/bin/hyperframes-skill.mjs contract --json`. MCP: `node <skill-dir>/bin/hyperframes-skill.mjs mcp` (stdio; same tools, same result documents).
 
 ## Workflow (always in this order)
 
 0. **Environment, only on failure.** Don't start a job with `doctor`. After a `kind: missing_tool` failure, or when asked what the machine can do, run `doctor --json` and report the capability that is `missing` or `unknown` (they are different: `unknown` means the probe itself failed, not that the thing is absent).
 1. **Decide the scene yourself, then write it as a request.** Copy, pacing, which asset goes where, colours, sizes: all yours (or the user's). This skill never invents or changes any of it. Write a `scene_version: 1` JSON request (schema below).
-   For a stock layout use a template instead: `template --list`, then `template NAME --set key=value ... -o REQUEST.json` (or `--values values.json`). Templates: `lower-third` (transparent: render with `--codec prores` to key over a live feed), `title-card`, `session-slate`, `break`. Only the values change; the layout is the template's. Set `lang=ja` for Japanese text.
+   For a stock layout use a template instead: `template --list`, then `template NAME --set key=value ... -o REQUEST.json` (or `--values values.json`). Templates: `lower-third` (transparent: render with `--codec prores` to key over a live feed), `title-card`, `session-slate`, `break`. Only the values change; the layout is the template's. Japanese (any CJK) text: pass `--font FILE` (e.g. a Noto Sans JP .otf); see Gotchas.
    Many items of the same template (every speaker, every session): `batch ROWS.csv --template NAME [--name-field COLUMN] -o OUT_DIR --json` renders one file per row (header row = value names; empty cell = value left out; `--encoding shift_jis` for a Japanese-Windows Excel CSV). All rows are validated first; report `summary` and every row whose `status` is not `completed`.
 2. **`scene REQUEST.json -o SCENE_DIR --json`.** It validates every field (all problems at once), copies the assets into `SCENE_DIR/assets/`, writes `SCENE_DIR/index.html`, and runs `hyperframes lint` on it. Fix the request, never the generated HTML.
 3. **`preview SCENE_DIR -o preview.mp4 --json`** (10 fps, draft encode; `--max-duration S` for the first S seconds) and look at it before the expensive render when layout or timing is new.
@@ -44,6 +44,7 @@ Shared flags, on every tool: `--json` (one result document on stdout: `status`, 
 - Colours: `#rgb`, `#rrggbb`, `#rrggbbaa`, `rgb()`, `rgba()`, `transparent`. Text is escaped, `\n` breaks lines.
 - `transition_in` / `transition_out` (optional, any layer): `fade`; `slide` with `direction` (`left|right|up|down`: the side it enters from / leaves towards) and `distance` (px); `zoom` with `scale` (the scale it starts from / ends at). `duration` in seconds, `easing` `linear` (default), `ease_in`, `ease_out`, `ease_in_out`. In starts at the layer's start, out ends at the layer's end; the two together may not exceed the layer. Slide and zoom also fade.
 - Video layers are muted: the output has no audio in this release.
+- `fonts` (optional, top level): `[{"family": "JP Gothic", "src": "fonts/NotoSansJP-Bold.otf", "weight": 700, "style": "normal"}]`; `.otf/.ttf/.woff/.woff2`, local file, copied into the scene; a layer uses it by `style.font_family`. Omit `weight` to use the file for every weight.
 - Unknown keys are errors, not ignored.
 
 ## What this skill does and does not decide
@@ -59,5 +60,5 @@ If a request needs something the five tools do not expose (audio, animation beyo
 - `--fps` default: the scene's `data-fps`, else 30. Integer fps only in this release.
 - Fonts: HyperFrames injects `@font-face` rules for families it bundles (it did for `sans-serif` in testing); any other family depends on the machine's fonts. Byte-identical output is promised on the same machine and toolchain, not across machines.
 - `kind: render` = page load or capture failed; `kind: encode` = HyperFrames reported the ffmpeg encode failed and a recorded ffmpeg exited non-zero; `timeout` (exit 124) = `--timeout` hit, Chrome and ffmpeg were killed.
-- CJK text needs a CJK font on the machine (not checked by `doctor`); set the request's `lang` (or the template's `lang` value) so the right glyph forms are picked. Look at a frame.
+- CJK text: ship the font. `lang` alone does **not** pick Japanese glyph forms: with system fonts, fontconfig may give Japanese the same (Chinese) font it gives Chinese, and 直 骨 写 then render in Chinese forms (seen on Ubuntu with WenQuanYi + IPAGothic installed). Use `--font FILE` on `template` / `batch`, or the request's `fonts`; `doctor` reports what fontconfig picks per language and warns about this. One font file serves every weight (no synthesized bold): pass a Bold file for bold text.
 - Windows is not supported in this release (the argv-recording shims are POSIX sh).

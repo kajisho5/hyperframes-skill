@@ -48,7 +48,7 @@
       "type": "string",
       "default": "en",
       "max_length": 16,
-      "description": "BCP 47 language tag of the text (e.g. ja): lets the browser pick that language's glyph forms from the installed fonts"
+      "description": "BCP 47 language tag of the text (e.g. ja). It does not by itself give Japanese glyph forms: pass --font with a Japanese font for that"
     }
   },
   "request": {

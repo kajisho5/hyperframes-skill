@@ -1,0 +1,99 @@
+{
+  "batch": {
+    "properties": [
+      "codec",
+      "dryRun",
+      "encoding",
+      "failFast",
+      "font",
+      "nameField",
+      "output",
+      "overwrite",
+      "quality",
+      "rows",
+      "template",
+      "timeout",
+      "workers"
+    ],
+    "required": [
+      "output",
+      "rows",
+      "template"
+    ]
+  },
+  "doctor": {
+    "properties": [
+      "chromiumProbe",
+      "dryRun"
+    ],
+    "required": []
+  },
+  "preview": {
+    "properties": [
+      "dryRun",
+      "fps",
+      "maxDuration",
+      "output",
+      "overwrite",
+      "scene_dir",
+      "timeout",
+      "workers"
+    ],
+    "required": [
+      "output",
+      "scene_dir"
+    ]
+  },
+  "probe": {
+    "properties": [
+      "countFrames",
+      "dryRun",
+      "file"
+    ],
+    "required": [
+      "file"
+    ]
+  },
+  "render": {
+    "properties": [
+      "codec",
+      "dryRun",
+      "fps",
+      "output",
+      "overwrite",
+      "quality",
+      "scene_dir",
+      "timeout",
+      "workers"
+    ],
+    "required": [
+      "output",
+      "scene_dir"
+    ]
+  },
+  "scene": {
+    "properties": [
+      "dryRun",
+      "output",
+      "overwrite",
+      "request"
+    ],
+    "required": [
+      "output",
+      "request"
+    ]
+  },
+  "template": {
+    "properties": [
+      "dryRun",
+      "font",
+      "list",
+      "name",
+      "output",
+      "overwrite",
+      "set",
+      "values"
+    ],
+    "required": []
+  }
+}

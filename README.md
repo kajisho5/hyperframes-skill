@@ -5,7 +5,7 @@ A contract-first CLI toolset and agent skill around [HyperFrames](https://hyperf
 headless Chrome and encoded to video by ffmpeg. It is modelled on
 [ffmpeg-skill](https://github.com/kajisho5/ffmpeg-skill): the calling agent decides what a scene
 says; this toolset turns that already-decided, structured description into valid HyperFrames
-markup, renders it, verifies the result and reports back. 7 tools, v0.4.0.
+markup, renders it, verifies the result and reports back. 7 tools, v0.6.0.
 
 ```
 template + values --template--> scene request (JSON) --scene--> scene dir (index.html + assets)
@@ -60,6 +60,9 @@ node scripts/batch.mjs speakers.csv --template lower-third --name-field name --c
 # out/001-佐藤-花子.mov, out/002-..., and each row's scene under out/scenes/
 ```
 
+For Japanese names add `--font NotoSansJP-Bold.otf` (any .otf/.ttf/.woff2): the font is copied
+into every scene, so the glyphs do not depend on the machine's fonts (see "What is verified").
+
 Every row is validated before the first render, so a typo in row 30 stops the batch before
 anything is written.
 
@@ -93,7 +96,8 @@ Every flag of every tool: [`references/scripts.md`](references/scripts.md). Ever
 }
 ```
 
-Layers: `text`, `image`, `video` (muted), each with `start`/`duration` in seconds, an optional
+Optional top-level `fonts` ships font files with the scene (`[{"family", "src", "weight"?,
+"style"?}]`), so text does not depend on the machine's fonts. Layers: `text`, `image`, `video` (muted), each with `start`/`duration` in seconds, an optional
 pixel `box`, painted in array order, and optional `transition_in` / `transition_out` (`fade`,
 `slide` with `direction` + `distance`, `zoom` with `scale`; `easing` linear / ease_in / ease_out /
 ease_in_out). Transitions are CSS animations that HyperFrames seeks frame by frame, so they
@@ -136,6 +140,12 @@ and macOS:
 - `batch`: RFC 4180 CSV (quotes, CRLF, BOM), Shift_JIS refused as UTF-8 with a hint and read with
   `--encoding shift_jis`, all rows validated before any render, one verified file per row, per-row
   failure and `--fail-fast` reporting with a real failing Chrome;
+- fonts shipped with the scene: `@font-face` on a copied file, accepted by `hyperframes lint`, and
+  a render whose glyphs differ from the default font's and repeat exactly; `--font` on `template`
+  and `batch`; `doctor`'s fontconfig report is `unknown` (never `missing`) without fontconfig;
+- the MCP server over real stdio: initialize, tools/list equal to the contract, tools/call results
+  equal to the tools' own documents, `isError` on failures, notifications unanswered, unknown
+  arguments refused;
 - `--dry-run` of every tool behind recording fake binaries;
 - docs ↔ contract consistency and the frozen CLI surface.
 
@@ -147,13 +157,32 @@ Not verified (said plainly rather than claimed):
 - **macOS**: covered only by CI (installs ffmpeg with Homebrew and chrome-headless-shell with
   `hyperframes browser ensure`); never run on a macOS machine by hand.
 - Determinism **across machines** is not promised (fonts, Chrome build, ffmpeg build).
-- **Fonts for Japanese and other CJK text** come from the machine; `doctor` does not check them yet.
-  Rendering Japanese was checked by eye on one machine whose only CJK font was WenQuanYi Zen Hei
-  (a Chinese font); install a Japanese font (e.g. Noto Sans CJK JP) and set `lang` to `ja` for
-  Japanese glyph forms.
+- **Japanese / CJK glyph forms from system fonts are not guaranteed**, and `lang` does not fix it:
+  on the Ubuntu machine used for testing, fontconfig picked the Chinese font WenQuanYi for
+  `:lang=ja` although IPAGothic was installed, and 直 骨 写 rendered in Chinese forms with
+  `lang=ja`. Ship the font with the scene instead (request `fonts`, `--font` on `template` /
+  `batch`): with IPAGothic shipped that way the same text rendered in Japanese forms (checked by
+  eye). `doctor` reports what fontconfig picks per language and warns when Japanese and Chinese
+  get the same font.
 - Audio, free-form animation (anything beyond fade / slide / zoom transitions), sub-compositions
   and captions are not implemented. `zoom` is checked in the markup and by lint only,
   not by a pixel test.
+
+## MCP server
+
+`hyperframes-skill mcp` (or `node bin/hyperframes-skill.mjs mcp`) is a stdio MCP server with no
+extra dependency. `tools/list` is generated from the contract (one MCP tool per tool, input
+properties = the contract's `input_schema` names); `tools/call` runs the tool's own script with
+`--json` and returns its result document unchanged, as text and as `structuredContent`, with
+`isError` true exactly when `status` is not `completed`. Relative paths resolve against the
+server's working directory. Example client entry (Claude Desktop `claude_desktop_config.json`):
+
+```json
+{"mcpServers": {"hyperframes": {"command": "node", "args": ["/path/to/hyperframes-skill/bin/hyperframes-skill.mjs", "mcp"]}}}
+```
+
+The tool names and property names are frozen by `tests/fixtures/mcp_tools.json`, the same way
+the CLI surface is.
 
 ## Development
 
