@@ -2,7 +2,7 @@
 // binaries that record any call, and the test asserts nothing was called and nothing written.
 // probe is the stated exception (read-only: ffprobe still runs), and the contract says so.
 import assert from "node:assert/strict";
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { test } from "node:test";
 import { buildContract } from "../lib/contract.mjs";
@@ -66,6 +66,18 @@ test("template --dry-run writes nothing and runs nothing", () => {
   assert.deepEqual(calls(f), []);
 });
 
+test("batch --dry-run launches neither Chrome nor ffmpeg and writes nothing", () => {
+  const f = fakes();
+  const dir = tmp();
+  writeFileSync(join(dir, "rows.csv"), "message,duration\nBreak,1\nLunch,1\n");
+  const r = tool("batch", [join(dir, "rows.csv"), "--template", "break", "-o", join(dir, "out"), "--dry-run", "--json"], { env: f.env });
+  assert.equal(r.code, 0, r.stderr);
+  assert.equal(r.doc.rows.length, 2);
+  assert.deepEqual(r.doc.commands, []);
+  assert.deepEqual(readdirSync(dir), ["rows.csv"]);
+  assert.deepEqual(calls(f), []);
+});
+
 test("doctor --dry-run lists its probes and runs none", () => {
   const f = fakes();
   const r = tool("doctor", ["--dry-run", "--json"], { env: f.env });
@@ -88,6 +100,6 @@ test("probe --dry-run still runs ffprobe (read-only), as the contract states", (
 
 test("every tool in the contract supports --dry-run and is covered above", () => {
   const names = buildContract().tools.map((t) => t.name).sort();
-  assert.deepEqual(names, ["doctor", "preview", "probe", "render", "scene", "template"]);
+  assert.deepEqual(names, ["batch", "doctor", "preview", "probe", "render", "scene", "template"]);
   for (const t of buildContract().tools) assert.equal(t.supports_dry_run, true, t.name);
 });

@@ -1,8 +1,33 @@
 # Tool reference
 
-Every flag of all 6 tools. `tests/contract.test.mjs` checks this file against each tool's real parser: a flag missing here, or listed here but not accepted, fails CI.
+Every flag of all 7 tools. `tests/contract.test.mjs` checks this file against each tool's real parser: a flag missing here, or listed here but not accepted, fails CI.
 
 All tools: `--json` prints one result document; `--dry-run` validates and plans without launching Chrome or ffmpeg or writing files (`probe` still runs ffprobe).
+
+## batch
+
+`hyperframes-skill/batch` · role `execution`
+
+Render one video per row of a CSV or JSON file through a template (e.g. every speaker's lower third from the programme sheet). Every row is validated before the first render; each output is verified like render's.
+
+Usage: `node scripts/batch.mjs <rows> [options]`
+
+| Flag | Type | Default | Meaning |
+|---|---|---|---|
+| `--json` | boolean |  | print one JSON result document on stdout |
+| `--dry-run` | boolean |  | validate and plan without launching Chrome or ffmpeg or writing files |
+| `--template` | string | required | template every row fills (see `template --list`); the columns are its value names |
+| `-o, --output` | string | required | output directory (created) |
+| `--name-field` | string |  | column whose value names each file (<row number>-<value>); default: the row number only |
+| `--encoding` | utf-8 \| shift_jis | `utf-8` | text encoding of a CSV file |
+| `--codec` | h264 \| vp9 \| prores | `h264` | h264 (.mp4), vp9 (.webm) or prores (.mov, keeps alpha) |
+| `--quality` | integer |  | CRF, as render's --quality |
+| `--workers` | integer\|auto | `auto` | parallel capture workers per render: auto or 1-8 |
+| `--timeout` | number | `1800` | per-row render timeout; 0 disables |
+| `--fail-fast` | boolean |  | stop at the first row that fails (the rest are reported as skipped) |
+| `--overwrite` | boolean |  | replace this batch's own outputs and scene directories if they exist |
+
+Dry run: reads and validates every row against the template and reports each planned output, its expected frame count and name; launches neither Chrome nor ffmpeg and writes nothing.
 
 ## doctor
 

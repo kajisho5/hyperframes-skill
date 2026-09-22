@@ -3,7 +3,19 @@
 All notable changes. The stability guarantee and deprecation policy are in
 [docs/contract.md](docs/contract.md).
 
-## 0.3.0 (unreleased)
+## 0.4.0 (unreleased)
+
+### Added
+
+- `batch` tool (tool count 6 → 7): one render per row of a CSV (RFC 4180, header row = template
+  value names, empty cell = value left out, UTF-8 with or without BOM, `--encoding shift_jis`)
+  or JSON array, through a template. Every row is validated before the first render; outputs are
+  `<row>-<--name-field value>.<ext>`, with each row's scene kept under `<output>/scenes/`. Per-row
+  `status` / `verified` / `error`, a `summary`, `--fail-fast`, `--overwrite` for the batch's own
+  files only. A batch with any failed or skipped row ends `failed`, never `completed`.
+- Demo `demos/speakers-batch`.
+
+## 0.3.0
 
 ### Added
 
