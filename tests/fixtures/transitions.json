@@ -1,0 +1,23 @@
+{
+  "scene_version": 1,
+  "id": "transitions",
+  "width": 320,
+  "height": 180,
+  "duration": 2,
+  "fps": 10,
+  "layers": [
+    {
+      "type": "text", "id": "left", "start": 0, "duration": 2, "text": " ",
+      "box": { "x": 0, "y": 0, "width": 160, "height": 180 },
+      "style": { "background": "#ffffff" },
+      "transition_in": { "type": "fade", "duration": 0.5 },
+      "transition_out": { "type": "fade", "duration": 0.5 }
+    },
+    {
+      "type": "text", "id": "right", "start": 1, "duration": 1, "text": " ",
+      "box": { "x": 160, "y": 0, "width": 160, "height": 180 },
+      "style": { "background": "#ffffff" },
+      "transition_in": { "type": "slide", "duration": 0.5, "direction": "up", "distance": 180, "easing": "ease_out" }
+    }
+  ]
+}

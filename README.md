@@ -5,7 +5,7 @@ A contract-first CLI toolset and agent skill around [HyperFrames](https://hyperf
 headless Chrome and encoded to video by ffmpeg. It is modelled on
 [ffmpeg-skill](https://github.com/kajisho5/ffmpeg-skill): the calling agent decides what a scene
 says; this toolset turns that already-decided, structured description into valid HyperFrames
-markup, renders it, verifies the result and reports back. 5 tools, v0.1.0 (first slice).
+markup, renders it, verifies the result and reports back. 5 tools, v0.2.0.
 
 ```
 scene request (JSON) --scene--> scene dir (index.html + assets) --render--> video --probe--> verified numbers
@@ -70,7 +70,10 @@ Every flag of every tool: [`references/scripts.md`](references/scripts.md). Ever
 ```
 
 Layers: `text`, `image`, `video` (muted), each with `start`/`duration` in seconds, an optional
-pixel `box`, painted in array order. The full schema is in `SKILL.md`. Unknown keys, URLs,
+pixel `box`, painted in array order, and optional `transition_in` / `transition_out` (`fade`,
+`slide` with `direction` + `distance`, `zoom` with `scale`; `easing` linear / ease_in / ease_out /
+ease_in_out). Transitions are CSS animations that HyperFrames seeks frame by frame, so they
+stay deterministic and need no script or CDN. The full schema is in `SKILL.md`. Unknown keys, URLs,
 missing files, layers running past the scene's end and values that could escape the style
 block are refused with every problem listed at once (`kind: input`).
 
@@ -99,7 +102,8 @@ and macOS:
 - the full loop `scene` → `render` → `probe` on a two-line fixture with real Chrome and ffmpeg,
   including the pixels (line one white in the first half, line two yellow in the second);
 - determinism: the fixture rendered twice, sha256 and per-frame md5 identical;
-- image and video layers with timing and `media_start`; `--codec vp9`, `--codec prores`, `--quality`;
+- image and video layers with timing and `media_start`; fade and slide transitions landing on the
+  expected frames (per-frame luma), in clip-local time; `--codec vp9`, `--codec prores`, `--quality`;
 - `preview` with `--max-duration`; every failure kind above except `internal`, including a
   real timeout and a real SIGTERM;
 - `--dry-run` of every tool behind recording fake binaries;
@@ -113,7 +117,9 @@ Not verified (said plainly rather than claimed):
 - **macOS**: covered only by CI (installs ffmpeg with Homebrew and chrome-headless-shell with
   `hyperframes browser ensure`); never run on a macOS machine by hand.
 - Determinism **across machines** is not promised (fonts, Chrome build, ffmpeg build).
-- Audio, animation, transitions, sub-compositions, captions and templates are not implemented.
+- Audio, free-form animation (anything beyond fade / slide / zoom transitions), sub-compositions,
+  captions and templates are not implemented. `zoom` is checked in the markup and by lint only,
+  not by a pixel test.
 
 ## Development
 

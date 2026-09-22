@@ -26,7 +26,7 @@ the tool count, the requirement list), so a stale restatement fails CI instead o
 | Field | Meaning | Changes when |
 |---|---|---|
 | `contract_version` | shape of this document (`0.1`) | a key is renamed, removed or changes meaning |
-| `skill.version` | package.json version (`0.1.0`) | any release |
+| `skill.version` | package.json version (`0.2.0`) | any release |
 
 ## Stability guarantee
 
@@ -43,7 +43,7 @@ major.
 | Exit codes (0 success, 1 failure, 2 `doctor` undecidable, 124 timeout, 127 missing tool, 128+signal interrupted) | unchanged |
 | `error.kind` values (`input`, `render`, `encode`, `missing_tool`, `timeout`, `verification`, `interrupted`, `internal`) | never removed or renamed; new kinds may be added |
 | `contract_version` | unchanged; a ToolSpec shape change bumps it and is a major |
-| Scene request `scene_version: 1` | a request that validates today keeps validating and renders the same markup; a new request shape gets a new `scene_version` |
+| Scene request `scene_version: 1` | a request that validates today keeps validating and renders the same markup; a new request shape gets a new `scene_version`. New optional keys may be added (0.2.0: `transition_in` / `transition_out`); a request without them renders byte-identical markup, pinned by `tests/fixtures/*.index.html` |
 | MCP `tools/list` names and `inputSchema` property names (when an MCP server is added) | derived from the above, so covered by the same promise |
 | Behaviour of a tool for the same input and arguments | may change only to fix a defect or to track a HyperFrames / Chrome / FFmpeg change, and every such change gets a CHANGELOG line |
 
@@ -77,7 +77,7 @@ CHANGELOG line.
 {
   "contract_version": "0.1",
   "deprecated": [],
-  "skill": {"id": "hyperframes-skill", "version": "0.1.0", "execution_mode": "local", "kind": "execution",
+  "skill": {"id": "hyperframes-skill", "version": "0.2.0", "execution_mode": "local", "kind": "execution",
             "entrypoints": {"cli": "...", "scripts": "...", "contract": "...", "doctor": "..."},
             "not_provided": ["AI reasoning", "creative or compositional decisions", "..."]},
   "requirements": {"node": ">=22", "hyperframes": "0.8.61", "chromium": "...", "ffmpeg": ">=5.0", "ffprobe": ">=5.0"},

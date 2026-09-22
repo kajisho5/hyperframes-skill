@@ -149,3 +149,38 @@ test("an invalid request fails with kind input, exit 1, and writes nothing", () 
   assert.equal(r.doc.verified, false);
   assert.ok(!existsSync(join(dir, "out")));
 });
+
+// scene_version 1 promise (docs/contract.md): a request that validated before keeps rendering the
+// same markup. Transitions (0.2.0) are additive: without them, the bytes are the 0.1.0 bytes.
+test("markup of pre-transition requests is byte-identical to the 0.1.0 snapshots", () => {
+  for (const [req, snap] of [
+    [join(FIXTURES, "two-line.json"), join(FIXTURES, "two-line.index.html")],
+    [join(FIXTURES, "..", "..", "demos", "title-card", "request.json"), join(FIXTURES, "title-card.index.html")],
+  ]) {
+    const html = renderHtml(validateRequest(JSON.parse(readFileSync(req, "utf8")), join(req, "..")));
+    assert.equal(html, readFileSync(snap, "utf8"), snap);
+  }
+});
+
+test("transitions become clip-local CSS animations: in at 0s, out at duration - out", () => {
+  const html = renderHtml(validateRequest(JSON.parse(readFileSync(join(FIXTURES, "transitions.json"), "utf8")), FIXTURES));
+  assert.ok(html.includes("animation:hfs-left-in 0.5s linear 0s 1 normal both,hfs-left-out 0.5s linear 1.5s 1 normal forwards"));
+  assert.ok(html.includes("@keyframes hfs-right-in{from{opacity:0;transform:translate(0px,-180px)}to{opacity:1;transform:translate(0px,0px)}}"));
+  assert.ok(html.includes("animation:hfs-right-in 0.5s ease-out 0s 1 normal both"));
+  const zoom = validateRequest({ scene_version: 1, width: 64, height: 64, duration: 1, layers: [{ type: "text", id: "z", start: 0, duration: 1, text: "z", transition_out: { type: "zoom", duration: 0.25, scale: 1.5, easing: "ease_in" } }] }, FIXTURES);
+  const zh = renderHtml(zoom);
+  assert.ok(zh.includes("animation:hfs-z-out 0.25s ease-in 0.75s 1 normal forwards"));
+  assert.ok(zh.includes("@keyframes hfs-z-out{from{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(1.5)}}"));
+});
+
+test("transition values are validated, never defaulted except easing", () => {
+  const layer = (extra) => ({ scene_version: 1, width: 64, height: 64, duration: 1, layers: [{ type: "text", id: "t", start: 0, duration: 1, text: "t", ...extra }] });
+  assert.ok(problems(layer({ transition_in: { type: "slide", duration: 0.5 } })).some((m) => m.includes("direction must be one of")));
+  assert.ok(problems(layer({ transition_in: { type: "slide", duration: 0.5, direction: "left" } })).some((m) => m.includes("distance must be a positive integer")));
+  assert.ok(problems(layer({ transition_in: { type: "zoom", duration: 0.5 } })).some((m) => m.includes("scale must be")));
+  assert.ok(problems(layer({ transition_in: { type: "spin", duration: 0.5 } })).some((m) => m.includes("type must be one of fade, slide, zoom")));
+  assert.ok(problems(layer({ transition_in: { type: "fade", duration: 0.5, easing: "bounce" } })).some((m) => m.includes("easing must be one of")));
+  assert.ok(problems(layer({ transition_in: { type: "fade", duration: 0.5, distance: 3 } })).some((m) => m.includes('unknown key "distance" for a fade transition')));
+  assert.ok(problems(layer({ transition_in: { type: "fade", duration: 0.6 }, transition_out: { type: "fade", duration: 0.5 } })).some((m) => m.includes("is longer than the layer")));
+  assert.deepEqual(problems(layer({ transition_in: { type: "fade", duration: 0.5 }, transition_out: { type: "fade", duration: 0.5 } })), []);
+});

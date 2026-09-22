@@ -3,7 +3,18 @@
 All notable changes. The stability guarantee and deprecation policy are in
 [docs/contract.md](docs/contract.md).
 
-## 0.1.0 (unreleased)
+## 0.2.0 (unreleased)
+
+### Added
+
+- Layer transitions: optional `transition_in` / `transition_out` on every layer type (`fade`;
+  `slide` with `direction` and `distance`; `zoom` with `scale`; `easing` linear / ease_in /
+  ease_out / ease_in_out). Rendered as CSS animations that HyperFrames seeks per frame in
+  clip-local time: no script, no CDN, deterministic. Additive to `scene_version: 1`: requests
+  without transitions render byte-identical markup (pinned by snapshot fixtures).
+- Demo `demos/lower-third`: slide-in lower third and a zoomed-in tag.
+
+## 0.1.0
 
 First slice: a working `doctor` → `scene` → `render` → `probe` loop, plus `preview`.
 

@@ -132,3 +132,36 @@ test("--quality maps to the encoder's CRF", { skip: SKIP_RENDER }, () => {
   const enc = r.doc.commands.find((c) => c.role === "ffmpeg" && c.argv.includes("image2pipe"));
   assert.equal(enc.argv[enc.argv.indexOf("-crf") + 1], "35");
 });
+
+// Transitions are CSS animations HyperFrames seeks per frame, in clip-local time. Luma per frame
+// (10 fps) of each half of tests/fixtures/transitions.json: the left half fades in over 0.5 s and
+// out over the last 0.5 s; the right half starts at 1 s and slides in over 0.5 s.
+test("transitions: fades and slides land on the frames the request names", { skip: SKIP_RENDER }, () => {
+  const dir = tmp();
+  const scene = makeScene(dir, join(FIXTURES, "transitions.json"));
+  const out = join(dir, "t.mp4");
+  const r = tool("render", [scene, "-o", out, "--json"]);
+  assert.equal(r.code, 0, r.stderr);
+  assert.equal(r.doc.verified, true);
+  const luma = (crop) =>
+    ffmpeg(["-i", out, "-vf", `${crop},signalstats,metadata=print:key=lavfi.signalstats.YAVG:file=-`, "-f", "null", "-"])
+      .toString()
+      .match(/YAVG=[\d.]+/g)
+      .map((m) => Number(m.slice(5)));
+  const black = (v) => v <= 18;
+  const white = (v) => v >= 233;
+  const rising = (a) => a.every((v, i) => i === 0 || v > a[i - 1]);
+  const falling = (a) => a.every((v, i) => i === 0 || v < a[i - 1]);
+  const left = luma("crop=160:180:0:0");
+  const right = luma("crop=160:180:160:0");
+  assert.equal(left.length, 20);
+  assert.ok(black(left[0]) && rising(left.slice(0, 6)) && white(left[5]), `fade in over frames 0-5: ${left}`);
+  assert.ok(left.slice(5, 16).every(white), `held 0.5-1.5 s: ${left}`);
+  assert.ok(falling(left.slice(15)) && !white(left[19]) && !black(left[19]), `fade out from 1.5 s: ${left}`);
+  assert.ok(right.slice(0, 11).every(black), `right layer absent before 1 s (clip-local timing): ${right}`);
+  assert.ok(rising(right.slice(10, 16)) && right.slice(15).every(white), `slide in 1.0-1.5 s: ${right}`);
+  // same request, same bytes
+  const again = tool("render", [scene, "-o", join(dir, "t2.mp4"), "--json"]);
+  assert.equal(again.code, 0, again.stderr);
+  assert.equal(sha(out), sha(join(dir, "t2.mp4")));
+});

@@ -29,7 +29,9 @@ Shared flags, on every tool: `--json` (one result document on stdout: `status`, 
     {"type": "video", "id": "bg", "start": 0, "duration": 5, "src": "clips/bg.mp4", "fit": "cover", "media_start": 2},
     {"type": "image", "id": "logo", "start": 0.5, "duration": 4.5, "src": "logo.png", "box": {"x": 1600, "y": 60, "width": 256, "height": 128}, "fit": "contain"},
     {"type": "text", "id": "title", "start": 1, "duration": 3, "text": "Annual Meeting 2026",
-     "style": {"font_family": "sans-serif", "font_size": 96, "font_weight": 700, "color": "#ffffff", "align": "center", "valign": "middle", "line_height": 1.2, "background": "transparent"}}
+     "style": {"font_family": "sans-serif", "font_size": 96, "font_weight": 700, "color": "#ffffff", "align": "center", "valign": "middle", "line_height": 1.2, "background": "transparent"},
+     "transition_in": {"type": "slide", "duration": 0.5, "direction": "down", "distance": 60, "easing": "ease_out"},
+     "transition_out": {"type": "fade", "duration": 0.5}}
   ]
 }
 ```
@@ -38,14 +40,15 @@ Shared flags, on every tool: `--json` (one result document on stdout: `status`, 
 - `box` is pixels, default the full frame. `fit`: `contain` (default), `cover`, `fill`.
 - `src` is a local path (relative to the request file). URLs are refused: this skill never fetches.
 - Colours: `#rgb`, `#rrggbb`, `#rrggbbaa`, `rgb()`, `rgba()`, `transparent`. Text is escaped, `\n` breaks lines.
+- `transition_in` / `transition_out` (optional, any layer): `fade`; `slide` with `direction` (`left|right|up|down`: the side it enters from / leaves towards) and `distance` (px); `zoom` with `scale` (the scale it starts from / ends at). `duration` in seconds, `easing` `linear` (default), `ease_in`, `ease_out`, `ease_in_out`. In starts at the layer's start, out ends at the layer's end; the two together may not exceed the layer. Slide and zoom also fade.
 - Video layers are muted: the output has no audio in this release.
 - Unknown keys are errors, not ignored.
 
 ## What this skill does and does not decide
 
-It turns an explicit scene into markup, renders it, and reports what came out. It does not write copy, choose timing, pick or crop to a subject, choose fonts or colours you did not give it, judge whether a frame looks good, or add animation or transitions (not in this release). Same request + same flags on the same machine gives byte-identical output; anything that depends on taste belongs to the caller.
+It turns an explicit scene into markup, renders it, and reports what came out. It does not write copy, choose timing, pick or crop to a subject, choose fonts or colours you did not give it, judge whether a frame looks good, or add a transition you did not ask for. Same request + same flags on the same machine gives byte-identical output; anything that depends on taste belongs to the caller.
 
-If a request needs something the five tools do not expose (audio, animation, captions, templates), say so. Never fall back to calling Chrome, ffmpeg or the `hyperframes` CLI directly: that bypasses every check here.
+If a request needs something the five tools do not expose (audio, animation beyond the three transitions, captions, templates), say so. Never fall back to calling Chrome, ffmpeg or the `hyperframes` CLI directly: that bypasses every check here.
 
 ## Gotchas
 
