@@ -5,7 +5,7 @@ description: 'Render video from HTML scenes with HyperFrames (headless Chrome ca
 
 # hyperframes-skill
 
-Tools live in `scripts/` next to this file: `node <skill-dir>/scripts/<name>.mjs` (or `npx hyperframes-skill <name>`). There are 5 tools: `doctor`, `scene`, `render`, `probe`, `preview`. `--help` on the tool about to run is the cheapest full flag list; `references/scripts.md` has every flag of all five.
+Tools live in `scripts/` next to this file: `node <skill-dir>/scripts/<name>.mjs` (or `npx hyperframes-skill <name>`). There are 6 tools: `doctor`, `template`, `scene`, `render`, `probe`, `preview`. `--help` on the tool about to run is the cheapest full flag list; `references/scripts.md` has every flag of all six.
 
 Shared flags, on every tool: `--json` (one result document on stdout: `status`, `verified`, `verification[]`, `commands[]`, `error.kind` on failure) and `--dry-run` (validate and plan; `scene`, `render`, `preview` and `doctor` run nothing and write nothing; `probe` is read-only and still runs ffprobe). Contract: `node <skill-dir>/bin/hyperframes-skill.mjs contract --json`.
 
@@ -13,6 +13,7 @@ Shared flags, on every tool: `--json` (one result document on stdout: `status`, 
 
 0. **Environment, only on failure.** Don't start a job with `doctor`. After a `kind: missing_tool` failure, or when asked what the machine can do, run `doctor --json` and report the capability that is `missing` or `unknown` (they are different: `unknown` means the probe itself failed, not that the thing is absent).
 1. **Decide the scene yourself, then write it as a request.** Copy, pacing, which asset goes where, colours, sizes: all yours (or the user's). This skill never invents or changes any of it. Write a `scene_version: 1` JSON request (schema below).
+   For a stock layout use a template instead: `template --list`, then `template NAME --set key=value ... -o REQUEST.json` (or `--values values.json`). Templates: `lower-third` (transparent: render with `--codec prores` to key over a live feed), `title-card`, `session-slate`, `break`. Only the values change; the layout is the template's. Set `lang=ja` for Japanese text.
 2. **`scene REQUEST.json -o SCENE_DIR --json`.** It validates every field (all problems at once), copies the assets into `SCENE_DIR/assets/`, writes `SCENE_DIR/index.html`, and runs `hyperframes lint` on it. Fix the request, never the generated HTML.
 3. **`preview SCENE_DIR -o preview.mp4 --json`** (10 fps, draft encode; `--max-duration S` for the first S seconds) and look at it before the expensive render when layout or timing is new.
 4. **`render SCENE_DIR -o final.mp4 --json`** (`--codec h264|vp9|prores`, `--quality N` CRF). It is done only when `status` is `completed` and `verified` is `true`: the output was probed and its codec, resolution, fps, frame count and duration match what the scene declares, and the scene directory was left unchanged.
@@ -48,7 +49,7 @@ Shared flags, on every tool: `--json` (one result document on stdout: `status`, 
 
 It turns an explicit scene into markup, renders it, and reports what came out. It does not write copy, choose timing, pick or crop to a subject, choose fonts or colours you did not give it, judge whether a frame looks good, or add a transition you did not ask for. Same request + same flags on the same machine gives byte-identical output; anything that depends on taste belongs to the caller.
 
-If a request needs something the five tools do not expose (audio, animation beyond the three transitions, captions, templates), say so. Never fall back to calling Chrome, ffmpeg or the `hyperframes` CLI directly: that bypasses every check here.
+If a request needs something the five tools do not expose (audio, animation beyond the three transitions, captions, a layout no template has), say so. Never fall back to calling Chrome, ffmpeg or the `hyperframes` CLI directly: that bypasses every check here.
 
 ## Gotchas
 
@@ -57,4 +58,5 @@ If a request needs something the five tools do not expose (audio, animation beyo
 - `--fps` default: the scene's `data-fps`, else 30. Integer fps only in this release.
 - Fonts: HyperFrames injects `@font-face` rules for families it bundles (it did for `sans-serif` in testing); any other family depends on the machine's fonts. Byte-identical output is promised on the same machine and toolchain, not across machines.
 - `kind: render` = page load or capture failed; `kind: encode` = HyperFrames reported the ffmpeg encode failed and a recorded ffmpeg exited non-zero; `timeout` (exit 124) = `--timeout` hit, Chrome and ffmpeg were killed.
+- CJK text needs a CJK font on the machine (not checked by `doctor`); set the request's `lang` (or the template's `lang` value) so the right glyph forms are picked. Look at a frame.
 - Windows is not supported in this release (the argv-recording shims are POSIX sh).

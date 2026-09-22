@@ -1,6 +1,6 @@
 # Tool reference
 
-Every flag of all 5 tools. `tests/contract.test.mjs` checks this file against each tool's real parser: a flag missing here, or listed here but not accepted, fails CI.
+Every flag of all 6 tools. `tests/contract.test.mjs` checks this file against each tool's real parser: a flag missing here, or listed here but not accepted, fails CI.
 
 All tools: `--json` prints one result document; `--dry-run` validates and plans without launching Chrome or ffmpeg or writing files (`probe` still runs ffprobe).
 
@@ -35,7 +35,7 @@ Usage: `node scripts/preview.mjs <scene_dir> [options]`
 | `-o, --output` | string | required | proxy .mp4 to write |
 | `--fps` | integer | `10` | proxy frame rate, integer 1-240 |
 | `--max-duration` | number |  | render only the first N seconds (a staged copy of the scene is shortened; the scene itself is untouched) |
-| `--workers` | integer|auto | `auto` | parallel capture workers: auto or 1-8 |
+| `--workers` | integer\|auto | `auto` | parallel capture workers: auto or 1-8 |
 | `--timeout` | number | `1800` | kill the render after this long; 0 disables |
 | `--overwrite` | boolean |  | replace an existing output file |
 
@@ -53,7 +53,7 @@ Usage: `node scripts/probe.mjs <file> [options]`
 |---|---|---|---|
 | `--json` | boolean |  | print one JSON result document on stdout |
 | `--dry-run` | boolean |  | validate and plan without launching Chrome or ffmpeg or writing files |
-| `--no-count-frames` | boolean | `true` | do not decode to count frames when the container does not state them (frames is then null) |
+| `--no-count-frames` | boolean |  | do not decode to count frames when the container does not state them (frames is then null) |
 
 Dry run: read-only: ffprobe still runs under --dry-run (measuring is the tool's whole job); nothing is written either way.
 
@@ -73,7 +73,7 @@ Usage: `node scripts/render.mjs <scene_dir> [options]`
 | `--codec` | h264 \| vp9 \| prores | `h264` | h264 (.mp4), vp9 (.webm) or prores (.mov, ProRes 4444) |
 | `--quality` | integer |  | CRF, codec-neutral scale (lower is better): h264 0-51, vp9 0-63; not for prores. Default: HyperFrames' own default (CRF 16) |
 | `--fps` | integer |  | frame rate, integer 1-240 (default: the root's data-fps, else 30) |
-| `--workers` | integer|auto | `auto` | parallel capture workers: auto or 1-8 |
+| `--workers` | integer\|auto | `auto` | parallel capture workers: auto or 1-8 |
 | `--timeout` | number | `1800` | kill the render (Chrome and ffmpeg included) after this long; 0 disables |
 | `--overwrite` | boolean |  | replace an existing output file |
 
@@ -95,3 +95,23 @@ Usage: `node scripts/scene.mjs <request> [options]`
 | `--overwrite` | boolean |  | replace index.html and assets/ in a directory an earlier `scene` run wrote |
 
 Dry run: validates the request and every asset path and reports the files it would write; writes nothing and does not run hyperframes lint.
+
+## template
+
+`hyperframes-skill/template` · role `execution`
+
+Fill one of the skill's scene templates (lower-third, title-card, session-slate, break) with caller-given values and write the resulting scene request JSON for `scene`. --list shows every template and the values it takes.
+
+Usage: `node scripts/template.mjs [name] [options]`
+
+| Flag | Type | Default | Meaning |
+|---|---|---|---|
+| `--json` | boolean |  | print one JSON result document on stdout |
+| `--dry-run` | boolean |  | validate and plan without launching Chrome or ffmpeg or writing files |
+| `-o, --output` | string |  | scene request JSON to write |
+| `--values` | string |  | JSON object of template values |
+| `--set` | string[] |  | one template value; repeatable; overrides --values |
+| `--list` | boolean |  | list the templates and the values each takes |
+| `--overwrite` | boolean |  | replace an existing output file |
+
+Dry run: resolves and validates the values and the filled request and reports it; writes nothing.

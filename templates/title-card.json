@@ -1,0 +1,104 @@
+{
+  "template_version": 1,
+  "name": "title-card",
+  "description": "Full-screen title with an optional subtitle, centred, on a solid background. Fades in and out.",
+  "values": {
+    "title": {
+      "type": "string",
+      "required": true,
+      "max_length": 80,
+      "description": "main title; \\n breaks lines"
+    },
+    "subtitle": {
+      "type": "string",
+      "required": false,
+      "max_length": 120,
+      "description": "line under the title; omitted when absent"
+    },
+    "background": {
+      "type": "color",
+      "default": "#101820",
+      "description": "background colour"
+    },
+    "duration": {
+      "type": "number",
+      "default": 5,
+      "min": 2,
+      "max": 600,
+      "description": "seconds"
+    },
+    "lang": {
+      "type": "string",
+      "default": "en",
+      "max_length": 16,
+      "description": "BCP 47 language tag of the text (e.g. ja): lets the browser pick that language's glyph forms from the installed fonts"
+    }
+  },
+  "request": {
+    "scene_version": 1,
+    "id": "title-card",
+    "width": 1920,
+    "height": 1080,
+    "duration": "{{duration}}",
+    "fps": 30,
+    "background": "{{background}}",
+    "lang": "{{lang}}",
+    "layers": [
+      {
+        "type": "text",
+        "id": "title",
+        "start": 0,
+        "duration": "{{duration}}",
+        "text": "{{title}}",
+        "box": {
+          "x": 160,
+          "y": 260,
+          "width": 1600,
+          "height": 380
+        },
+        "style": {
+          "font_size": 96,
+          "font_weight": 700,
+          "valign": "bottom",
+          "color": "#ffffff"
+        },
+        "transition_in": {
+          "type": "fade",
+          "duration": 0.8
+        },
+        "transition_out": {
+          "type": "fade",
+          "duration": 0.8
+        }
+      },
+      {
+        "when": "subtitle",
+        "type": "text",
+        "id": "subtitle",
+        "start": 0,
+        "duration": "{{duration}}",
+        "text": "{{subtitle}}",
+        "box": {
+          "x": 160,
+          "y": 680,
+          "width": 1600,
+          "height": 160
+        },
+        "style": {
+          "font_size": 48,
+          "font_weight": 400,
+          "valign": "top",
+          "color": "#cfd8dc"
+        },
+        "transition_in": {
+          "type": "fade",
+          "duration": 0.8
+        },
+        "transition_out": {
+          "type": "fade",
+          "duration": 0.8
+        }
+      }
+    ]
+  }
+}

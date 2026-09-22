@@ -3,7 +3,21 @@
 All notable changes. The stability guarantee and deprecation policy are in
 [docs/contract.md](docs/contract.md).
 
-## 0.2.0 (unreleased)
+## 0.3.0 (unreleased)
+
+### Added
+
+- `template` tool (tool count 5 → 6): fills a shipped template with caller values (`--values`
+  file and/or repeatable `--set key=value`) and writes a `scene_version: 1` request; `--list`
+  describes every template and its values. Values are type-checked (string with max length,
+  number with range, colour), unknown and missing ones refused together; an optional value
+  left out drops the layers marked `"when"` for it. The filled request must pass `scene`'s own
+  validation.
+- Templates: `lower-third` (transparent background; ProRes 4444 render keeps alpha, verified by
+  a render test), `title-card`, `session-slate`, `break`. Each takes `lang`.
+- Demo `demos/session-slate` built from a template.
+
+## 0.2.0
 
 ### Added
 

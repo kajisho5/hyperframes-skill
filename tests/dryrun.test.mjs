@@ -54,6 +54,18 @@ for (const name of ["render", "preview"]) {
   });
 }
 
+test("template --dry-run writes nothing and runs nothing", () => {
+  const f = fakes();
+  const dir = tmp();
+  const r = tool("template", ["break", "--set", "message=Break", "-o", join(dir, "r.json"), "--dry-run", "--json"], { env: f.env });
+  assert.equal(r.code, 0, r.stderr);
+  assert.equal(r.doc.dry_run, true);
+  assert.equal(r.doc.verified, false);
+  assert.equal(r.doc.request.layers.length, 1);
+  assert.deepEqual(readdirSync(dir), []);
+  assert.deepEqual(calls(f), []);
+});
+
 test("doctor --dry-run lists its probes and runs none", () => {
   const f = fakes();
   const r = tool("doctor", ["--dry-run", "--json"], { env: f.env });
@@ -76,6 +88,6 @@ test("probe --dry-run still runs ffprobe (read-only), as the contract states", (
 
 test("every tool in the contract supports --dry-run and is covered above", () => {
   const names = buildContract().tools.map((t) => t.name).sort();
-  assert.deepEqual(names, ["doctor", "preview", "probe", "render", "scene"]);
+  assert.deepEqual(names, ["doctor", "preview", "probe", "render", "scene", "template"]);
   for (const t of buildContract().tools) assert.equal(t.supports_dry_run, true, t.name);
 });

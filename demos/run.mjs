@@ -4,7 +4,7 @@
 // demos/out/<name>/. Any step that does not end completed + verified fails the run, so a broken
 // flag fails CI instead of the reader.
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, readdirSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -25,13 +25,24 @@ function step(tool, args) {
   return ok ? doc : null;
 }
 
-const demos = readdirSync(join(ROOT, "demos"), { withFileTypes: true }).filter((d) => d.isDirectory() && d.name !== "out" && existsSync(join(ROOT, "demos", d.name, "request.json")));
+// A demo is demos/<name>/request.json (a hand-written request) or demos/<name>/template.json
+// ({template, values}: the request is made by the template tool first).
+const hasInput = (name) => ["request.json", "template.json"].some((f) => existsSync(join(ROOT, "demos", name, f)));
+const demos = readdirSync(join(ROOT, "demos"), { withFileTypes: true }).filter((d) => d.isDirectory() && d.name !== "out" && hasInput(d.name));
 for (const d of demos) {
   const out = join(OUT, d.name);
   rmSync(out, { recursive: true, force: true });
   mkdirSync(out, { recursive: true });
   console.log(d.name);
-  if (!step("scene", [join(ROOT, "demos", d.name, "request.json"), "-o", join(out, "scene")])) continue;
+  let request = join(ROOT, "demos", d.name, "request.json");
+  const tpl = join(ROOT, "demos", d.name, "template.json");
+  if (existsSync(tpl)) {
+    const { template, values } = JSON.parse(readFileSync(tpl, "utf8"));
+    writeFileSync(join(out, "values.json"), JSON.stringify(values));
+    request = join(out, "request.json");
+    if (!step("template", [template, "--values", join(out, "values.json"), "-o", request])) continue;
+  }
+  if (!step("scene", [request, "-o", join(out, "scene")])) continue;
   if (!step("preview", [join(out, "scene"), "-o", join(out, "preview.mp4")])) continue;
   const r = step("render", [join(out, "scene"), "-o", join(out, "render.mp4")]);
   if (!r) continue;

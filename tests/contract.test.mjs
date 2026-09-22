@@ -89,7 +89,7 @@ test("references/scripts.md lists exactly each tool's real flags", () => {
 
 test("the tool count stated in prose matches the real count", () => {
   const n = String(contract.tools.length);
-  const words = { 5: "five" };
+  const words = { 5: "five", 6: "six" };
   assert.match(read("README.md"), new RegExp(`\\b${n} tools\\b`));
   assert.match(read("SKILL.md"), new RegExp(`There are ${n} tools`));
   assert.match(read("SKILL.md"), new RegExp(`all ${words[n] ?? n}\\b`));

@@ -171,5 +171,45 @@
         "type": "string"
       }
     }
+  },
+  "hyperframes-skill/template": {
+    "positional": [
+      "name"
+    ],
+    "required": [],
+    "args": {
+      "dryRun": {
+        "cli": "--dry-run",
+        "type": "boolean"
+      },
+      "json": {
+        "cli": "--json",
+        "type": "boolean"
+      },
+      "list": {
+        "cli": "--list",
+        "type": "boolean"
+      },
+      "name": {
+        "cli": "<name>",
+        "type": "string"
+      },
+      "output": {
+        "cli": "--output",
+        "type": "string"
+      },
+      "overwrite": {
+        "cli": "--overwrite",
+        "type": "boolean"
+      },
+      "set": {
+        "cli": "--set",
+        "type": "string[]"
+      },
+      "values": {
+        "cli": "--values",
+        "type": "string"
+      }
+    }
   }
 }
