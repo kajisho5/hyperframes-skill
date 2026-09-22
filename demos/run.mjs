@@ -27,13 +27,30 @@ function step(tool, args) {
 
 // A demo is demos/<name>/request.json (a hand-written request) or demos/<name>/template.json
 // ({template, values}: the request is made by the template tool first).
-const hasInput = (name) => ["request.json", "template.json"].some((f) => existsSync(join(ROOT, "demos", name, f)));
+// A batch demo is demos/<name>/rows.csv + batch.json ({template, name_field?, codec?}).
+const hasInput = (name) => ["request.json", "template.json", "batch.json"].some((f) => existsSync(join(ROOT, "demos", name, f)));
 const demos = readdirSync(join(ROOT, "demos"), { withFileTypes: true }).filter((d) => d.isDirectory() && d.name !== "out" && hasInput(d.name));
 for (const d of demos) {
   const out = join(OUT, d.name);
   rmSync(out, { recursive: true, force: true });
   mkdirSync(out, { recursive: true });
   console.log(d.name);
+  const batch = join(ROOT, "demos", d.name, "batch.json");
+  if (existsSync(batch)) {
+    const b = JSON.parse(readFileSync(batch, "utf8"));
+    const args = [join(ROOT, "demos", d.name, "rows.csv"), "--template", b.template, "-o", join(out, "batch")];
+    if (b.name_field) args.push("--name-field", b.name_field);
+    if (b.codec) args.push("--codec", b.codec);
+    const r = step("batch", args);
+    if (!r) continue;
+    for (const row of r.rows) {
+      const p = step("probe", [row.output]);
+      if (!p) continue;
+      const v = p.probe.video;
+      console.log(`  ${row.name}: ${p.probe.duration.toFixed(3)} s, ${v.width}x${v.height}, ${v.fps} fps, ${v.frames} frames, ${v.codec} ${v.pix_fmt}`);
+    }
+    continue;
+  }
   let request = join(ROOT, "demos", d.name, "request.json");
   const tpl = join(ROOT, "demos", d.name, "template.json");
   if (existsSync(tpl)) {

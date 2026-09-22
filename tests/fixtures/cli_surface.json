@@ -1,4 +1,68 @@
 {
+  "hyperframes-skill/batch": {
+    "positional": [
+      "rows"
+    ],
+    "required": [
+      "output",
+      "rows",
+      "template"
+    ],
+    "args": {
+      "codec": {
+        "cli": "--codec",
+        "type": "string"
+      },
+      "dryRun": {
+        "cli": "--dry-run",
+        "type": "boolean"
+      },
+      "encoding": {
+        "cli": "--encoding",
+        "type": "string"
+      },
+      "failFast": {
+        "cli": "--fail-fast",
+        "type": "boolean"
+      },
+      "json": {
+        "cli": "--json",
+        "type": "boolean"
+      },
+      "nameField": {
+        "cli": "--name-field",
+        "type": "string"
+      },
+      "output": {
+        "cli": "--output",
+        "type": "string"
+      },
+      "overwrite": {
+        "cli": "--overwrite",
+        "type": "boolean"
+      },
+      "quality": {
+        "cli": "--quality",
+        "type": "integer"
+      },
+      "rows": {
+        "cli": "<rows>",
+        "type": "string"
+      },
+      "template": {
+        "cli": "--template",
+        "type": "string"
+      },
+      "timeout": {
+        "cli": "--timeout",
+        "type": "number"
+      },
+      "workers": {
+        "cli": "--workers",
+        "type": "integer|auto"
+      }
+    }
+  },
   "hyperframes-skill/doctor": {
     "positional": [],
     "required": [],

@@ -5,7 +5,7 @@ description: 'Render video from HTML scenes with HyperFrames (headless Chrome ca
 
 # hyperframes-skill
 
-Tools live in `scripts/` next to this file: `node <skill-dir>/scripts/<name>.mjs` (or `npx hyperframes-skill <name>`). There are 6 tools: `doctor`, `template`, `scene`, `render`, `probe`, `preview`. `--help` on the tool about to run is the cheapest full flag list; `references/scripts.md` has every flag of all six.
+Tools live in `scripts/` next to this file: `node <skill-dir>/scripts/<name>.mjs` (or `npx hyperframes-skill <name>`). There are 7 tools: `doctor`, `template`, `scene`, `render`, `probe`, `preview`, `batch`. `--help` on the tool about to run is the cheapest full flag list; `references/scripts.md` has every flag of all seven.
 
 Shared flags, on every tool: `--json` (one result document on stdout: `status`, `verified`, `verification[]`, `commands[]`, `error.kind` on failure) and `--dry-run` (validate and plan; `scene`, `render`, `preview` and `doctor` run nothing and write nothing; `probe` is read-only and still runs ffprobe). Contract: `node <skill-dir>/bin/hyperframes-skill.mjs contract --json`.
 
@@ -14,6 +14,7 @@ Shared flags, on every tool: `--json` (one result document on stdout: `status`, 
 0. **Environment, only on failure.** Don't start a job with `doctor`. After a `kind: missing_tool` failure, or when asked what the machine can do, run `doctor --json` and report the capability that is `missing` or `unknown` (they are different: `unknown` means the probe itself failed, not that the thing is absent).
 1. **Decide the scene yourself, then write it as a request.** Copy, pacing, which asset goes where, colours, sizes: all yours (or the user's). This skill never invents or changes any of it. Write a `scene_version: 1` JSON request (schema below).
    For a stock layout use a template instead: `template --list`, then `template NAME --set key=value ... -o REQUEST.json` (or `--values values.json`). Templates: `lower-third` (transparent: render with `--codec prores` to key over a live feed), `title-card`, `session-slate`, `break`. Only the values change; the layout is the template's. Set `lang=ja` for Japanese text.
+   Many items of the same template (every speaker, every session): `batch ROWS.csv --template NAME [--name-field COLUMN] -o OUT_DIR --json` renders one file per row (header row = value names; empty cell = value left out; `--encoding shift_jis` for a Japanese-Windows Excel CSV). All rows are validated first; report `summary` and every row whose `status` is not `completed`.
 2. **`scene REQUEST.json -o SCENE_DIR --json`.** It validates every field (all problems at once), copies the assets into `SCENE_DIR/assets/`, writes `SCENE_DIR/index.html`, and runs `hyperframes lint` on it. Fix the request, never the generated HTML.
 3. **`preview SCENE_DIR -o preview.mp4 --json`** (10 fps, draft encode; `--max-duration S` for the first S seconds) and look at it before the expensive render when layout or timing is new.
 4. **`render SCENE_DIR -o final.mp4 --json`** (`--codec h264|vp9|prores`, `--quality N` CRF). It is done only when `status` is `completed` and `verified` is `true`: the output was probed and its codec, resolution, fps, frame count and duration match what the scene declares, and the scene directory was left unchanged.

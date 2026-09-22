@@ -5,7 +5,7 @@ A contract-first CLI toolset and agent skill around [HyperFrames](https://hyperf
 headless Chrome and encoded to video by ffmpeg. It is modelled on
 [ffmpeg-skill](https://github.com/kajisho5/ffmpeg-skill): the calling agent decides what a scene
 says; this toolset turns that already-decided, structured description into valid HyperFrames
-markup, renders it, verifies the result and reports back. 6 tools, v0.3.0.
+markup, renders it, verifies the result and reports back. 7 tools, v0.4.0.
 
 ```
 template + values --template--> scene request (JSON) --scene--> scene dir (index.html + assets)
@@ -52,6 +52,17 @@ node scripts/scene.mjs /tmp/lt.json -o /tmp/lt
 node scripts/render.mjs /tmp/lt -o /tmp/lt.mov --codec prores --json
 ```
 
+Every speaker at once, from the programme spreadsheet saved as CSV (header row = the template's
+value names; a CSV saved by Excel on Japanese Windows needs `--encoding shift_jis`):
+
+```bash
+node scripts/batch.mjs speakers.csv --template lower-third --name-field name --codec prores -o out/ --json
+# out/001-佐藤-花子.mov, out/002-..., and each row's scene under out/scenes/
+```
+
+Every row is validated before the first render, so a typo in row 30 stops the batch before
+anything is written.
+
 As an agent skill, point the agent at `SKILL.md` (it names the scripts relative to itself).
 
 ## Tools
@@ -63,6 +74,7 @@ As an agent skill, point the agent at `SKILL.md` (it names the scripts relative 
 | `scene` | `hyperframes-skill/scene` | execution | structured scene request → HyperFrames scene directory (index.html + copied assets), linted |
 | `render` | `hyperframes-skill/render` | execution | scene directory → .mp4 (h264) / .webm (vp9) / .mov (ProRes 4444), probed and verified |
 | `probe` | `hyperframes-skill/probe` | analysis | ffprobe read-back: duration, resolution, fps, frame count, codecs |
+| `batch` | `hyperframes-skill/batch` | execution | one verified render per row of a CSV/JSON through a template (every speaker's lower third from the programme sheet) |
 | `preview` | `hyperframes-skill/preview` | execution | fast proxy render: 10 fps, draft encoder preset, optionally the first N seconds |
 
 Every flag of every tool: [`references/scripts.md`](references/scripts.md). Every tool takes
@@ -121,6 +133,9 @@ and macOS:
 - every shipped template fills into a valid request (with only its required values and with all of
   them); the lower third renders to ProRes 4444 with alpha exactly 0 outside the bar and the bar at
   the 75% opacity the template sets (read from the raw alpha plane, FFmpeg 6.1 and 7.0);
+- `batch`: RFC 4180 CSV (quotes, CRLF, BOM), Shift_JIS refused as UTF-8 with a hint and read with
+  `--encoding shift_jis`, all rows validated before any render, one verified file per row, per-row
+  failure and `--fail-fast` reporting with a real failing Chrome;
 - `--dry-run` of every tool behind recording fake binaries;
 - docs ↔ contract consistency and the frozen CLI surface.
 
