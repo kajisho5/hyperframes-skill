@@ -1,6 +1,6 @@
 {
   "name": "hyperframes-skill",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "A contract-first CLI toolset and agent skill that turns structured scene requests into HyperFrames HTML, renders them to video with headless Chrome + ffmpeg, and reports verified results. 7 tools.",
   "license": "MIT",
   "type": "module",
@@ -15,11 +15,13 @@
     "test:fast": "HYPERFRAMES_SKILL_SKIP_RENDER_TESTS=1 node --test \"tests/*.test.mjs\"",
     "contract": "node bin/hyperframes-skill.mjs contract --json",
     "doctor": "node bin/hyperframes-skill.mjs doctor",
-    "demo": "node demos/run.mjs"
+    "demo": "node demos/run.mjs",
+    "mcp": "node bin/hyperframes-skill.mjs mcp"
   },
   "files": [
     "bin",
     "lib",
+    "mcp",
     "scripts",
     "docs",
     "templates",

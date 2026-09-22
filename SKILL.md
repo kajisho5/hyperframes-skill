@@ -7,7 +7,7 @@ description: 'Render video from HTML scenes with HyperFrames (headless Chrome ca
 
 Tools live in `scripts/` next to this file: `node <skill-dir>/scripts/<name>.mjs` (or `npx hyperframes-skill <name>`). There are 7 tools: `doctor`, `template`, `scene`, `render`, `probe`, `preview`, `batch`. `--help` on the tool about to run is the cheapest full flag list; `references/scripts.md` has every flag of all seven.
 
-Shared flags, on every tool: `--json` (one result document on stdout: `status`, `verified`, `verification[]`, `commands[]`, `error.kind` on failure) and `--dry-run` (validate and plan; `scene`, `render`, `preview` and `doctor` run nothing and write nothing; `probe` is read-only and still runs ffprobe). Contract: `node <skill-dir>/bin/hyperframes-skill.mjs contract --json`.
+Shared flags, on every tool: `--json` (one result document on stdout: `status`, `verified`, `verification[]`, `commands[]`, `error.kind` on failure) and `--dry-run` (validate and plan; `scene`, `render`, `preview` and `doctor` run nothing and write nothing; `probe` is read-only and still runs ffprobe). Contract: `node <skill-dir>/bin/hyperframes-skill.mjs contract --json`. MCP: `node <skill-dir>/bin/hyperframes-skill.mjs mcp` (stdio; same tools, same result documents).
 
 ## Workflow (always in this order)
 

@@ -3,7 +3,17 @@
 All notable changes. The stability guarantee and deprecation policy are in
 [docs/contract.md](docs/contract.md).
 
-## 0.5.0 (unreleased)
+## 0.6.0 (unreleased)
+
+### Added
+
+- MCP server, `hyperframes-skill mcp` (stdio, newline-delimited JSON-RPC, no new dependency):
+  `tools/list` generated from the contract, `tools/call` runs the tool's script with `--json`
+  and returns its result document as text and `structuredContent`, `isError` exactly when
+  `status` is not `completed`. The MCP surface is frozen by `tests/fixtures/mcp_tools.json`.
+  `contract --json` gains `skill.entrypoints.mcp`.
+
+## 0.5.0
 
 ### Added
 

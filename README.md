@@ -5,7 +5,7 @@ A contract-first CLI toolset and agent skill around [HyperFrames](https://hyperf
 headless Chrome and encoded to video by ffmpeg. It is modelled on
 [ffmpeg-skill](https://github.com/kajisho5/ffmpeg-skill): the calling agent decides what a scene
 says; this toolset turns that already-decided, structured description into valid HyperFrames
-markup, renders it, verifies the result and reports back. 7 tools, v0.5.0.
+markup, renders it, verifies the result and reports back. 7 tools, v0.6.0.
 
 ```
 template + values --template--> scene request (JSON) --scene--> scene dir (index.html + assets)
@@ -143,6 +143,9 @@ and macOS:
 - fonts shipped with the scene: `@font-face` on a copied file, accepted by `hyperframes lint`, and
   a render whose glyphs differ from the default font's and repeat exactly; `--font` on `template`
   and `batch`; `doctor`'s fontconfig report is `unknown` (never `missing`) without fontconfig;
+- the MCP server over real stdio: initialize, tools/list equal to the contract, tools/call results
+  equal to the tools' own documents, `isError` on failures, notifications unanswered, unknown
+  arguments refused;
 - `--dry-run` of every tool behind recording fake binaries;
 - docs ↔ contract consistency and the frozen CLI surface.
 
@@ -164,6 +167,22 @@ Not verified (said plainly rather than claimed):
 - Audio, free-form animation (anything beyond fade / slide / zoom transitions), sub-compositions
   and captions are not implemented. `zoom` is checked in the markup and by lint only,
   not by a pixel test.
+
+## MCP server
+
+`hyperframes-skill mcp` (or `node bin/hyperframes-skill.mjs mcp`) is a stdio MCP server with no
+extra dependency. `tools/list` is generated from the contract (one MCP tool per tool, input
+properties = the contract's `input_schema` names); `tools/call` runs the tool's own script with
+`--json` and returns its result document unchanged, as text and as `structuredContent`, with
+`isError` true exactly when `status` is not `completed`. Relative paths resolve against the
+server's working directory. Example client entry (Claude Desktop `claude_desktop_config.json`):
+
+```json
+{"mcpServers": {"hyperframes": {"command": "node", "args": ["/path/to/hyperframes-skill/bin/hyperframes-skill.mjs", "mcp"]}}}
+```
+
+The tool names and property names are frozen by `tests/fixtures/mcp_tools.json`, the same way
+the CLI surface is.
 
 ## Development
 
