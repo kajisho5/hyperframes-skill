@@ -119,7 +119,8 @@ and macOS:
 - `preview` with `--max-duration`; every failure kind above except `internal`, including a
   real timeout and a real SIGTERM;
 - every shipped template fills into a valid request (with only its required values and with all of
-  them); the lower third renders to ProRes 4444 with a transparent background and an opaque bar;
+  them); the lower third renders to ProRes 4444 with alpha exactly 0 outside the bar and the bar at
+  the 75% opacity the template sets (read from the raw alpha plane, FFmpeg 6.1 and 7.0);
 - `--dry-run` of every tool behind recording fake binaries;
 - docs ↔ contract consistency and the frozen CLI surface.
 

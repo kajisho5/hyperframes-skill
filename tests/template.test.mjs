@@ -98,9 +98,20 @@ test("lower-third renders to ProRes with real alpha", { skip: SKIP_RENDER }, () 
   assert.equal(r.code, 0, r.stderr);
   assert.equal(r.doc.verified, true);
   assert.match(r.doc.probe.video.pix_fmt, /^yuva/);
-  const alphaMax = (crop) =>
-    Number(/YMAX=([\d.]+)/.exec(ffmpeg(["-ss", "1", "-i", out, "-vf", `alphaextract,${crop},signalstats,metadata=print:key=lavfi.signalstats.YMAX:file=-`, "-frames:v", "1", "-f", "null", "-"]).toString())[1]);
-  assert.equal(alphaMax("crop=1920:700:0:0"), 0, "top of the frame fully transparent");
-  assert.ok(alphaMax("crop=900:80:130:805") > 0, "the name bar is opaque");
+  // Read the alpha plane itself (yuva444p12le, 4th plane), not through alphaextract: FFmpeg 7+
+  // range-converts alphaextract's gray output, so a fully transparent area reads 256 there
+  // while the stored alpha is 0 (seen on the macOS CI runner; reproduced with FFmpeg 7.0.2).
+  const [W, H] = [1920, 1080];
+  const raw = ffmpeg(["-ss", "1", "-i", out, "-frames:v", "1", "-f", "rawvideo", "-pix_fmt", "yuva444p12le", "-"]);
+  assert.equal(raw.length, W * H * 2 * 4);
+  const alpha = raw.subarray(W * H * 2 * 3);
+  const at = (x, y) => alpha.readUInt16LE((y * W + x) * 2);
+  let topMax = 0;
+  for (let y = 0; y < 700; y++) for (let x = 0; x < W; x++) topMax = Math.max(topMax, at(x, y));
+  let barMin = 4096;
+  for (let y = 810; y < 880; y++) for (let x = 140; x < 1020; x++) barMin = Math.min(barMin, at(x, y));
+  assert.equal(topMax, 0, "top of the frame fully transparent");
+  // the bar's background is rgba(0,0,0,0.75): 0.75 x 4095 = 3071, +-1 for rounding
+  assert.ok(Math.abs(barMin - 3071) <= 1, `the name bar is 75% opaque, as the template says (min alpha ${barMin})`);
 });
 
