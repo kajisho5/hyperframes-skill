@@ -1,4 +1,18 @@
-# hyperframes-skill
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="brand/app-icon-dark.png">
+    <img src="brand/app-icon.png" width="128" alt="hyperframes-skill app icon">
+  </picture>
+</p>
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="brand/logo/hyperframes-skill-wordmark-white.svg">
+    <img src="brand/logo/hyperframes-skill-wordmark-black.svg" height="48" alt="hyperframes-skill">
+  </picture>
+</p>
+
+<p align="center"><b>HTML scenes rendered to verified video</b></p>
 
 A contract-first CLI toolset and agent skill around [HyperFrames](https://hyperframes.heygen.com)
 ([source](https://github.com/heygen-com/hyperframes)): HTML scenes rendered frame by frame in
