@@ -75,6 +75,9 @@ CHANGELOG line.
 
 ```json
 {
+  "skill_id": "hyperframes-skill", "version": "0.6.0",
+  "provides": [{"id": "html_scene.render", "lifecycle": "EXPERIMENTAL", "tool_id": "hyperframes-skill/render"}, "..."],
+  "dependencies": [],
   "contract_version": "0.1",
   "deprecated": [],
   "skill": {"id": "hyperframes-skill", "version": "0.6.0", "execution_mode": "local", "kind": "execution",
@@ -86,6 +89,11 @@ CHANGELOG line.
   "tools": [ToolSpec, ...]
 }
 ```
+
+`skill_id`, `version`, `provides` and `dependencies` are the AI Video Production OS registry's
+keys: `provides` names one capability per tool except `doctor` (`html_scene.<tool>`, with its
+`tool_id`), and `dependencies` lists other Skills this one calls, none today (ffmpeg and ffprobe
+are run directly; the engines it needs are under `requirements`).
 
 `requirements.node` is `>=22` because the pinned `hyperframes` package declares
 `engines.node >=22`. `hyperframes` is pinned to an exact version: a HyperFrames upgrade is a

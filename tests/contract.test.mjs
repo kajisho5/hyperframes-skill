@@ -27,6 +27,21 @@ test("contract --json from the CLI is the generated contract", () => {
   assert.equal(contract.contract_version, CONTRACT_VERSION);
 });
 
+test("the AI Video Production OS registry keys: skill_id, version, provides, dependencies", () => {
+  assert.equal(contract.skill_id, contract.skill.id);
+  assert.equal(contract.version, PKG.version);
+  const toolIds = contract.tools.map((t) => t.id);
+  const ids = contract.provides.map((p) => p.id);
+  assert.equal(new Set(ids).size, ids.length, "provides ids are unique");
+  for (const p of contract.provides) {
+    assert.deepEqual(Object.keys(p).sort(), ["id", "lifecycle", "tool_id"]);
+    assert.ok(["PROPOSED", "EXPERIMENTAL", "STABLE", "DEPRECATED", "RETIRED"].includes(p.lifecycle));
+    assert.ok(toolIds.includes(p.tool_id), p.tool_id);
+  }
+  assert.deepEqual(contract.provides.map((p) => p.tool_id).sort(), toolIds.filter((id) => id !== "hyperframes-skill/doctor"));
+  for (const d of contract.dependencies) assert.ok(d.skill_id && d.version_range, JSON.stringify(d));
+});
+
 test("every ToolSpec carries the fields the contract promises", () => {
   const keys = ["id", "name", "version", "executable", "description", "role", "capabilities", "inputs", "outputs", "input_schema", "output_schema", "supports_dry_run", "dry_run", "supports_json", "mutates_input", "produces_artifact", "verification", "deterministic_inputs", "idempotency_hint"];
   for (const t of contract.tools) {
