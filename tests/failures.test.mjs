@@ -100,9 +100,17 @@ test("interrupted: SIGTERM gives exit 143 and a failure document", { skip: SKIP_
   let out = "";
   child.stdout.on("data", (c) => (out += c));
   let err = "";
+  let signalled = false;
   child.stderr.on("data", (c) => {
     err += c;
-    if (err.includes("rendering ")) child.kill("SIGTERM");
+    // Exactly one SIGTERM. `err` accumulates, so testing it on every chunk would signal again
+    // on the next chunk ("error: interrupted ...", written just before the failure document);
+    // that second signal can land while Node is tearing down after it has already reported,
+    // when its handlers are gone, and kill the process with no exit code at all.
+    if (!signalled && err.includes("rendering ")) {
+      signalled = true;
+      child.kill("SIGTERM");
+    }
   });
   const code = await new Promise((res) => child.on("close", (c) => res(c)));
   const doc = JSON.parse(out);
