@@ -21,7 +21,7 @@ Not reachable from the agent. Calls ffmpeg/ffprobe directly, bypassing ffmpeg-sk
 
 ## Steps
 
-- [ ] **1. provides[] + dependencies in the contract**
+- [x] **1. provides[] + dependencies in the contract**
   - Done when: OS conformance
 - [ ] **2. Release workflow; cut 0.6.0** — npm + tag
   - Done when: tag produces a release
