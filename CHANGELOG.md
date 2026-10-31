@@ -20,6 +20,8 @@ All notable changes. The stability guarantee and deprecation policy are in
   `hyperframes browser ensure`, the ffmpeg-skill cross-check through the runner's Python).
   The tests' fake chrome / ffmpeg are a Node double (`tests/fixtures/fake-spawn.cjs`) instead of
   sh scripts. The SIGTERM test is POSIX-only: Windows has no signal delivery to a handler.
+- `.gitattributes` keeps LF line endings on every checkout, Windows included. The snapshots, JSON fixtures and
+  workflow files the tests compare byte for byte would otherwise be checked out with CRLF.
 
 ## 0.6.1
 ### Added
