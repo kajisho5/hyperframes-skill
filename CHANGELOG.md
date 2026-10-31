@@ -3,8 +3,7 @@
 All notable changes. The stability guarantee and deprecation policy are in
 [docs/contract.md](docs/contract.md).
 
-## Unreleased
-
+## 0.6.1
 ### Added
 
 - `render` cross-checks its output with ffmpeg-skill when a checkout is present (roadmap step 3;
