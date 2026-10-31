@@ -46,3 +46,53 @@ Format:
   the `event` and `head_repository` checks a fork's PR CI run would get its code checked out with
   `contents: write` and the npm token (the artifacts-skill #66 fix).
 - **Pinned by:** `tests/release.test.mjs` (the three workflow-hardening tests).
+
+## D3. HyperFrames renders with its own engine, not through ffmpeg-skill; ffmpeg-skill reads the output back
+
+- **Reported as:** the 2026-10-30 ecosystem audit ([ECOSYSTEM_ROADMAP.md](../ECOSYSTEM_ROADMAP.md),
+  "Wiring"): this skill "calls ffmpeg/ffprobe directly, bypassing ffmpeg-skill", the ecosystem's
+  engine for every media operation.
+- **Decision:** the render path stays as it is: the pinned `hyperframes` CLI captures frames in
+  headless Chrome and pipes them into the ffmpeg it launches itself (through the argv-recording
+  shims, so `commands` shows the real encode). The gap is closed on the output side instead:
+  after every real `render`, when an ffmpeg-skill checkout is present, `lib/ffmpeg-skill.mjs` runs
+  ffmpeg-skill's own probe on the file (`python3 <dir>/scripts/probe.py --json -- <output>`, no
+  shell, ffmpeg-skill never imported or modified) and compares codec, resolution, fps, duration
+  and, for `--codec vp9`/`prores`, alpha with what the scene asked for. The result carries
+  `ffmpeg_skill.status`:
+  - `PASSED`: every property measured and matched; adds `verification[]` step `ffmpeg_skill`.
+  - `FAILED`: ffmpeg-skill refused the file (corrupt, empty, no video stream) or measured a
+    mismatch; the step is `ok: false` and the render fails with `kind: verification`.
+  - `UNCHECKED` + `reason`: no checkout, no Python, ffmpeg-skill gave no usable result (did not
+    start, timed out, printed no JSON), or a property it cannot measure. No step is added, so it
+    is never counted as a pass, and an absent optional dependency never fails a render.
+  ffmpeg-skill is found the way the other ecosystem skills find it (color-grading-skill's
+  adapter): `--ffmpeg-skill DIR` alone when given, else `HYPERFRAMES_SKILL_FFMPEG_SKILL_DIR`,
+  `VIDEO_AGENT_FFMPEG_SKILL_DIR`, `~/.claude/skills/ffmpeg-skill`, `./vendor/ffmpeg-skill`, and
+  `ffmpeg-skill` next to this checkout. Its version comes from its `package.json`. There is no
+  version gate (the declared range `>=2.0.0 <3.0.0` in the contract's `dependencies` is what it was
+  checked against): the probe document's keys are read directly and a missing one is `UNCHECKED`.
+- **Why:** HyperFrames streams each captured frame into ffmpeg as it is captured (`image2pipe`,
+  visible in `commands`). ffmpeg-skill has no tool that takes such a stream: `sequence.py` encodes
+  an image sequence already on disk (h264 / hevc / av1 / prores, no VP9) and `render.py` executes
+  its own edit plans. Routing HyperFrames through it would mean writing every frame to disk and
+  encoding on a second path with a different codec set (no VP9 alpha), or re-implementing
+  HyperFrames' capture/encode loop and losing its tested frame-exact timing and byte-identical
+  output, or adding a frame-pipe encoder to ffmpeg-skill, which is finished and not changed from
+  here. What the ecosystem actually needs from "use the engine" is
+  that the engine vouches for the artifact; reading it back with the same probe every other skill
+  uses gives that without touching either engine. `check.py` was not used: it is a platform
+  compliance check (duration limit, aspect, loudness, file size against a delivery spec), not a
+  comparison with exact requested values, and these renders have no audio for its loudness rows.
+  `verify.py` runs the whole toolchain against real footage and writes outputs; it is a test kit.
+- **Gaps in ffmpeg-skill (2.21.0 / 2.23.1), recorded rather than worked around:**
+  `probe.py` reports neither stream tags nor an alpha field, so VP9 alpha (stored as the
+  `alpha_mode=1` stream tag; the stream reads as `yuv420p`) cannot be measured through it and is
+  `UNCHECKED`; ProRes alpha is visible in `pix_fmt` (`yuva444p12le`). The probe document carries
+  no ffmpeg-skill version, so the version is read from the checkout's `package.json` (`unknown`
+  when it has none). ffmpeg-skill finds `ffprobe` on PATH itself; `HYPERFRAMES_SKILL_FFPROBE` does
+  not reach it, so the read-back may use a different ffprobe than this skill's own probe step.
+  `preview` and `batch` do not cross-check yet.
+- **Pinned by:** `tests/ffmpeg-skill.test.mjs` (present → measured fields and `PASSED`; a
+  mismatch → `FAILED` and a failed `kind: verification` render; absent → `UNCHECKED`; empty and
+  corrupt files → `FAILED`, not a crash) and the end-to-end test in `tests/render.test.mjs`.

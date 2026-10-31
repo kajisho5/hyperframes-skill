@@ -58,6 +58,7 @@
     "properties": [
       "codec",
       "dryRun",
+      "ffmpegSkill",
       "fps",
       "output",
       "overwrite",

@@ -136,7 +136,7 @@ One entry per tool under `tools`, sorted by id.
 ### Capabilities
 
 `node`, `hyperframes`, `chromium:headless`, `ffmpeg`, `ffprobe`, `encoder:libx264`,
-`encoder:libvpx-vp9`, `encoder:prores_ks`, `disk:tmp`. The encoder names are the ones
+`encoder:libvpx-vp9`, `encoder:prores_ks`, `disk:tmp`, and the optional `ffmpeg-skill`. The encoder names are the ones
 HyperFrames 0.8.61 was observed passing to ffmpeg for each `--codec` (recorded in `commands`).
 
 `doctor` reports each as `available`, `missing` or `unknown`, and never folds them together:
@@ -149,6 +149,7 @@ HyperFrames 0.8.61 was observed passing to ffmpeg for each `--codec` (recorded i
 | `encoder:*` | listed by `ffmpeg -encoders` | not listed | the listing could not be read |
 | `chromium:headless` | found and a headless `--dump-dom` of a probe page printed the marker | nothing found in any searched location, or `HYPERFRAMES_BROWSER_PATH` names a missing file | found but the probe failed or timed out, or `--no-chromium-probe` |
 | `disk:tmp` | >= 1 GiB free in the temp dir | less | `statfs` failed |
+| `ffmpeg-skill` (optional, never affects `ok`) | a checkout with `scripts/probe.py` found (same search as `render`) and a Python to run it; nothing is run | no checkout, or no Python | – |
 
 Chromium search order (the first existing one is what `render` uses, so doctor and a render
 always talk about the same binary): `HYPERFRAMES_BROWSER_PATH`; HyperFrames' own download
@@ -214,10 +215,11 @@ from the CLI or any later MCP server.
 | `status` | `"completed"` only from `emit()`; every failure path goes through `fail()` | a Chrome capture error reported as success |
 | `exit_code` | the process exit code, repeated | – |
 | `verified` | computed inside `emit()` as the conjunction of the `verification[]` steps this run performed; never passed in; `false` on a dry run and on every failure | `true` for a file never probed |
-| `verification[]` | `{step, ok, expected?, actual?, detail?}`: render/preview: `exists`, `probe`, `codec`, `resolution`, `fps`, `frames`, `duration`, `input_preserved`; scene: `exists`, `assets_copied` (only with assets), `declared_values`, `hyperframes_lint` | a step listed that did not run |
+| `verification[]` | `{step, ok, expected?, actual?, detail?}`: render/preview: `exists`, `probe`, `codec`, `resolution`, `fps`, `frames`, `duration`, `input_preserved`, then for render `ffmpeg_skill` only when `ffmpeg_skill.status` is `PASSED` or `FAILED`; scene: `exists`, `assets_copied` (only with assets), `declared_values`, `hyperframes_lint` | a step listed that did not run |
 | `error.kind` | see below | a generic catch-all |
 | `error.retryable` | always `false` | `true` invites a blind retry loop |
-| `commands[]` | `{program, argv, exit_code, via?, role?}` for every process that ran, in start order: the hyperframes CLI, then each chrome/ffmpeg/ffprobe process it started (`via: "hyperframes"`, `role` = which shim), then this skill's own ffprobe | a command that wasn't the one executed |
+| `commands[]` | `{program, argv, exit_code, via?, role?}` for every process that ran, in start order: the hyperframes CLI, then each chrome/ffmpeg/ffprobe process it started (`via: "hyperframes"`, `role` = which shim), then this skill's own ffprobe, then (render, when present) ffmpeg-skill's probe (`role: "ffmpeg-skill/probe"`) | a command that wasn't the one executed |
+| `ffmpeg_skill` (render) | `PASSED` / `FAILED` / `UNCHECKED` from reading the output back through ffmpeg-skill/probe (`lib/ffmpeg-skill.mjs`, design-decisions D3), with `skill.version`, `measured`, `checks[]`; `UNCHECKED` always has a `reason` and adds no `verification[]` step | `PASSED` without ffmpeg-skill having run |
 
 `exit_code` inside `commands` is `null` for chrome: its shim `exec`s the browser so HyperFrames
 can manage the process directly, which leaves no place to observe its exit status.
@@ -231,6 +233,6 @@ can manage the process directly, which leaves no place to observe its exit statu
 | `encode` | 1 | HyperFrames' own failure message names FFmpeg/the encode **and** a recorded ffmpeg process exited non-zero (both required; `details.classification` shows the evidence) |
 | `missing_tool` | 127 | ffmpeg, ffprobe, Chromium or the hyperframes package not found |
 | `timeout` | 124 | `--timeout` elapsed; the whole process group (Chrome, ffmpeg) was killed |
-| `verification` | 1 | the artifact was written but a verification step failed; the document still carries `verification[]` and `probe` |
+| `verification` | 1 | the artifact was written but a verification step failed (including `ffmpeg_skill` when ffmpeg-skill measured a mismatch or refused the file); the document still carries `verification[]`, `probe` and, for render, `ffmpeg_skill` |
 | `interrupted` | 128+signal | SIGINT/SIGTERM/SIGHUP; the process group was killed |
 | `internal` | 1 | a bug in this skill (an exception that is not a ToolError) |

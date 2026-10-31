@@ -34,6 +34,16 @@ jobs:
         if: runner.os == 'macOS'
         run: brew install ffmpeg
       - run: npm ci
+      # ffmpeg-skill is optional at run time; CI pins a release so render's cross-check
+      # (ffmpeg_skill.status, docs/design-decisions.md D3) runs for real. Read-only use.
+      - name: Check out ffmpeg-skill (pinned) for the cross-check
+        env:
+          FFMPEG_SKILL_TAG: v2.23.1
+        run: |
+          set -eu
+          git clone --quiet --depth 1 --branch "$FFMPEG_SKILL_TAG" https://github.com/kajisho5/ffmpeg-skill "$RUNNER_TEMP/ffmpeg-skill"
+          python3 --version
+          echo "HYPERFRAMES_SKILL_FFMPEG_SKILL_DIR=$RUNNER_TEMP/ffmpeg-skill" >> "$GITHUB_ENV"
       - name: Install HyperFrames' chrome-headless-shell
         run: npx hyperframes browser ensure
       - name: doctor (must be ok before anything claims it can run)

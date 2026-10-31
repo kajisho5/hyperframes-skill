@@ -34,7 +34,7 @@ Dry run: reads and validates every row against the template and reports each pla
 
 `hyperframes-skill/doctor` · role `analysis`
 
-Probe this machine now: Node version, the pinned hyperframes package, ffmpeg/ffprobe and their encoders, a working headless Chromium, free temp space. Each capability is available, missing or unknown; nothing is reported that was not probed.
+Probe this machine now: Node version, the pinned hyperframes package, ffmpeg/ffprobe and their encoders, a working headless Chromium, free temp space, and whether an ffmpeg-skill checkout is present for render's cross-check (optional). Each capability is available, missing or unknown; nothing is reported that was not probed.
 
 Usage: `node scripts/doctor.mjs [options]`
 
@@ -87,7 +87,7 @@ Dry run: read-only: ffprobe still runs under --dry-run (measuring is the tool's 
 
 `hyperframes-skill/render` · role `execution`
 
-Render a HyperFrames scene directory to video: headless Chrome captures every frame, ffmpeg encodes them; the result is probed and compared with the scene's declared size, duration and fps.
+Render a HyperFrames scene directory to video: headless Chrome captures every frame, ffmpeg encodes them; the result is probed and compared with the scene's declared size, duration and fps, and cross-checked with ffmpeg-skill's probe when an ffmpeg-skill checkout is present.
 
 Usage: `node scripts/render.mjs <scene_dir> [options]`
 
@@ -102,6 +102,9 @@ Usage: `node scripts/render.mjs <scene_dir> [options]`
 | `--workers` | integer\|auto | `auto` | parallel capture workers: auto or 1-8 |
 | `--timeout` | number | `1800` | kill the render (Chrome and ffmpeg included) after this long; 0 disables |
 | `--overwrite` | boolean |  | replace an existing output file |
+| `--ffmpeg-skill` | string |  | ffmpeg-skill checkout to cross-check the output with (default: HYPERFRAMES_SKILL_FFMPEG_SKILL_DIR, VIDEO_AGENT_FFMPEG_SKILL_DIR, ~/.claude/skills/ffmpeg-skill, ./vendor/ffmpeg-skill, ../ffmpeg-skill next to this checkout; none found: ffmpeg_skill.status UNCHECKED) |
+
+Result: `ffmpeg_skill.status` is `PASSED` (ffmpeg-skill/probe read the file and codec, resolution, fps, duration and, for vp9/prores, alpha all match), `FAILED` (it refused the file or measured a mismatch; the render then fails with `kind: verification`) or `UNCHECKED` with a `reason` (no checkout, no Python, no usable result, or a property it cannot measure). UNCHECKED is never a pass.
 
 Dry run: reads index.html, checks the root's declared size/duration/fps and the output path, and reports the hyperframes command it would run and the expected frame count; launches neither Chrome nor ffmpeg and writes nothing.
 
