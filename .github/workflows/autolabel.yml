@@ -1,0 +1,28 @@
+name: PR autolabel
+
+# Labels each PR from .github/release-drafter.yml's `autolabeler` (feat: -> feature, fix: -> fix,
+# docs: -> documentation, ci:/.github changes -> ci, chore:/deps:/test: -> chore), so that when it
+# merges release.yml has a label to pick the bump from. `major` is only ever applied by hand.
+#
+# pull_request_target (not pull_request): a fork's PR needs the base repository's token to be
+# labelled at all. That is safe here because the job never checks out or runs the PR's code; the
+# autolabeler sub-action only reads the title and changed-file list and calls the labels API.
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize]
+
+permissions:
+  contents: read
+
+jobs:
+  autolabel:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: release-drafter/release-drafter/autolabeler@978bb0b30c5ee8cdd332ced253758157150d43f0 # v7.10.0
+        with:
+          config-name: release-drafter.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

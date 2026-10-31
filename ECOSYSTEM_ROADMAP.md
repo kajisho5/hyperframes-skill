@@ -23,7 +23,7 @@ Not reachable from the agent. Calls ffmpeg/ffprobe directly, bypassing ffmpeg-sk
 
 - [x] **1. provides[] + dependencies in the contract**
   - Done when: OS conformance
-- [ ] **2. Release workflow; cut 0.6.0** — npm + tag
+- [x] **2. Release workflow; cut 0.6.0** — npm + tag ([#12](https://github.com/kajisho5/hyperframes-skill/pull/12))
   - Done when: tag produces a release
 - [ ] **3. Verify outputs with ffmpeg-skill when present** — probe/check; ADR on the engine bypass
   - Done when: render result reports ffmpeg-skill verification

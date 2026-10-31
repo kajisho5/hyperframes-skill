@@ -1,0 +1,47 @@
+# Read by two things, neither of which lets release-drafter create or edit a GitHub Release:
+#   .github/workflows/autolabel.yml  labels each PR from `autolabeler` below as it is opened or
+#                                    updated, so it carries a label before it merges.
+#   .github/scripts/release.mjs      maps the labels of the PRs merged since the last vX.Y.Z tag
+#                                    to a bump through `version-resolver` below (highest wins).
+#                                    Keep each `labels:` list inline: that is the shape it parses,
+#                                    and tests/release.test.mjs fails if it stops parsing.
+name-template: 'v$RESOLVED_VERSION'
+tag-template: 'v$RESOLVED_VERSION'
+
+version-resolver:
+  major:
+    labels: ['major', 'breaking']
+  minor:
+    labels: ['minor', 'feature', 'enhancement']
+  patch:
+    labels: ['patch', 'fix', 'bug', 'chore', 'ci', 'documentation', 'docs']
+  default: patch
+
+# `major` / `breaking` is never applied from title or body text: the autolabeler runs on
+# pull_request_target, so a fork's PR controls its title, and a label added once is not removed
+# when the title is edited. A maintainer applies `major` by hand when a change is actually
+# breaking (docs/contract.md: while the major version is 0 a breaking change is a minor bump,
+# so `minor` is the label for that today).
+autolabeler:
+  - label: 'feature'
+    title:
+      - '/^feat(\(.+\))?:/i'
+  - label: 'fix'
+    title:
+      - '/^fix(\(.+\))?:/i'
+  - label: 'documentation'
+    title:
+      - '/^docs(\(.+\))?:/i'
+  - label: 'ci'
+    title:
+      - '/^ci(\(.+\))?:/i'
+    files:
+      - '.github/**'
+  - label: 'chore'
+    title:
+      - '/^(chore|build|deps|test)(\(.+\))?:/i'
+
+template: |
+  ## What's Changed
+
+  $CHANGES

@@ -3,7 +3,7 @@
 All notable changes. The stability guarantee and deprecation policy are in
 [docs/contract.md](docs/contract.md).
 
-## 0.6.0 (unreleased)
+## 0.6.0
 
 ### Added
 
@@ -12,6 +12,11 @@ All notable changes. The stability guarantee and deprecation policy are in
   and returns its result document as text and `structuredContent`, `isError` exactly when
   `status` is not `completed`. The MCP surface is frozen by `tests/fixtures/mcp_tools.json`.
   `contract --json` gains `skill.entrypoints.mcp`.
+- Releases: `.github/workflows/release.yml` tags `vX.Y.Z`, creates the GitHub Release (notes
+  from this file) and publishes to npm when the `NPM` secret is set, after CI passes on a push to
+  `main`. The first release tags `package.json`'s version as it stands (0.6.0); after that, the
+  labels of the PRs merged since the last tag pick the bump (`.github/release-drafter.yml`,
+  applied by `.github/workflows/autolabel.yml`).
 
 ## 0.5.0
 

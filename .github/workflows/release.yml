@@ -1,0 +1,123 @@
+name: Release
+
+# Runs once CI has finished on a push to main, so every release is a commit CI already verified
+# (real Chrome + ffmpeg renders on Ubuntu and macOS). head_branch alone is not enough: it is a
+# pull request's *source* branch name, and a fork can call its branch "main". The job `if:` also
+# requires the CI run to come from a push event in this repository, so a fork's code is never
+# checked out here with contents: write or the npm token (artifacts-skill #66).
+#
+# One job does everything (decide, bump, tag, GitHub Release, npm): a tag or commit pushed with
+# the default GITHUB_TOKEN does not start other workflows, so a tag-triggered second half would
+# never run.
+#
+# What gets released (.github/scripts/release.mjs, docs/design-decisions.md D1):
+#   - package.json's version not tagged yet -> that version, unchanged (the first release: 0.6.0)
+#   - already tagged and PRs merged since    -> their labels pick major / minor / patch
+#                                               (.github/release-drafter.yml `version-resolver`)
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false   # queue, never cancel a release partway through
+
+jobs:
+  release:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write        # push the tag (and the release commit), create the GitHub Release
+      pull-requests: read    # read the labels of merged PRs
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0     # every tag and the history since the newest one
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      - name: Decide what this push releases
+        id: plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node .github/scripts/release.mjs plan
+
+      - name: Bump (label-decided releases only), tag and push
+        if: steps.plan.outputs.tag_needed == 'true'
+        env:
+          MODE: ${{ steps.plan.outputs.mode }}
+          VERSION: ${{ steps.plan.outputs.version }}
+        run: |
+          set -eu
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [ "$MODE" = "auto" ]; then
+            node .github/scripts/release.mjs bump "$VERSION"
+            git add package.json package-lock.json docs/contract.md CHANGELOG.md
+            git commit -m "chore(release): v$VERSION"
+          fi
+          git tag -a "v$VERSION" -m "v$VERSION"
+          if [ "$MODE" = "auto" ]; then
+            # atomic: if main moved on since this CI run, neither the commit nor the tag lands;
+            # the next push's CI run releases instead
+            git push --atomic origin HEAD:refs/heads/main "refs/tags/v$VERSION"
+          else
+            git push origin "refs/tags/v$VERSION"
+          fi
+
+      # Idempotent, and runs even when nothing new was tagged, so a re-run repairs a tag that was
+      # pushed but never got its Release.
+      - name: Create the GitHub Release, if missing
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.plan.outputs.version }}
+        run: |
+          set -eu
+          tag="v$VERSION"
+          if ! git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null; then
+            echo "$tag is not tagged; no Release to create."
+            exit 0
+          fi
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "$tag already has a Release."
+            exit 0
+          fi
+          node .github/scripts/release.mjs notes "$VERSION" > "$RUNNER_TEMP/release-notes.md"
+          gh release create "$tag" --verify-tag --title "$tag" --notes-file "$RUNNER_TEMP/release-notes.md"
+
+      # Optional: without the NPM secret the tag and GitHub Release above still happen. Idempotent
+      # (checks the registry first), so adding the secret later publishes the pending version on
+      # the next push to main.
+      - name: Publish to npm, if configured and not published yet
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM }}
+          VERSION: ${{ steps.plan.outputs.version }}
+        run: |
+          set -eu
+          if [ -z "${NODE_AUTH_TOKEN:-}" ]; then
+            echo "The NPM secret is not set; skipping npm publish."
+            exit 0
+          fi
+          # publish only the exact tree that carries the tag
+          if [ "$(git rev-parse -q --verify "refs/tags/v$VERSION^{commit}" || true)" != "$(git rev-parse HEAD)" ]; then
+            echo "HEAD is not the commit tagged v$VERSION; nothing to publish."
+            exit 0
+          fi
+          if npm view "hyperframes-skill@$VERSION" version >/dev/null 2>&1; then
+            echo "hyperframes-skill@$VERSION is already on npm."
+            exit 0
+          fi
+          npm publish --ignore-scripts

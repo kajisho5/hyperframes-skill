@@ -209,6 +209,10 @@ UPDATE_SNAPSHOT=1 node --test tests/contract.test.mjs   # after deliberately add
 See [CONTRIBUTING.md](CONTRIBUTING.md) for scope, the docs-surfaces rule and the SKILL.md byte
 budget, and [CHANGELOG.md](CHANGELOG.md).
 
+Releases are cut by CI: when CI passes on a push to `main`, `.github/workflows/release.yml` tags
+`vX.Y.Z`, creates the GitHub Release and, if the `NPM` secret is set, publishes the package to npm.
+How the version is chosen is in [CONTRIBUTING.md](CONTRIBUTING.md#releases).
+
 ## License
 
 MIT
