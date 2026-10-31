@@ -3,7 +3,7 @@
 All notable changes. The stability guarantee and deprecation policy are in
 [docs/contract.md](docs/contract.md).
 
-## Unreleased
+## 0.6.2
 ### Changed
 
 - Windows is supported (roadmap step 4): `render` / `preview` no longer generate POSIX `sh` shims to
