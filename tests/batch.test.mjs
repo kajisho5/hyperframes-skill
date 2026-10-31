@@ -4,7 +4,7 @@ import { existsSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { test } from "node:test";
 import { loadRows, parseCsv, slug } from "../lib/rows.mjs";
-import { SKIP_RENDER, tmp, tool, writeExe, writeJson } from "./helpers.mjs";
+import { SKIP_RENDER, fakeTools, tmp, tool, writeJson } from "./helpers.mjs";
 
 test("CSV: RFC 4180 quoting, CRLF, embedded newlines and commas", () => {
   assert.deepEqual(parseCsv('a,b\r\n"x, y","say ""hi"""\r\n"two\nlines",\n'), [
@@ -97,14 +97,15 @@ test("batch renders one verified file per row and refuses to overwrite them", { 
 test("a failing row is reported as failed, the batch as failed, and --fail-fast skips the rest", { skip: SKIP_RENDER }, () => {
   const dir = tmp();
   const rows = writeJson(join(dir, "rows.json"), [{ message: "A", duration: 1 }, { message: "B", duration: 1 }]);
-  const chrome = writeExe(join(dir, "chrome"), "#!/bin/sh\nexit 1\n");
-  const r = tool("batch", [rows, "--template", "break", "-o", join(dir, "out"), "--fail-fast", "--json"], { env: { HYPERFRAMES_BROWSER_PATH: chrome } });
+  const f = fakeTools([{ name: "chrome", exit: 1 }], dir);
+  const env = { ...f.env, HYPERFRAMES_BROWSER_PATH: f.rules[0].path };
+  const r = tool("batch", [rows, "--template", "break", "-o", join(dir, "out"), "--fail-fast", "--json"], { env });
   assert.equal(r.code, 1);
   assert.equal(r.doc.status, "failed");
   assert.equal(r.doc.error.kind, "render");
   assert.equal(r.doc.verified, false);
   assert.deepEqual(r.doc.summary, { total: 2, completed: 0, failed: 1, skipped: 1 });
   assert.deepEqual(r.doc.rows.map((x) => x.status), ["failed", "skipped"]);
-  const all = tool("batch", [rows, "--template", "break", "-o", join(dir, "out2"), "--json"], { env: { HYPERFRAMES_BROWSER_PATH: chrome } });
+  const all = tool("batch", [rows, "--template", "break", "-o", join(dir, "out2"), "--json"], { env });
   assert.deepEqual(all.doc.summary, { total: 2, completed: 0, failed: 2, skipped: 0 }, "without --fail-fast every row is attempted");
 });

@@ -13,6 +13,8 @@ const SERIF_CANDIDATES = [
   "/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf",
   "/System/Library/Fonts/Supplemental/Times New Roman.ttf",
   "/System/Library/Fonts/Supplemental/Georgia.ttf",
+  "C:\\Windows\\Fonts\\georgia.ttf",
+  "C:\\Windows\\Fonts\\times.ttf",
 ];
 
 function serifFont() {

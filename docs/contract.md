@@ -84,7 +84,7 @@ CHANGELOG line.
             "entrypoints": {"cli": "...", "scripts": "...", "contract": "...", "doctor": "..."},
             "not_provided": ["AI reasoning", "creative or compositional decisions", "..."]},
   "requirements": {"node": ">=22", "hyperframes": "0.8.61", "chromium": "...", "ffmpeg": ">=5.0", "ffprobe": ">=5.0"},
-  "execution": {"shell": false, "arbitrary_executables": false, "network": false, "input_mutation": false, "telemetry": false, "argv_shims": "..."},
+  "execution": {"shell": false, "arbitrary_executables": false, "network": false, "input_mutation": false, "telemetry": false, "argv_recorder": "..."},
   "exit_codes": {...}, "error": {"kinds": {...}, "retryable": false},
   "tools": [ToolSpec, ...]
 }
@@ -108,10 +108,12 @@ on Linux by rendering inside a network namespace with only loopback up (`unshare
 render succeeds and is byte-identical to the networked one. CI repeats that on Linux
 (`.github/workflows/ci.yml`, "Render with no network"); macOS is not checked.
 
-`execution.argv_shims`: `render` and `preview` point HyperFrames at generated POSIX `sh` shims
-for chrome, ffmpeg and ffprobe that write their argv to a log and run the real binary with
-`"$@"`. That is how `commands` carries the argv that actually ran. No user string is evaluated
-by a shell.
+`execution.argv_recorder`: `render` and `preview` run HyperFrames as
+`node --require lib/argv-recorder.cjs <hyperframes cli> render ...` (and put the same preload in
+`NODE_OPTIONS`). Inside HyperFrames the preload wraps `child_process`: for each chrome, ffmpeg or
+ffprobe process HyperFrames starts, it writes the argv to a log, then starts the process unchanged.
+That is how `commands` carries the argv that actually ran, on Linux, macOS and Windows alike
+(design-decisions D10). No user string is evaluated by a shell, and no script is generated.
 
 ## ToolSpec
 
@@ -218,11 +220,11 @@ from the CLI or any later MCP server.
 | `verification[]` | `{step, ok, expected?, actual?, detail?}`: render/preview: `exists`, `probe`, `codec`, `resolution`, `fps`, `frames`, `duration`, `input_preserved`, then for render `ffmpeg_skill` only when `ffmpeg_skill.status` is `PASSED` or `FAILED`; scene: `exists`, `assets_copied` (only with assets), `declared_values`, `hyperframes_lint` | a step listed that did not run |
 | `error.kind` | see below | a generic catch-all |
 | `error.retryable` | always `false` | `true` invites a blind retry loop |
-| `commands[]` | `{program, argv, exit_code, via?, role?}` for every process that ran, in start order: the hyperframes CLI, then each chrome/ffmpeg/ffprobe process it started (`via: "hyperframes"`, `role` = which shim), then this skill's own ffprobe, then (render, when present) ffmpeg-skill's probe (`role: "ffmpeg-skill/probe"`) | a command that wasn't the one executed |
+| `commands[]` | `{program, argv, exit_code, via?, role?}` for every process that ran, in start order: the hyperframes CLI, then each chrome/ffmpeg/ffprobe process it started (`via: "hyperframes"`, `role` = `chrome` / `ffmpeg` / `ffprobe`); `program` is the executable's file name without a Windows `.exe`, then this skill's own ffprobe, then (render, when present) ffmpeg-skill's probe (`role: "ffmpeg-skill/probe"`) | a command that wasn't the one executed |
 | `ffmpeg_skill` (render) | `PASSED` / `FAILED` / `UNCHECKED` from reading the output back through ffmpeg-skill/probe (`lib/ffmpeg-skill.mjs`, design-decisions D3), with `skill.version`, `measured`, `checks[]`; `UNCHECKED` always has a `reason` and adds no `verification[]` step | `PASSED` without ffmpeg-skill having run |
 
-`exit_code` inside `commands` is `null` for chrome: its shim `exec`s the browser so HyperFrames
-can manage the process directly, which leaves no place to observe its exit status.
+`exit_code` inside `commands` is `null` for chrome: HyperFrames ends the browser itself at the end
+of every render, so its exit status says nothing about the render and is not recorded.
 
 `error.kind`:
 

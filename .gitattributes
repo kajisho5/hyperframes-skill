@@ -1,0 +1,6 @@
+# LF everywhere, Windows checkouts included: snapshots, JSON fixtures and workflow files are compared byte for byte
+* text=auto eol=lf
+*.png binary
+*.ttf binary
+*.woff2 binary
+*.mp4 binary

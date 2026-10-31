@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { chmodSync, mkdtempSync, readdirSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -41,10 +41,22 @@ export function writeJson(path, obj) {
   return path;
 }
 
-export function writeExe(path, text) {
-  writeFileSync(path, text);
-  chmodSync(path, 0o755);
-  return path;
+/**
+ * Fake chrome / ffmpeg / ffprobe on every OS (tests/fixtures/fake-spawn.cjs): `rules` are
+ * {name, path, when?, log?, exit?, stderr?}. Returns the environment that loads the double into the
+ * skill and every HyperFrames process it starts. A rule without `path` gets a placeholder file
+ * (it exists, so the skill accepts the setting, and is never executed: the double runs instead).
+ */
+export function fakeTools(rules, dir = tmp("hfs-fake-")) {
+  const done = rules.map((r) => {
+    if (r.path) return r;
+    const path = join(dir, r.name + (process.platform === "win32" ? ".exe" : ""));
+    writeFileSync(path, "placeholder: tests/fixtures/fake-spawn.cjs runs instead\n");
+    return { ...r, path };
+  });
+  const hook = join(FIXTURES, "fake-spawn.cjs");
+  const nodeOptions = [process.env.NODE_OPTIONS, `--require ${JSON.stringify(hook)}`].filter(Boolean).join(" ");
+  return { rules: done, env: { NODE_OPTIONS: nodeOptions, HYPERFRAMES_SKILL_TEST_FAKES: JSON.stringify(done) } };
 }
 
 export function listTree(dir) {
