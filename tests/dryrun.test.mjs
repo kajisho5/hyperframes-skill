@@ -6,13 +6,15 @@ import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { test } from "node:test";
 import { buildContract } from "../lib/contract.mjs";
-import { FIXTURES, listTree, tmp, tool, writeExe } from "./helpers.mjs";
+import { FIXTURES, fakeTools, listTree, tmp, tool } from "./helpers.mjs";
 
+// fake chrome / ffmpeg / ffprobe that log every call and exit 0, on every OS (tests/fixtures/fake-spawn.cjs)
 function fakes() {
   const dir = tmp("hfs-fake-");
   const log = join(dir, "calls");
-  const mk = (name) => writeExe(join(dir, name), `#!/bin/sh\necho "${name} $*" >> "${log}"\nexit 0\n`);
-  return { dir, log, env: { HYPERFRAMES_BROWSER_PATH: mk("chrome"), HYPERFRAMES_SKILL_FFMPEG: mk("ffmpeg"), HYPERFRAMES_SKILL_FFPROBE: mk("ffprobe") } };
+  const f = fakeTools(["chrome", "ffmpeg", "ffprobe"].map((name) => ({ name, log, exit: 0 })), dir);
+  const at = Object.fromEntries(f.rules.map((r) => [r.name, r.path]));
+  return { dir, log, env: { ...f.env, HYPERFRAMES_BROWSER_PATH: at.chrome, HYPERFRAMES_SKILL_FFMPEG: at.ffmpeg, HYPERFRAMES_SKILL_FFPROBE: at.ffprobe } };
 }
 
 const calls = (f) => (existsSync(f.log) ? readFileSync(f.log, "utf8").trim().split("\n") : []);

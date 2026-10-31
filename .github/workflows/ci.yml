@@ -17,8 +17,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Windows is deferred: the argv-recording shims are POSIX sh (README, "What is verified").
-        os: [ubuntu-latest, macos-latest]
+        # Windows since roadmap step 4: the argv of what HyperFrames starts is recorded by a Node preload
+        # (lib/argv-recorder.cjs, docs/design-decisions.md D10), not by POSIX sh shims.
+        os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     steps:
@@ -33,16 +34,30 @@ jobs:
       - name: Install ffmpeg (macOS)
         if: runner.os == 'macOS'
         run: brew install ffmpeg
+      - name: Install ffmpeg (Windows)
+        if: runner.os == 'Windows'
+        run: choco install ffmpeg -y --no-progress
+      # ffmpeg-skill's probe.py runs on Python; on Windows `python3` may be a Store alias, so the
+      # interpreter is named explicitly (HYPERFRAMES_SKILL_PYTHON, lib/ffmpeg-skill.mjs)
+      - uses: actions/setup-python@v5
+        if: runner.os == 'Windows'
+        with:
+          python-version: "3.12"
+      - name: Point the ffmpeg-skill cross-check at that Python (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: echo "HYPERFRAMES_SKILL_PYTHON=$(python -c 'import sys; print(sys.executable)')" >> "$GITHUB_ENV"
       - run: npm ci
       # ffmpeg-skill is optional at run time; CI pins a release so render's cross-check
       # (ffmpeg_skill.status, docs/design-decisions.md D3) runs for real. Read-only use.
       - name: Check out ffmpeg-skill (pinned) for the cross-check
+        shell: bash
         env:
           FFMPEG_SKILL_TAG: v2.23.1
         run: |
           set -eu
           git clone --quiet --depth 1 --branch "$FFMPEG_SKILL_TAG" https://github.com/kajisho5/ffmpeg-skill "$RUNNER_TEMP/ffmpeg-skill"
-          python3 --version
+          "${HYPERFRAMES_SKILL_PYTHON:-python3}" --version
           echo "HYPERFRAMES_SKILL_FFMPEG_SKILL_DIR=$RUNNER_TEMP/ffmpeg-skill" >> "$GITHUB_ENV"
       - name: Install HyperFrames' chrome-headless-shell
         run: npx hyperframes browser ensure

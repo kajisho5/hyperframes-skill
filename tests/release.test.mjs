@@ -74,20 +74,25 @@ test("bump writes every place the version is stated, and leaves the rest of the 
   // assertions below are about bumpFiles, not about what happens to be unreleased today.
   files["CHANGELOG.md"] = files["CHANGELOG.md"].replace(/^## Unreleased\s*\n[\s\S]*?(?=^## )/m, "");
   assert.doesNotMatch(files["CHANGELOG.md"], /^## Unreleased/m);
+  // the repository's own version, whatever release it is at (it moves with every release), and the next patch
+  const from = JSON.parse(files["package.json"]).version;
+  const [maj, min, pat] = from.split(".").map(Number);
+  const to = `${maj}.${min}.${pat + 1}`;
   // round trip: same version in, nothing changes
-  assert.deepEqual(bumpFiles(files, "0.6.0", JSON.parse(files["package.json"]).version), {});
-  const withUnreleased = { ...files, "CHANGELOG.md": files["CHANGELOG.md"].replace("## 0.6.0\n", "## Unreleased\n\n- something\n\n## 0.6.0\n") };
-  const out = bumpFiles(withUnreleased, "0.6.0", "0.6.1");
-  assert.equal(JSON.parse(out["package.json"]).version, "0.6.1");
+  assert.deepEqual(bumpFiles(files, from, from), {});
+  const withUnreleased = { ...files, "CHANGELOG.md": files["CHANGELOG.md"].replace(`## ${from}\n`, `## Unreleased\n\n- something\n\n## ${from}\n`) };
+  assert.match(withUnreleased["CHANGELOG.md"], /^## Unreleased$/m, "the CHANGELOG has a section for the current version");
+  const out = bumpFiles(withUnreleased, from, to);
+  assert.equal(JSON.parse(out["package.json"]).version, to);
   const lock = JSON.parse(out["package-lock.json"]);
-  assert.equal(lock.version, "0.6.1");
-  assert.equal(lock.packages[""].version, "0.6.1");
+  assert.equal(lock.version, to);
+  assert.equal(lock.packages[""].version, to);
   const changed = out["package-lock.json"].split("\n").filter((l, i) => l !== files["package-lock.json"].split("\n")[i]);
-  assert.deepEqual(changed, ['  "version": "0.6.1",', '      "version": "0.6.1",'], "only the two root version lines change");
-  assert.match(out["docs/contract.md"], /package\.json version \(`0\.6\.1`\)/);
-  assert.doesNotMatch(out["docs/contract.md"], /"version": "0\.6\.0"/);
-  assert.match(out["CHANGELOG.md"], /^## 0\.6\.1$/m);
-  assert.equal(changelogSection(out["CHANGELOG.md"], "0.6.1"), "- something");
+  assert.deepEqual(changed, [`  "version": "${to}",`, `      "version": "${to}",`], "only the two root version lines change");
+  assert.ok(out["docs/contract.md"].includes(`package.json version (\`${to}\`)`));
+  assert.ok(!out["docs/contract.md"].includes(`"version": "${from}"`));
+  assert.ok(out["CHANGELOG.md"].split("\n").includes(`## ${to}`));
+  assert.equal(changelogSection(out["CHANGELOG.md"], to), "- something");
 });
 
 test("plan and notes against a throwaway git repository", () => {

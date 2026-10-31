@@ -6,7 +6,7 @@ import { existsSync, symlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { test } from "node:test";
 import { classifyFailure, hyperframesFailureMessage } from "../lib/render-core.mjs";
-import { FIXTURES, ROOT, SKIP_RENDER, tmp, tool, writeExe } from "./helpers.mjs";
+import { FIXTURES, ROOT, SKIP_RENDER, fakeTools, tmp, tool } from "./helpers.mjs";
 import { which } from "../lib/deps.mjs";
 
 function scene() {
@@ -59,8 +59,8 @@ test("missing_tool: exit 127 when ffmpeg, ffprobe or Chromium is absent", () => 
 
 test("render: a Chrome that cannot start is kind render, never completed", { skip: SKIP_RENDER }, () => {
   const dir = scene();
-  const chrome = writeExe(join(dir, "chrome"), "#!/bin/sh\necho 'fake chrome failure' >&2\nexit 1\n");
-  const r = tool("render", [join(dir, "scene"), "-o", join(dir, "o.mp4"), "--json"], { env: { HYPERFRAMES_BROWSER_PATH: chrome } });
+  const f = fakeTools([{ name: "chrome", exit: 1, stderr: "fake chrome failure" }], dir);
+  const r = tool("render", [join(dir, "scene"), "-o", join(dir, "o.mp4"), "--json"], { env: { ...f.env, HYPERFRAMES_BROWSER_PATH: f.rules[0].path } });
   assertFailed(r, "render", 1);
   assert.match(r.doc.error.message, /Chrome cannot start/);
   assert.equal(r.doc.commands[0].exit_code, 1);
@@ -68,12 +68,10 @@ test("render: a Chrome that cannot start is kind render, never completed", { ski
 
 test("encode: ffmpeg failing on the frame stream is kind encode", { skip: SKIP_RENDER }, () => {
   const dir = scene();
+  // the real ffmpeg, except the encode of the frame stream (image2pipe), which fails
   const real = which("ffmpeg");
-  const ff = writeExe(
-    join(dir, "ffmpeg"),
-    `#!/bin/sh\nfor a in "$@"; do if [ "$a" = image2pipe ]; then cat >/dev/null; echo 'fake encode failure' >&2; exit 1; fi; done\nexec '${real}' "$@"\n`,
-  );
-  const r = tool("render", [join(dir, "scene"), "-o", join(dir, "o.mp4"), "--json"], { env: { HYPERFRAMES_SKILL_FFMPEG: ff } });
+  const f = fakeTools([{ name: "ffmpeg", path: real, when: "image2pipe", exit: 1, stderr: "fake encode failure" }], dir);
+  const r = tool("render", [join(dir, "scene"), "-o", join(dir, "o.mp4"), "--json"], { env: { ...f.env, HYPERFRAMES_SKILL_FFMPEG: real } });
   assertFailed(r, "encode", 1);
   assert.deepEqual(r.doc.details.classification, { hyperframes_message_names_encode: true, ffmpeg_nonzero_exits: [1] });
 });
@@ -94,7 +92,11 @@ test("timeout: exit 124, kind timeout, the process group is killed", { skip: SKI
   assertFailed(r, "timeout", 124);
 });
 
-test("interrupted: SIGTERM gives exit 143 and a failure document", { skip: SKIP_RENDER }, async () => {
+// POSIX only: Windows has no signal delivery to a handler (Node's child.kill() ends a Windows process
+// unconditionally, so no process can report an interruption there); the interrupt path itself is the same code.
+const NO_SIGNALS = process.platform === "win32" ? "Windows delivers no SIGTERM to a handler" : false;
+
+test("interrupted: SIGTERM gives exit 143 and a failure document", { skip: SKIP_RENDER || NO_SIGNALS }, async () => {
   const dir = scene();
   const child = spawn(process.execPath, [join(ROOT, "scripts", "render.mjs"), join(dir, "scene"), "-o", join(dir, "o.mp4"), "--json"], { stdio: ["ignore", "pipe", "pipe"] });
   let out = "";

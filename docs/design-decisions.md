@@ -53,8 +53,8 @@ Format:
   "Wiring"): this skill "calls ffmpeg/ffprobe directly, bypassing ffmpeg-skill", the ecosystem's
   engine for every media operation.
 - **Decision:** the render path stays as it is: the pinned `hyperframes` CLI captures frames in
-  headless Chrome and pipes them into the ffmpeg it launches itself (through the argv-recording
-  shims, so `commands` shows the real encode). The gap is closed on the output side instead:
+  headless Chrome and pipes them into the ffmpeg it launches itself (through the argv recorder,
+  D10, so `commands` shows the real encode). The gap is closed on the output side instead:
   after every real `render`, when an ffmpeg-skill checkout is present, `lib/ffmpeg-skill.mjs` runs
   ffmpeg-skill's own probe on the file (`python3 <dir>/scripts/probe.py --json -- <output>`, no
   shell, ffmpeg-skill never imported or modified) and compares codec, resolution, fps, duration
@@ -96,3 +96,36 @@ Format:
 - **Pinned by:** `tests/ffmpeg-skill.test.mjs` (present → measured fields and `PASSED`; a
   mismatch → `FAILED` and a failed `kind: verification` render; absent → `UNCHECKED`; empty and
   corrupt files → `FAILED`, not a crash) and the end-to-end test in `tests/render.test.mjs`.
+
+## D10. What HyperFrames starts is recorded by a Node preload inside HyperFrames, not by generated shell shims
+
+- **Reported as:** the roadmap's step 4 ([ECOSYSTEM_ROADMAP.md](../ECOSYSTEM_ROADMAP.md)): Windows is unsupported
+  because the argv-recording shims are POSIX `sh`, and there is no Windows CI.
+- **Decision:** `render` / `preview` point HyperFrames at the real chrome / ffmpeg / ffprobe and run it as
+  `node --require lib/argv-recorder.cjs <hyperframes cli> render ...`, with the same preload in `NODE_OPTIONS`.
+  The preload wraps `child_process.spawn` / `spawnSync` / `execFile` / `execFileSync` / `fork`, then
+  `syncBuiltinESMExports()` so HyperFrames' ES-module imports see the wrappers.
+  - For a child whose executable is one of the three paths (matched resolved, case-insensitively on Windows, and
+    under its real path too), it writes the argv as `<ns>-<pid>-<seq>-<role>.argv`, NUL-separated, before the
+    process starts. These are the same files the shims wrote, so `readArgvLog()` and `commands[]` are unchanged.
+  - For ffmpeg and ffprobe it also writes `.rc` with the exit status (128 + n for a signal, as the shell's `$?` was).
+  - Nothing about the call changes: the same function gets the same arguments.
+  - A process that loads the preload twice installs it once.
+  - On Windows a timeout or an interrupt ends the tree with `taskkill /T`, and `/F` for the final kill.
+  - `commands[].program` drops `.exe`.
+- **Why:** a generated `sh` script cannot be started on Windows, and a `.cmd` wrapper cannot either. Node refuses to
+  spawn `.bat` / `.cmd` without a shell (the 2024 security fix), and a shell is exactly what this skill never uses.
+  A wrapper executable would need a compiler or a copy of Node per tool. The preload needs neither: HyperFrames is
+  already a Node process this skill starts, and the record is made where the call is made, from the argv array
+  itself, with no quoting layer in between. The alternatives were worse:
+  - Keeping the shims on POSIX and the preload on Windows would mean two code paths to keep equal.
+  - Recording nothing on Windows would make `commands[]` untrue there.
+  - HyperFrames' own logs are not argv.
+  The preload sees only processes started through those five functions. `exec` / `execSync` take a shell command
+  line, which is not an argv, and HyperFrames does not start these binaries that way: the end-to-end render test
+  requires the chrome and the frame-encoding ffmpeg (`image2pipe`) argv in `commands`, on every CI OS.
+- **Pinned by:** `tests/render.test.mjs` ("end to end": the hyperframes argv carries `--require <recorder>`, and the
+  recorded roles include chrome and the image2pipe ffmpeg with exit 0), `tests/failures.test.mjs` (a failing encode
+  is classified from the recorded ffmpeg exit 1), and CI on `ubuntu-latest`, `macos-latest` and `windows-latest`.
+  The tests' fake chrome / ffmpeg are `tests/fixtures/fake-spawn.cjs`, a Node double loaded through
+  `NODE_OPTIONS`, for the same reason.

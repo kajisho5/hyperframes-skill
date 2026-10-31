@@ -61,4 +61,5 @@ If a request needs something the five tools do not expose (audio, animation beyo
 - Fonts: HyperFrames injects `@font-face` rules for families it bundles (it did for `sans-serif` in testing); any other family depends on the machine's fonts. Byte-identical output is promised on the same machine and toolchain, not across machines.
 - `kind: render` = page load or capture failed; `kind: encode` = HyperFrames reported the ffmpeg encode failed and a recorded ffmpeg exited non-zero; `timeout` (exit 124) = `--timeout` hit, Chrome and ffmpeg were killed.
 - CJK text: ship the font. `lang` alone does **not** pick Japanese glyph forms: with system fonts, fontconfig may give Japanese the same (Chinese) font it gives Chinese, and 直 骨 写 then render in Chinese forms (seen on Ubuntu with WenQuanYi + IPAGothic installed). Use `--font FILE` on `template` / `batch`, or the request's `fonts`; `doctor` reports what fontconfig picks per language and warns about this. One font file serves every weight (no synthesized bold): pass a Bold file for bold text.
-- Windows is not supported in this release (the argv-recording shims are POSIX sh).
+- Linux, macOS and Windows (Windows covered by CI only). On Windows, a timeout or an interrupt
+  ends the whole render tree with `taskkill /T`.

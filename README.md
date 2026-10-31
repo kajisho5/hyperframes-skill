@@ -205,7 +205,10 @@ and macOS:
 
 Not verified (said plainly rather than claimed):
 
-- **Windows**: not supported in this release (the argv shims are POSIX sh); no Windows CI.
+- **Windows**: covered only by CI (`windows-latest`: ffmpeg from Chocolatey, chrome-headless-shell
+  from `hyperframes browser ensure`); never run on a Windows machine by hand. The SIGTERM test is
+  POSIX-only (Windows delivers no signal to a handler); a timeout ends the process tree with
+  `taskkill /T`.
 - **Offline rendering** is checked on Linux only (by hand, and by a CI step that renders inside a
   network namespace with only loopback up and compares the file with a networked render); not on macOS.
 - **macOS**: covered only by CI (installs ffmpeg with Homebrew and chrome-headless-shell with

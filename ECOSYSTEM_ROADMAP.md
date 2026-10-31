@@ -5,7 +5,7 @@ Written from a read-only audit of this repository on 2026-10-30. Each step below
 
 ## Where it stands
 
-v0.6.0 (CHANGELOG says unreleased; no release workflow). Node 22. batch, doctor, preview, probe, render (h264/vp9/ProRes 4444 alpha), scene, template. 76 tests, CI on Ubuntu + macOS (no Windows).
+v0.6.0 (CHANGELOG says unreleased; no release workflow). Node 22. batch, doctor, preview, probe, render (h264/vp9/ProRes 4444 alpha), scene, template. 76 tests, CI on Ubuntu + macOS, and Windows since [#14](https://github.com/kajisho5/hyperframes-skill/pull/14).
 
 ## What this repository owns
 
@@ -27,7 +27,7 @@ Not reachable from the agent. Calls ffmpeg/ffprobe directly, bypassing ffmpeg-sk
   - Done when: tag produces a release
 - [x] **3. Verify outputs with ffmpeg-skill when present** — probe/check; ADR on the engine bypass ([#13](https://github.com/kajisho5/hyperframes-skill/pull/13))
   - Done when: render result reports ffmpeg-skill verification
-- [ ] **4. Windows** — replace sh argv shims with Node; Windows CI
+- [x] **4. Windows** — replace sh argv shims with Node; Windows CI ([#14](https://github.com/kajisho5/hyperframes-skill/pull/14), design-decisions D10)
   - Done when: CI green on Windows
 - [ ] **5. (agent side) SkillSpec html_scene_render** — output to video-editing concat or ffmpeg-skill overlay (alpha)
   - Done when: tracked in video-production-agent

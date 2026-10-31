@@ -3,6 +3,24 @@
 All notable changes. The stability guarantee and deprecation policy are in
 [docs/contract.md](docs/contract.md).
 
+## Unreleased
+### Changed
+
+- Windows is supported (roadmap step 4): `render` / `preview` no longer generate POSIX `sh` shims to
+  record what HyperFrames starts. HyperFrames now runs with a Node preload, `lib/argv-recorder.cjs`
+  (`node --require`, also in `NODE_OPTIONS` for any Node process it starts). The preload writes the
+  argv of every chrome / ffmpeg / ffprobe process HyperFrames starts, in the same log format as the
+  shims, so `commands[]` is unchanged in content ([docs/design-decisions.md D10](docs/design-decisions.md)).
+- The contract's `execution.argv_shims` is now `execution.argv_recorder`. The hyperframes entry of
+  `commands[]` starts `node --require <lib/argv-recorder.cjs> <hyperframes cli> render ...`.
+- `commands[].program` drops Windows' `.exe`, so a command reads the same on every OS.
+- On Windows a timeout or an interrupt ends the whole process tree with `taskkill /T` (there are no
+  process groups).
+- CI runs on `windows-latest` too (ffmpeg from Chocolatey, chrome-headless-shell from
+  `hyperframes browser ensure`, the ffmpeg-skill cross-check through the runner's Python).
+  The tests' fake chrome / ffmpeg are a Node double (`tests/fixtures/fake-spawn.cjs`) instead of
+  sh scripts. The SIGTERM test is POSIX-only: Windows has no signal delivery to a handler.
+
 ## 0.6.1
 ### Added
 

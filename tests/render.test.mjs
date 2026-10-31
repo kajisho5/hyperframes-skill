@@ -4,6 +4,7 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { test } from "node:test";
+import { ARGV_RECORDER } from "../lib/render-core.mjs";
 import { countPixels, ffmpeg, FIXTURES, frameRgb, listTree, SKIP_RENDER, tmp, tool, writeJson } from "./helpers.mjs";
 
 const sha = (f) => createHash("sha256").update(readFileSync(f)).digest("hex");
@@ -43,7 +44,8 @@ test("end to end: scene -> render -> probe on the two-line fixture", { skip: SKI
   );
   assert.deepEqual(d.expected, { width: 320, height: 180, duration: 1, fps: 30, frames: 30, codec: "h264", fps_source: "data-fps" });
   // commands: the hyperframes CLI, then what it really started, then our own probe
-  assert.equal(d.commands[0].argv[2], "render");
+  assert.deepEqual(d.commands[0].argv.slice(1, 3), ["--require", ARGV_RECORDER], "HyperFrames runs with the argv recorder (D10)");
+  assert.equal(d.commands[0].argv[4], "render");
   assert.equal(d.commands[0].exit_code, 0);
   const roles = d.commands.filter((c) => c.via === "hyperframes").map((c) => c.role);
   assert.ok(roles.includes("chrome") && roles.includes("ffmpeg"), roles.join(","));
