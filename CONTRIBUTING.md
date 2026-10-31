@@ -48,6 +48,8 @@ npm run test:fast # HYPERFRAMES_SKILL_SKIP_RENDER_TESTS=1: no Chrome
 - `tests/render.test.mjs`: real renders of small fixtures (320x180, 1 s), pixels checked, the
   determinism test (render twice, compare sha256 and per-frame md5).
 - `tests/scene.test.mjs`: request validation and markup.
+- `tests/release.test.mjs`: the release version decision (`.github/scripts/release.mjs`) and the
+  hardening of `release.yml` / `autolabel.yml` (SHA pins, permissions, no `${{ }}` in `run:`).
 
 A fix without a regression test that would have caught the original bug isn't done yet.
 Real renders in CI, not only mocked Chrome/ffmpeg: a change that breaks determinism is a defect
@@ -70,3 +72,25 @@ on the same level as a change to the frozen CLI surface.
   `docs/design-decisions.md` with the test that pins it.
 - State plainly which checks you ran and what you did not verify. An unrun check reported as
   passing is the same defect as an overstated result document.
+
+## Releases
+
+`package.json` is the one version source (`contract --json` reads it; the release commit also
+rewrites the example in `docs/contract.md`). `.github/workflows/release.yml` runs after CI passes
+on a push to `main` and calls `.github/scripts/release.mjs plan`:
+
+- `package.json`'s version has no `vX.Y.Z` tag yet: that version is tagged as it stands. This is
+  how the first release came out as 0.6.0, and how a hand bump in a PR is released as written.
+- It equals the newest tag and PRs merged since: their labels pick the bump, highest wins
+  (`.github/release-drafter.yml` `version-resolver`: `major`/`breaking` → major,
+  `minor`/`feature`/`enhancement` → minor, anything else or no label → patch). The workflow then
+  bumps `package.json`, `package-lock.json` and `docs/contract.md`, renames `## Unreleased` in
+  `CHANGELOG.md` to the version, and commits `chore(release): vX.Y.Z` with the tag.
+
+So: don't bump the version in a PR, put its entry under `## Unreleased` at the top of
+`CHANGELOG.md` (that section becomes the release notes; without one the notes are the commit
+subjects since the last tag), and check the label `autolabel.yml` gave the PR from its title
+(`feat:` → `feature`, `fix:` → `fix`, `docs:` → `documentation`, `ci:` → `ci`,
+`chore:`/`deps:`/`test:` → `chore`). A breaking change gets `minor` by hand while the major
+version is 0 (see "Stability guarantee" in `docs/contract.md`); `major` is never applied
+automatically.
