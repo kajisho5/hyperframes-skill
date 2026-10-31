@@ -3,7 +3,7 @@
 All notable changes. The stability guarantee and deprecation policy are in
 [docs/contract.md](docs/contract.md).
 
-## Unreleased
+## 0.6.3
 ### Changed
 
 - ffmpeg-skill 3.0.0 is accepted: the contract's `dependencies[0].version_range` is `>=2.0.0 <4.0.0`
