@@ -69,6 +69,11 @@ test("a hand bump in a PR is released as written, and an already-tagged older ve
 
 test("bump writes every place the version is stated, and leaves the rest of the lockfile byte-identical", () => {
   const files = Object.fromEntries(["package.json", "package-lock.json", "docs/contract.md", "CHANGELOG.md"].map((f) => [f, read(f)]));
+  // The repo's own CHANGELOG.md has an `## Unreleased` section whenever merged work awaits a
+  // release (CONTRIBUTING.md asks every PR to add one); start from the released state so the
+  // assertions below are about bumpFiles, not about what happens to be unreleased today.
+  files["CHANGELOG.md"] = files["CHANGELOG.md"].replace(/^## Unreleased\s*\n[\s\S]*?(?=^## )/m, "");
+  assert.doesNotMatch(files["CHANGELOG.md"], /^## Unreleased/m);
   // round trip: same version in, nothing changes
   assert.deepEqual(bumpFiles(files, "0.6.0", JSON.parse(files["package.json"]).version), {});
   const withUnreleased = { ...files, "CHANGELOG.md": files["CHANGELOG.md"].replace("## 0.6.0\n", "## Unreleased\n\n- something\n\n## 0.6.0\n") };
