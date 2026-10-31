@@ -175,6 +175,10 @@
         "cli": "--dry-run",
         "type": "boolean"
       },
+      "ffmpegSkill": {
+        "cli": "--ffmpeg-skill",
+        "type": "string"
+      },
       "fps": {
         "cli": "--fps",
         "type": "integer"

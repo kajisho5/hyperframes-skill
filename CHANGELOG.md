@@ -3,6 +3,30 @@
 All notable changes. The stability guarantee and deprecation policy are in
 [docs/contract.md](docs/contract.md).
 
+## Unreleased
+
+### Added
+
+- `render` cross-checks its output with ffmpeg-skill when a checkout is present (roadmap step 3;
+  [docs/design-decisions.md D3](docs/design-decisions.md), the engine bypass): it runs
+  `ffmpeg-skill/probe` on the file and reports `ffmpeg_skill` in the result: `status`
+  `PASSED` / `FAILED` / `UNCHECKED`, the ffmpeg-skill `version`, `measured` duration, resolution,
+  fps, codec, pixel format and alpha, and `checks[]` against what the scene asked for (alpha for
+  `--codec vp9` / `prores`). `PASSED` and `FAILED` add the `verification[]` step `ffmpeg_skill`
+  (`FAILED` fails the render with `kind: verification`); `UNCHECKED` always carries a `reason` and
+  adds no step, so it is never a pass. Found through `--ffmpeg-skill DIR`,
+  `HYPERFRAMES_SKILL_FFMPEG_SKILL_DIR`, `VIDEO_AGENT_FFMPEG_SKILL_DIR`,
+  `~/.claude/skills/ffmpeg-skill`, `./vendor/ffmpeg-skill` or a sibling checkout. Additive:
+  without ffmpeg-skill every existing result is unchanged apart from the new `ffmpeg_skill` key.
+- `doctor` reports the optional capability `ffmpeg-skill` (never affects `ok`); the contract's
+  `dependencies` lists ffmpeg-skill as optional (`required: false`).
+- CI checks out ffmpeg-skill v2.23.1 so the cross-check runs against a real checkout.
+
+### Known gaps (ffmpeg-skill, recorded in D3)
+
+- VP9 alpha is reported `UNCHECKED`: ffmpeg-skill's probe reports neither stream tags nor an alpha
+  field, and VP9 alpha lives in the `alpha_mode` tag.
+
 ## 0.6.0
 
 ### Added

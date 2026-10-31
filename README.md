@@ -43,6 +43,10 @@ present.
   `doctor` launches it headless to prove it works.
 - **ffmpeg and ffprobe >= 5.0** on PATH (or `HYPERFRAMES_SKILL_FFMPEG` / `HYPERFRAMES_SKILL_FFPROBE`),
   with `libx264` (default codec); `libvpx-vp9` for `--codec vp9`, `prores_ks` for `--codec prores`.
+- **ffmpeg-skill (optional)**: when a [ffmpeg-skill](https://github.com/kajisho5/ffmpeg-skill)
+  checkout and `python3` are found, `render` reads its output back through `ffmpeg-skill/probe`
+  (see "Cross-check with ffmpeg-skill" below). Not required; without it the result says
+  `UNCHECKED`.
 
 ## Install and first run
 
@@ -89,7 +93,7 @@ As an agent skill, point the agent at `SKILL.md` (it names the scripts relative 
 | `doctor` | `hyperframes-skill/doctor` | analysis | probes Node, hyperframes, ffmpeg/ffprobe + encoders, a headless Chromium launch, temp space |
 | `template` | `hyperframes-skill/template` | execution | fills a shipped template (lower-third, title-card, session-slate, break) with caller values → scene request |
 | `scene` | `hyperframes-skill/scene` | execution | structured scene request → HyperFrames scene directory (index.html + copied assets), linted |
-| `render` | `hyperframes-skill/render` | execution | scene directory → .mp4 (h264) / .webm (vp9) / .mov (ProRes 4444), probed and verified |
+| `render` | `hyperframes-skill/render` | execution | scene directory → .mp4 (h264) / .webm (vp9) / .mov (ProRes 4444), probed and verified; cross-checked with ffmpeg-skill/probe when present |
 | `probe` | `hyperframes-skill/probe` | analysis | ffprobe read-back: duration, resolution, fps, frame count, codecs |
 | `batch` | `hyperframes-skill/batch` | execution | one verified render per row of a CSV/JSON through a template (every speaker's lower third from the programme sheet) |
 | `preview` | `hyperframes-skill/preview` | execution | fast proxy render: 10 fps, draft encoder preset, optionally the first N seconds |
@@ -135,6 +139,37 @@ the stability guarantee and the deprecation policy.
 | Network | none: telemetry, update check and auto-install are off, Chromium is always given explicitly, URL sources are refused |
 | Determinism | same scene + flags on the same machine → byte-identical file (GPU capture off, SDR forced) |
 
+## Cross-check with ffmpeg-skill
+
+HyperFrames encodes with its own ffmpeg pipeline, not through ffmpeg-skill (the engine bypass:
+[docs/design-decisions.md D3](docs/design-decisions.md)). So after every real render, when an
+ffmpeg-skill checkout is present, `render` runs ffmpeg-skill's own probe on the file
+(`python3 <dir>/scripts/probe.py --json -- <output>`, recorded in `commands`) and reports
+`ffmpeg_skill` in the result:
+
+```json
+"ffmpeg_skill": {
+  "status": "PASSED",
+  "tool": "ffmpeg-skill/probe",
+  "skill": {"dir": "/home/me/ffmpeg-skill", "source": "sibling", "version": "2.23.1", "version_source": "package.json"},
+  "measured": {"duration": 1, "width": 320, "height": 180, "fps": 30, "codec": "h264", "pix_fmt": "yuv420p", "alpha": false, "frames": 30},
+  "checks": [{"check": "codec", "ok": true, "expected": "h264", "actual": "h264"}, "... resolution, fps, duration (and alpha for vp9 / prores)"]
+}
+```
+
+| `status` | When | Effect on the result |
+|---|---|---|
+| `PASSED` | ffmpeg-skill/probe read the file and codec, resolution, fps, duration (and alpha for `--codec vp9`/`prores`) match what the scene asked for | adds `verification[]` step `ffmpeg_skill`, `ok: true` |
+| `FAILED` | ffmpeg-skill/probe refused the file (corrupt, empty, no video stream) or measured a mismatch | adds the step with `ok: false`; the render fails with `kind: verification` |
+| `UNCHECKED` | no checkout found, no Python, ffmpeg-skill gave no usable result, or a property it cannot measure (VP9 alpha) — `reason` says which | no step: never counted as a pass, never as a failure |
+
+Where it is looked for, first hit wins: `--ffmpeg-skill DIR` (alone, never replaced by a
+fallback; not a checkout → `kind: input`), `HYPERFRAMES_SKILL_FFMPEG_SKILL_DIR`,
+`VIDEO_AGENT_FFMPEG_SKILL_DIR`, `~/.claude/skills/ffmpeg-skill`, `./vendor/ffmpeg-skill`, and
+`ffmpeg-skill` next to this checkout. Python: `HYPERFRAMES_SKILL_PYTHON`, else `python3` on PATH.
+`doctor` reports it as the optional capability `ffmpeg-skill`. `preview` and `batch` do not
+cross-check yet.
+
 ## What is verified, and what is not
 
 Run locally on Linux (Ubuntu 24.04, Node 22.22, ffmpeg 6.1.1, Playwright's
@@ -160,6 +195,11 @@ and macOS:
 - the MCP server over real stdio: initialize, tools/list equal to the contract, tools/call results
   equal to the tools' own documents, `isError` on failures, notifications unanswered, unknown
   arguments refused;
+- the ffmpeg-skill cross-check: a real render read back by a real ffmpeg-skill checkout (CI clones
+  a pinned tag) reports `PASSED`; a checkout whose probe disagrees fails the render with
+  `kind: verification`; tiny ffmpeg-made h264 / ProRes 4444 / VP9 files, an empty file and random
+  bytes read by the real ffmpeg-skill (`PASSED`, alpha seen in ProRes, VP9 alpha `UNCHECKED`,
+  corrupt `FAILED`); no checkout → `UNCHECKED`;
 - `--dry-run` of every tool behind recording fake binaries;
 - docs ↔ contract consistency and the frozen CLI surface.
 

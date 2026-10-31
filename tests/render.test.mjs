@@ -26,9 +26,20 @@ test("end to end: scene -> render -> probe on the two-line fixture", { skip: SKI
   const d = r.doc;
   assert.equal(d.status, "completed");
   assert.equal(d.verified, true);
+  // ffmpeg-skill's read-back (D3): PASSED when CI's pinned checkout is configured; otherwise
+  // whatever this machine has, but never FAILED, and UNCHECKED adds no step.
+  const ffs = d.ffmpeg_skill;
+  if (process.env.HYPERFRAMES_SKILL_FFMPEG_SKILL_DIR) {
+    assert.equal(ffs.status, "PASSED", JSON.stringify(ffs));
+    assert.deepEqual([ffs.measured.width, ffs.measured.height, ffs.measured.fps, ffs.measured.codec, ffs.measured.duration], [320, 180, 30, "h264", 1]);
+    assert.match(ffs.skill.version, /^\d+\.\d+\.\d+$/);
+  } else {
+    assert.notEqual(ffs.status, "FAILED", JSON.stringify(ffs));
+    if (ffs.status === "UNCHECKED") assert.ok(ffs.reason);
+  }
   assert.deepEqual(
     d.verification.map((s) => [s.step, s.ok]),
-    [["exists", true], ["probe", true], ["codec", true], ["resolution", true], ["fps", true], ["frames", true], ["duration", true], ["input_preserved", true]],
+    [["exists", true], ["probe", true], ["codec", true], ["resolution", true], ["fps", true], ["frames", true], ["duration", true], ["input_preserved", true], ...(ffs.status === "PASSED" ? [["ffmpeg_skill", true]] : [])],
   );
   assert.deepEqual(d.expected, { width: 320, height: 180, duration: 1, fps: 30, frames: 30, codec: "h264", fps_source: "data-fps" });
   // commands: the hyperframes CLI, then what it really started, then our own probe
@@ -39,7 +50,9 @@ test("end to end: scene -> render -> probe on the two-line fixture", { skip: SKI
   const encode = d.commands.find((c) => c.role === "ffmpeg" && c.argv.includes("image2pipe"));
   assert.ok(encode, "the frame-encoding ffmpeg argv is recorded");
   assert.equal(encode.exit_code, 0);
-  assert.equal(d.commands.at(-1).program, "ffprobe");
+  const own = d.commands.filter((c) => c.role !== "ffmpeg-skill/probe");
+  assert.equal(own.at(-1).program, "ffprobe");
+  assert.equal(d.commands.filter((c) => c.role === "ffmpeg-skill/probe").length, ffs.status === "UNCHECKED" && !ffs.skill ? 0 : 1);
   assert.deepEqual(listTree(scene), before);
 
   // independent read-back through the probe tool
