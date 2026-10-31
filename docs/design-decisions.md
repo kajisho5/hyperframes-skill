@@ -70,7 +70,7 @@ Format:
   adapter): `--ffmpeg-skill DIR` alone when given, else `HYPERFRAMES_SKILL_FFMPEG_SKILL_DIR`,
   `VIDEO_AGENT_FFMPEG_SKILL_DIR`, `~/.claude/skills/ffmpeg-skill`, `./vendor/ffmpeg-skill`, and
   `ffmpeg-skill` next to this checkout. Its version comes from its `package.json`. There is no
-  version gate (the declared range `>=2.0.0 <3.0.0` in the contract's `dependencies` is what it was
+  version gate (the declared range `>=2.0.0 <4.0.0` in the contract's `dependencies` is what it was
   checked against): the probe document's keys are read directly and a missing one is `UNCHECKED`.
 - **Why:** HyperFrames streams each captured frame into ffmpeg as it is captured (`image2pipe`,
   visible in `commands`). ffmpeg-skill has no tool that takes such a stream: `sequence.py` encodes
@@ -129,3 +129,16 @@ Format:
   is classified from the recorded ffmpeg exit 1), and CI on `ubuntu-latest`, `macos-latest` and `windows-latest`.
   The tests' fake chrome / ffmpeg are `tests/fixtures/fake-spawn.cjs`, a Node double loaded through
   `NODE_OPTIONS`, for the same reason.
+
+## D11. ffmpeg-skill 3.0.0 is inside the declared range; CI cross-checks against 3.0.0 and the last checked 2.x
+
+- **Context:** ffmpeg-skill 3.0.0 (`1dc2f52`) drops Python 3.9 and FFmpeg 5.x, changes `cut.py`'s defaults and adds
+  `timecode` to probe. Its `contract_version` became 2.0 for `cut.py`'s key meanings. The declared range
+  `>=2.0.0 <3.0.0` (over its package version, `range_of: "version"`) excluded it.
+- **Decision:** the range becomes `>=2.0.0 <4.0.0`. The cross-check runs `probe.py` only and reads `video.codec`,
+  `width`, `height`, `fps`, `pix_fmt`, `duration` and `audio`. Its 3.x promise keeps those keys and their types
+  (ffmpeg-skill `docs/contract.md`). The range stays informational: there is still no version gate (D3).
+- **Python / FFmpeg:** the CI runners have Python ≥ 3.10 (3.12 is set up explicitly on Windows) and FFmpeg ≥ 6.1
+  (apt / Homebrew / Chocolatey), which are 3.0's floors.
+- **CI:** the job is a matrix over the ffmpeg-skill tag. v3.0.0 runs on Linux, macOS and Windows, and v2.23.1, the
+  release this was first checked against, runs on Linux.
