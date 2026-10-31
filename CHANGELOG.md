@@ -3,6 +3,14 @@
 All notable changes. The stability guarantee and deprecation policy are in
 [docs/contract.md](docs/contract.md).
 
+## Unreleased
+### Changed
+
+- ffmpeg-skill 3.0.0 is accepted: the contract's `dependencies[0].version_range` is `>=2.0.0 <4.0.0`
+  (was `<3.0.0`). The cross-check runs only `probe`, and every key it reads is unchanged in 3.0.0;
+  3.0 only adds `timecode` to probe. CI runs the cross-check against 3.0.0 on every OS, and against
+  2.23.1 on Linux (docs/design-decisions.md D11).
+
 ## 0.6.2
 ### Changed
 

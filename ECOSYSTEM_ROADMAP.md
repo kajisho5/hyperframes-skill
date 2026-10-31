@@ -31,6 +31,7 @@ Not reachable from the agent. Calls ffmpeg/ffprobe directly, bypassing ffmpeg-sk
   - Done when: CI green on Windows
 - [ ] **5. (agent side) SkillSpec html_scene_render** — output to video-editing concat or ffmpeg-skill overlay (alpha)
   - Done when: tracked in video-production-agent
+- [x] **6. ffmpeg-skill 3.0.0** — declared range `>=2.0.0 <4.0.0`; CI cross-check against 3.0.0 on every OS and 2.23.1 on Linux ([#15](https://github.com/kajisho5/hyperframes-skill/pull/15), D11)
 
 ## Boundaries
 

@@ -13,13 +13,18 @@ env:
 
 jobs:
   test:
-    name: test (${{ matrix.os }})
+    name: test (${{ matrix.os }}, ffmpeg-skill ${{ matrix.ffmpeg_skill }})
     strategy:
       fail-fast: false
       matrix:
         # Windows since roadmap step 4: the argv of what HyperFrames starts is recorded by a Node preload
         # (lib/argv-recorder.cjs, docs/design-decisions.md D10), not by POSIX sh shims.
         os: [ubuntu-latest, macos-latest, windows-latest]
+        # the cross-check's ffmpeg-skill release: 3.0.0 everywhere, and the last checked 2.x on Linux (D11)
+        ffmpeg_skill: [v3.0.0]
+        include:
+          - os: ubuntu-latest
+            ffmpeg_skill: v2.23.1
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     steps:
@@ -53,7 +58,7 @@ jobs:
       - name: Check out ffmpeg-skill (pinned) for the cross-check
         shell: bash
         env:
-          FFMPEG_SKILL_TAG: v2.23.1
+          FFMPEG_SKILL_TAG: ${{ matrix.ffmpeg_skill }}
         run: |
           set -eu
           git clone --quiet --depth 1 --branch "$FFMPEG_SKILL_TAG" https://github.com/kajisho5/ffmpeg-skill "$RUNNER_TEMP/ffmpeg-skill"
