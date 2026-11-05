@@ -3,6 +3,20 @@
 All notable changes. The stability guarantee and deprecation policy are in
 [docs/contract.md](docs/contract.md).
 
+## Unreleased
+### Changed
+
+- docs: `ECOSYSTEM_ROADMAP.md` brought up to date in the 2026-11-05 ecosystem review: 0.6.4 released by
+  its workflow, the agent names `hyperframes-skill/render` in a CONFIRM handoff (video-production-agent#95),
+  and the footer names ffmpeg-skill 3.x (#17). No code change.
+
+## 0.6.4
+### Changed
+
+- docs: `ECOSYSTEM_ROADMAP.md` step 5 ticked (agent side done in video-production-agent#95) (#16). No code
+  change. This section was added after the release (in #17): the release commit moved the version without
+  one, so `tests/release.test.mjs` failed on `main`.
+
 ## 0.6.3
 ### Changed
 
