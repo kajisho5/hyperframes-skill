@@ -3,7 +3,7 @@
 All notable changes. The stability guarantee and deprecation policy are in
 [docs/contract.md](docs/contract.md).
 
-## Unreleased
+## 0.6.5
 ### Changed
 
 - docs: `ECOSYSTEM_ROADMAP.md` brought up to date in the 2026-11-05 ecosystem review: 0.6.4 released by
