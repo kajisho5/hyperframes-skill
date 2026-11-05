@@ -26,7 +26,7 @@ the tool count, the requirement list), so a stale restatement fails CI instead o
 | Field | Meaning | Changes when |
 |---|---|---|
 | `contract_version` | shape of this document (`0.1`) | a key is renamed, removed or changes meaning |
-| `skill.version` | package.json version (`0.6.5`) | any release |
+| `skill.version` | package.json version (`0.6.6`) | any release |
 
 ## Stability guarantee
 
@@ -75,12 +75,12 @@ CHANGELOG line.
 
 ```json
 {
-  "skill_id": "hyperframes-skill", "version": "0.6.5",
+  "skill_id": "hyperframes-skill", "version": "0.6.6",
   "provides": [{"id": "html_scene.render", "lifecycle": "EXPERIMENTAL", "tool_id": "hyperframes-skill/render"}, "..."],
   "dependencies": [],
   "contract_version": "0.1",
   "deprecated": [],
-  "skill": {"id": "hyperframes-skill", "version": "0.6.5", "execution_mode": "local", "kind": "execution",
+  "skill": {"id": "hyperframes-skill", "version": "0.6.6", "execution_mode": "local", "kind": "execution",
             "entrypoints": {"cli": "...", "scripts": "...", "contract": "...", "doctor": "..."},
             "not_provided": ["AI reasoning", "creative or compositional decisions", "..."]},
   "requirements": {"node": ">=22", "hyperframes": "0.8.61", "chromium": "...", "ffmpeg": ">=5.0", "ffprobe": ">=5.0"},
