@@ -49,14 +49,17 @@ The agent names `hyperframes-skill/render` in a CONFIRM handoff from a pinned co
   - Done when: at 120 BPM every snapped start is a multiple of 0.5 s within one frame; the output's audio duration equals the scene's
 - [ ] **12. IN / LOOP / OUT segments and seamless loops** — a scene declares `segments` (in, loop, out); `render --segments` writes one file per segment plus the full preview, and the loop segment is built so its last frame leads into its first (every animation in it has a period that divides the loop length; a layer that does not is refused). Frame counts per segment are in the result
   - Note: ffmpeg-skill's seamless-loop work (Velisa ROADMAP proposal 10, accepted, top priority: [ffmpeg-skill#422](https://github.com/kajisho5/ffmpeg-skill/issues/422)) smooths a loop after the fact; this step makes the loop seamless by construction
-  - Why: an operator takes a lower third's IN and OUT separately on air, and standby screens loop without a visible seam（なぜ要るか：ライブ送出で IN と OUT を別に打ち、待機画面を途切れなくループできる）
+  - Why: in an edit a lower third holds for any length (IN, the loop repeated, OUT), and a loop runs without a visible seam（なぜ要るか：編集でテロップを好きな長さで出し、ループ素材を継ぎ目なく使える）
   - Done when: a lower third with in 0.5 s / loop 4 s / out 0.5 s gives three files whose frame counts add up to the full render; qc-skill's loop seam check passes on the loop
 - [ ] **13. Alpha deliveries** — besides ProRes 4444: WebM VP9 with alpha, PNG sequence, and a stated `alpha: straight|premultiplied` recorded in the result; transparent background checked on an output frame
-  - Why: OBS stingers take WebM, After Effects and NLEs take PNG sequences or ProRes 4444（なぜ要るか：送出機・NLE ごとに求められるアルファ形式で出せる）
+  - Why: web players take WebM with alpha, After Effects and NLEs take PNG sequences or ProRes 4444（なぜ要るか：編集先ごとに求められるアルファ形式で出せる）
   - Done when: each format's first frame has alpha 0 in an empty corner and 255 on a solid layer, read back by probe
 - [ ] **14. Style presets and recipe gallery** — preset templates built on the steps above: swiss, minimal, neon, glitch, corporate logo reveal, and regional styles as options (for example wafu, Japanese), each a template with typed values (copy, colours, font, bpm, aspect) and a brand kit as input; `template --gallery` renders one still per preset for choosing. Each preset has a fixed check scene rendered in CI. Reference, ideas only, no code used: video-shotcraft recipe cards (Apache-2.0), motion-video-kit's Gauntlet (MIT), the official Remotion and HyperFrames templates (each template's licence checked in an ADR)
   - Why: start from "make it neon" and compare stills before rendering（なぜ要るか：一言のスタイル指定から始め、静止画で比べて選べる）
   - Done when: six presets, each with a CI check scene; a preset given a brand kit uses only the kit's colours and font
+- [ ] **15. Stinger templates with a cut point** — stinger scenes (geometric, particles, brush, glitch, logo reveal) of a stated length whose graphic covers the whole frame from a stated cut point (`--duration 1.2 --cut-point 0.5`), with optional audio; the result writes `stinger.json` beside the file (cut point in frames and seconds, the fully covered window, alpha mode) for video-editing-skill's stinger transition to cut at
+  - Why: a stinger is a transition inside an edit: the cut happens while the graphic covers the picture, so its cut point must be exact data, not a guess（なぜ要るか：スティンガーのカット点をデータで渡し、編集で正確に切り替えられる）
+  - Done when: a 1.2 s stinger with a cut point at 0.5 s has full cover at frame 15 (30 fps), checked by qc-skill's stinger cut-point check, and `stinger.json` gives the same frame
 
 ## Boundaries
 
