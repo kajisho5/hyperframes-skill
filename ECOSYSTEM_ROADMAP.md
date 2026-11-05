@@ -5,7 +5,7 @@ Written from a read-only audit of this repository on 2026-10-30. Each step below
 
 ## Where it stands
 
-v0.6.0 (CHANGELOG says unreleased; no release workflow). Node 22. batch, doctor, preview, probe, render (h264/vp9/ProRes 4444 alpha), scene, template. 76 tests, CI on Ubuntu + macOS, and Windows since [#14](https://github.com/kajisho5/hyperframes-skill/pull/14).
+v0.6.4, released by its workflow (step 2). Node 22. batch, doctor, preview, probe, render (h264/vp9/ProRes 4444 alpha), scene, template. 76 tests, CI on Ubuntu + macOS, and Windows since [#14](https://github.com/kajisho5/hyperframes-skill/pull/14).
 
 ## What this repository owns
 
@@ -17,7 +17,7 @@ v0.6.0 (CHANGELOG says unreleased; no release workflow). Node 22. batch, doctor,
 
 ## Wiring
 
-Not reachable from the agent. Calls ffmpeg/ffprobe directly, bypassing ffmpeg-skill (the engine bypass, [docs/design-decisions.md D3](docs/design-decisions.md)); `render` reads its output back through ffmpeg-skill/probe when a checkout is present and reports `ffmpeg_skill.status`.
+The agent names `hyperframes-skill/render` in a CONFIRM handoff from a pinned contract (step 5, video-production-agent#95); it does not run it yet. Calls ffmpeg/ffprobe directly, bypassing ffmpeg-skill (the engine bypass, [docs/design-decisions.md D3](docs/design-decisions.md)); `render` reads its output back through ffmpeg-skill/probe when a checkout is present and reports `ffmpeg_skill.status`.
 
 ## Steps
 
@@ -38,4 +38,4 @@ Not reachable from the agent. Calls ffmpeg/ffprobe directly, bypassing ffmpeg-sk
 title-card / lower-third templates overlap motion-graphics titles.
 
 ---
-Engine for every media operation: [ffmpeg-skill](https://github.com/kajisho5/ffmpeg-skill) (42 tools, treated as complete). Orchestrator: [video-production-agent](https://github.com/kajisho5/video-production-agent).
+Engine for every media operation: [ffmpeg-skill](https://github.com/kajisho5/ffmpeg-skill) (3.x, 42 tools, contract_version 2.0; treated as complete, proposals go to Velisa's ROADMAP). Orchestrator: [video-production-agent](https://github.com/kajisho5/video-production-agent).
