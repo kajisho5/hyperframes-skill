@@ -3,6 +3,20 @@
 All notable changes. The stability guarantee and deprecation policy are in
 [docs/contract.md](docs/contract.md).
 
+## Unreleased
+### Changed
+
+- ci: `CI` runs on pushes to `main` and on pull requests, no longer on every branch push, so a pull request
+  commit is tested once instead of twice; a newer commit on a pull request cancels the runs of the one it
+  replaces. Runs on `main` are never cancelled. No code change.
+
+## 0.6.6
+### Changed
+
+- docs: `ECOSYSTEM_ROADMAP.md` gained steps 7-15 from the 2026-11-05 field review (#18). No code change.
+  This section was added after the release: the release commit moved the version without one, so
+  `tests/release.test.mjs` failed on `main`.
+
 ## 0.6.5
 ### Changed
 
