@@ -3,7 +3,7 @@
 All notable changes. The stability guarantee and deprecation policy are in
 [docs/contract.md](docs/contract.md).
 
-## Unreleased
+## 0.6.7
 ### Changed
 
 - ci: `CI` runs on pushes to `main` and on pull requests, no longer on every branch push, so a pull request
