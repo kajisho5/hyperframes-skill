@@ -125,7 +125,8 @@ test("scene writes one composition per non-empty segment and reports them", () =
   const r = tool("scene", [req, "-o", join(dir, "scene"), "--json"]);
   assert.equal(r.code, 0, r.stderr);
   assert.equal(r.doc.verified, true);
-  assert.deepEqual(r.doc.segments.map((S) => [S.name, S.frames, S.html && S.html.slice(join(dir, "scene").length + 1)]), [["in", 5, "segments/in.html"], ["loop", 40, "segments/loop.html"], ["out", 0, null]]);
+  const seg = (name) => join(dir, "scene", "segments", `${name}.html`);
+  assert.deepEqual(r.doc.segments.map((S) => [S.name, S.frames, S.html]), [["in", 5, seg("in")], ["loop", 40, seg("loop")], ["out", 0, null]]);
   const step = r.doc.verification.find((s) => s.step === "segments");
   assert.deepEqual([step.ok, step.actual.frames], [true, 45]);
   // --overwrite on a scene without segments removes the stale segment compositions
