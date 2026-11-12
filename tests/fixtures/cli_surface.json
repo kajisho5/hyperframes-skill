@@ -140,6 +140,10 @@
       "file"
     ],
     "args": {
+      "alpha": {
+        "cli": "--alpha",
+        "type": "boolean"
+      },
       "countFrames": {
         "cli": "--no-count-frames",
         "type": "boolean"
@@ -155,6 +159,10 @@
       "json": {
         "cli": "--json",
         "type": "boolean"
+      },
+      "sample": {
+        "cli": "--sample",
+        "type": "string[]"
       }
     }
   },

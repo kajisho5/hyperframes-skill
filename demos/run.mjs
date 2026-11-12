@@ -67,6 +67,14 @@ for (const d of demos) {
   if (!r) continue;
   for (const S of r.segments ?? []) console.log(`  ${S.name}: ${S.output ? `${S.probe.video.frames} frames from frame ${S.start_frame}` : "empty"}`);
   if (r.loop_seam) console.log(`  loop seam: wrap ${r.loop_seam.wrap_diff} <= largest step ${r.loop_seam.max_step_diff} + ${r.loop_seam.tolerance}`);
+  // a transparent background also goes out in every alpha delivery, read back by probe --alpha
+  if (JSON.parse(readFileSync(request, "utf8")).background === "transparent") {
+    for (const [codec, file] of [["vp9", "alpha.webm"], ["prores", "alpha.mov"], ["png", "alpha-frames"]]) {
+      if (!step("render", [join(out, "scene"), "-o", join(out, file), "--codec", codec])) continue;
+      const a = step("probe", [join(out, file), "--alpha"]);
+      if (a) console.log(`  ${file}: alpha ${a.probe.alpha.mode}, first frame ${a.probe.alpha.first_frame.min}..${a.probe.alpha.first_frame.max}, top-left ${a.probe.alpha.first_frame.corners.top_left}`);
+    }
+  }
   const p = step("probe", [join(out, "render.mp4")]);
   if (!p) continue;
   const v = p.probe.video;
