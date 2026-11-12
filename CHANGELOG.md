@@ -3,7 +3,7 @@
 All notable changes. The stability guarantee and deprecation policy are in
 [docs/contract.md](docs/contract.md).
 
-## Unreleased
+## 0.7.0
 ### Added
 
 - IN / LOOP / OUT segments and seamless loops (roadmap step 12, design-decisions D12). A scene request may
