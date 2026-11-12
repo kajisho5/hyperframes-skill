@@ -64,6 +64,7 @@
       "overwrite",
       "quality",
       "scene_dir",
+      "segments",
       "timeout",
       "workers"
     ],

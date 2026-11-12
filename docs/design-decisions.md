@@ -142,3 +142,40 @@ Format:
   (apt / Homebrew / Chocolatey), which are 3.0's floors.
 - **CI:** the job is a matrix over the ffmpeg-skill tag. v3.0.0 runs on Linux, macOS and Windows, and v2.23.1, the
   release this was first checked against, runs on Linux.
+
+## D12. Segments are their own compositions, rendered by HyperFrames; the loop is seamless by refusal, and measured
+
+- **Context:** roadmap step 12 ([ECOSYSTEM_ROADMAP.md](../ECOSYSTEM_ROADMAP.md)): a lower third must hold for any length
+  in an edit (IN, the loop repeated, OUT), and the loop must run without a visible seam.
+- **Decision:**
+  - The request declares `segments: {in, loop, out}`. `scene` writes the full scene to `index.html` (its root carries
+    `data-hfs-segments="in=0.5 loop=4 out=0.5"`) and each non-empty segment to `segments/<name>.html`: the same scene
+    cut to that window, starting at 0. A layer that overlaps the window keeps it; a layer that started before it gets
+    every animation delay moved back by the part cut off (a negative CSS delay starts it partway) and its
+    `data-media-start` moved on by the same amount.
+  - `render --segments` renders the full scene, then stages a copy of the scene directory per segment with that
+    segment's composition as `index.html` (as `preview --max-duration` already stages a shortened copy) and renders it
+    with the same flags. Every file goes through the same verification, and the frame counts are added up.
+  - The loop is made seamless by refusing what could break it, never by adjusting it. Inside the loop window a layer is
+    absent or present throughout, no transition runs, no video plays, and every loop animation's period is a whole
+    number of frames that divides the loop's frames. Then the picture at the loop's end is the picture at its start.
+  - `loop_seam` measures it anyway on the rendered loop file. The file is decoded to 64x64 grey, and the mean
+    difference from its last frame back to its first (`wrap_diff`) must be at most its largest step between two
+    consecutive frames (`max_step_diff`) plus 1. This is a read-back, not a proof. It catches a loop that jumps,
+    such as a hand-edited composition with a 3 s spin in a 4 s loop (`wrap_diff` 25.6 against `max_step_diff` 14.3).
+- **Why:** cutting the full render with ffmpeg (`trim` and a re-encode) would encode every segment twice, after
+  HyperFrames' own capture-time encode. It would also add a second encoder path beside HyperFrames' (D3), and an
+  h264 cut can only land on keyframes without a re-encode. Rendering each window through HyperFrames keeps one encoder
+  path. It also makes the segment frames the full render's frames: on ProRes, every segment frame's colour planes are
+  identical to the full render's frame at the same scene time (tested). Only the order of the steps is new: the full
+  render still comes first, unchanged. qc-skill's loop seam check (1.3.0) measures audio only, so the video seam is
+  measured here.
+- **Known gap, measured:** HyperFrames' alpha plane for a *scaled* layer over a transparent background is not
+  bit-exact between two renders of the same scene. For a `pulse` loop animation, and for the existing `zoom`
+  transition, 1 to 16 of 50 ProRes frames differed in alpha (PSNR 37 to 50 dB) while colour stayed identical. With
+  `bob`, `spin` and no loop animation, 3 or 4 runs were identical. `will-change` on the layer made repeated renders
+  identical, but it made the segments differ from the full render in colour (PSNR about 32 dB), so it is not used.
+  The colour comparison in the test excludes alpha for this reason.
+- **Pinned by:** `tests/segments.test.mjs`. It covers validation and refusals, the window markup, the dry-run plan,
+  the seam measure on synthetic frames, and the real ProRes render (5 + 40 + 5 = 50 frames, colour frame-identical to
+  the full render, seam passes). It also covers the edited loop that fails `loop_seam`.

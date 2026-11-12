@@ -101,10 +101,13 @@ Usage: `node scripts/render.mjs <scene_dir> [options]`
 | `--fps` | integer |  | frame rate, integer 1-240 (default: the root's data-fps, else 30) |
 | `--workers` | integer\|auto | `auto` | parallel capture workers: auto or 1-8 |
 | `--timeout` | number | `1800` | kill the render (Chrome and ffmpeg included) after this long; 0 disables |
+| `--segments` | boolean |  | also render each segment the scene declares (request `segments`: in, loop, out) to <stem>.<segment><ext> next to the output, and measure the loop file's seam |
 | `--overwrite` | boolean |  | replace an existing output file |
 | `--ffmpeg-skill` | string |  | ffmpeg-skill checkout to cross-check the output with (default: HYPERFRAMES_SKILL_FFMPEG_SKILL_DIR, VIDEO_AGENT_FFMPEG_SKILL_DIR, ~/.claude/skills/ffmpeg-skill, ./vendor/ffmpeg-skill, ../ffmpeg-skill next to this checkout; none found: ffmpeg_skill.status UNCHECKED) |
 
 Result: `ffmpeg_skill.status` is `PASSED` (ffmpeg-skill/probe read the file and codec, resolution, fps, duration and, for vp9/prores, alpha all match), `FAILED` (it refused the file or measured a mismatch; the render then fails with `kind: verification`) or `UNCHECKED` with a `reason` (no checkout, no Python, no usable result, or a property it cannot measure). UNCHECKED is never a pass.
+
+With `--segments` (the scene was made from a request with `segments`): after the full render, each non-empty segment's composition (`segments/<name>.html`) is rendered from a staged copy of the scene to `<stem>.<name><ext>` and verified like the full render (`segments[]`: `name`, `start`, `duration`, `start_frame`, `frames`, `output`, `probe`, `verified`, `verification[]`, `ffmpeg_skill`). Two steps are added: `segments` (every segment verified and their probed frame counts add up to the full render's) and `loop_seam` (`loop_seam.wrap_diff`, the mean difference from the loop file's last frame back to its first on a 64x64 grey decode, is at most `max_step_diff`, its largest step between two of its own frames, plus `tolerance` 1). A scene without segments, a segment that is not a whole number of frames at `--fps`, or an existing segment output without `--overwrite` is refused (`kind: input`).
 
 Dry run: reads index.html, checks the root's declared size/duration/fps and the output path, and reports the hyperframes command it would run and the expected frame count; launches neither Chrome nor ffmpeg and writes nothing.
 
@@ -112,7 +115,7 @@ Dry run: reads index.html, checks the root's declared size/duration/fps and the 
 
 `hyperframes-skill/scene` · role `execution`
 
-Turn a structured scene request (JSON: size, duration, fps, ordered text/image/video layers with in/out times) into a HyperFrames scene directory (index.html + copied assets).
+Turn a structured scene request (JSON: size, duration, fps, ordered text/image/video layers with in/out times, optional IN / LOOP / OUT segments) into a HyperFrames scene directory (index.html + copied assets, plus one composition per segment).
 
 Usage: `node scripts/scene.mjs <request> [options]`
 
@@ -121,7 +124,7 @@ Usage: `node scripts/scene.mjs <request> [options]`
 | `--json` | boolean |  | print one JSON result document on stdout |
 | `--dry-run` | boolean |  | validate and plan without launching Chrome or ffmpeg or writing files |
 | `-o, --output` | string | required | scene directory to write (created; must be empty or absent) |
-| `--overwrite` | boolean |  | replace index.html and assets/ in a directory an earlier `scene` run wrote |
+| `--overwrite` | boolean |  | replace index.html, assets/ and segments/ in a directory an earlier `scene` run wrote |
 
 Dry run: validates the request and every asset path and reports the files it would write; writes nothing and does not run hyperframes lint.
 

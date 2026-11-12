@@ -3,6 +3,26 @@
 All notable changes. The stability guarantee and deprecation policy are in
 [docs/contract.md](docs/contract.md).
 
+## Unreleased
+### Added
+
+- IN / LOOP / OUT segments and seamless loops (roadmap step 12, design-decisions D12). A scene request may
+  declare `segments: {in, loop, out}` (seconds, whole frames, adding up to `duration`). `scene` writes each
+  non-empty segment as its own composition, `segments/<name>.html`, a window of the scene in which every
+  layer, transition and video is cut to the same scene time, and reports `segments[]`. The loop is seamless
+  by construction: a layer starting or ending inside it, a transition or a video running in it, or a loop
+  animation whose period does not divide its length (in frames) is refused, with the periods that fit.
+- `loop_animation` on any layer: `pulse` (`scale`), `bob` (`direction`, `distance`), `spin` (`direction`
+  `cw|ccw`), each with `period` and `easing`. They animate the individual `scale` / `translate` / `rotate`
+  properties, so they compose with the transitions' `transform`.
+- `render --segments`: after the full render, each segment is rendered to `<stem>.in|loop|out<ext>` and
+  verified; the result gains `segments[]` and `loop_seam`, and `verification[]` gains `segments` (their
+  probed frame counts add up to the full render's) and `loop_seam` (the loop file's last-to-first step is
+  no larger than its largest step between its own frames, plus 1/255).
+
+The contract change is additive: one new flag, two new request keys, new result keys and steps that
+appear only when they are used.
+
 ## 0.6.7
 ### Changed
 
