@@ -61,8 +61,12 @@ for (const d of demos) {
   }
   if (!step("scene", [request, "-o", join(out, "scene")])) continue;
   if (!step("preview", [join(out, "scene"), "-o", join(out, "preview.mp4")])) continue;
-  const r = step("render", [join(out, "scene"), "-o", join(out, "render.mp4")]);
+  // a request with segments also renders IN / LOOP / OUT files and measures the loop seam
+  const segmented = JSON.parse(readFileSync(request, "utf8")).segments !== undefined;
+  const r = step("render", [join(out, "scene"), "-o", join(out, "render.mp4"), ...(segmented ? ["--segments"] : [])]);
   if (!r) continue;
+  for (const S of r.segments ?? []) console.log(`  ${S.name}: ${S.output ? `${S.probe.video.frames} frames from frame ${S.start_frame}` : "empty"}`);
+  if (r.loop_seam) console.log(`  loop seam: wrap ${r.loop_seam.wrap_diff} <= largest step ${r.loop_seam.max_step_diff} + ${r.loop_seam.tolerance}`);
   const p = step("probe", [join(out, "render.mp4")]);
   if (!p) continue;
   const v = p.probe.video;

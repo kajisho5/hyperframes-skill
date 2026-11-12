@@ -1,0 +1,28 @@
+{
+  "scene_version": 1,
+  "id": "lower-third",
+  "width": 320,
+  "height": 180,
+  "duration": 5,
+  "fps": 10,
+  "background": "transparent",
+  "segments": { "in": 0.5, "loop": 4, "out": 0.5 },
+  "layers": [
+    {
+      "type": "text", "id": "name", "start": 0, "duration": 5, "text": "Ada Lovelace",
+      "box": { "x": 20, "y": 120, "width": 200, "height": 30 },
+      "style": { "font_size": 20, "font_weight": 700, "align": "left", "background": "rgba(0,0,0,0.75)" },
+      "transition_in": { "type": "slide", "duration": 0.5, "direction": "left", "distance": 40, "easing": "ease_out" },
+      "transition_out": { "type": "fade", "duration": 0.5 },
+      "loop_animation": { "type": "pulse", "period": 2, "scale": 1.1 }
+    },
+    {
+      "type": "text", "id": "dot", "start": 0, "duration": 5, "text": "●",
+      "box": { "x": 260, "y": 20, "width": 40, "height": 40 },
+      "style": { "font_size": 24, "color": "#ff3030" },
+      "transition_in": { "type": "fade", "duration": 0.5 },
+      "transition_out": { "type": "fade", "duration": 0.5 },
+      "loop_animation": { "type": "bob", "period": 1, "direction": "down", "distance": 6 }
+    }
+  ]
+}

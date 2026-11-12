@@ -93,7 +93,7 @@ As an agent skill, point the agent at `SKILL.md` (it names the scripts relative 
 | `doctor` | `hyperframes-skill/doctor` | analysis | probes Node, hyperframes, ffmpeg/ffprobe + encoders, a headless Chromium launch, temp space |
 | `template` | `hyperframes-skill/template` | execution | fills a shipped template (lower-third, title-card, session-slate, break) with caller values → scene request |
 | `scene` | `hyperframes-skill/scene` | execution | structured scene request → HyperFrames scene directory (index.html + copied assets), linted |
-| `render` | `hyperframes-skill/render` | execution | scene directory → .mp4 (h264) / .webm (vp9) / .mov (ProRes 4444), probed and verified; cross-checked with ffmpeg-skill/probe when present |
+| `render` | `hyperframes-skill/render` | execution | scene directory → .mp4 (h264) / .webm (vp9) / .mov (ProRes 4444), probed and verified; cross-checked with ffmpeg-skill/probe when present; `--segments`: one file per IN / LOOP / OUT segment too, with the loop's seam measured |
 | `probe` | `hyperframes-skill/probe` | analysis | ffprobe read-back: duration, resolution, fps, frame count, codecs |
 | `batch` | `hyperframes-skill/batch` | execution | one verified render per row of a CSV/JSON through a template (every speaker's lower third from the programme sheet) |
 | `preview` | `hyperframes-skill/preview` | execution | fast proxy render: 10 fps, draft encoder preset, optionally the first N seconds |
@@ -118,8 +118,21 @@ Optional top-level `fonts` ships font files with the scene (`[{"family", "src", 
 "style"?}]`), so text does not depend on the machine's fonts. Layers: `text`, `image`, `video` (muted), each with `start`/`duration` in seconds, an optional
 pixel `box`, painted in array order, and optional `transition_in` / `transition_out` (`fade`,
 `slide` with `direction` + `distance`, `zoom` with `scale`; `easing` linear / ease_in / ease_out /
-ease_in_out). Transitions are CSS animations that HyperFrames seeks frame by frame, so they
-stay deterministic and need no script or CDN. The full schema is in `SKILL.md`. Unknown keys, URLs,
+ease_in_out), and an optional `loop_animation` (`pulse` with `scale`, `bob` with `direction` +
+`distance`, `spin` with `direction` cw / ccw; each with a `period` in seconds). Transitions and
+loop animations are CSS animations that HyperFrames seeks frame by frame, so they
+stay deterministic and need no script or CDN.
+
+Optional top-level `segments` (`{"in": 0.5, "loop": 4, "out": 0.5}`, seconds, whole frames,
+adding up to the scene's duration) splits the scene into IN / LOOP / OUT, so an edit can hold a
+lower third for any length: IN, the loop repeated, OUT. `scene` writes each segment as its own
+composition (`segments/<name>.html`) and refuses a loop that could not be seamless: a layer that
+starts or ends inside the loop, a transition running in it, a video playing through it, or a loop
+animation whose period does not divide the loop length (it lists the periods that do).
+`render --segments` renders the full scene to `-o` and each segment to `<stem>.in<ext>`,
+`<stem>.loop<ext>`, `<stem>.out<ext>`, verifies each, checks that their frame counts add up to
+the full render's, and measures the loop file's seam (`loop_seam`: the step from its last frame
+back to its first is no larger than its largest step between two of its own frames). The full schema is in `SKILL.md`. Unknown keys, URLs,
 missing files, layers running past the scene's end and values that could escape the style
 block are refused with every problem listed at once (`kind: input`).
 
@@ -200,6 +213,11 @@ and macOS:
   `kind: verification`; tiny ffmpeg-made h264 / ProRes 4444 / VP9 files, an empty file and random
   bytes read by the real ffmpeg-skill (`PASSED`, alpha seen in ProRes, VP9 alpha `UNCHECKED`,
   corrupt `FAILED`); no checkout → `UNCHECKED`;
+- segments: a lower third with in 0.5 s / loop 4 s / out 0.5 s (a pulse and a bob loop animation)
+  renders to three ProRes files of 5 + 40 + 5 frames, the full render's 50, each frame equal in
+  colour to the full render's frame at the same scene time; its loop seam passes, and a loop
+  composition edited to a period that does not divide the loop fails `loop_seam`; every refusal
+  of a loop that cannot be seamless;
 - `--dry-run` of every tool behind recording fake binaries;
 - docs ↔ contract consistency and the frozen CLI surface.
 
@@ -221,8 +239,15 @@ Not verified (said plainly rather than claimed):
   `batch`): with IPAGothic shipped that way the same text rendered in Japanese forms (checked by
   eye). `doctor` reports what fontconfig picks per language and warns when Japanese and Chinese
   get the same font.
-- Audio, free-form animation (anything beyond fade / slide / zoom transitions), sub-compositions
-  and captions are not implemented. `zoom` is checked in the markup and by lint only,
+- **ProRes / VP9 alpha of a scaled layer is not bit-exact between renders**: with a `pulse` loop
+  animation or a `zoom` transition over a transparent background, the alpha plane of some frames
+  differed between two renders of the same scene (12 to 16 of 50 frames, PSNR 37 to 50 dB on
+  alpha) while colour stayed identical. It comes from the capture (HyperFrames / Chrome), not from
+  this skill; `bob` and `spin` and the other transitions were stable.
+- **The loop seam is not checked by qc-skill**: its loop seam check covers audio only (qc-skill
+  1.3.0); `render --segments` measures the video seam itself (`loop_seam`).
+- Audio, free-form animation (anything beyond fade / slide / zoom transitions and pulse / bob /
+  spin loop animations), sub-compositions and captions are not implemented. `zoom` is checked in the markup and by lint only,
   not by a pixel test.
 
 ## MCP server

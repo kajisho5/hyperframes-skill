@@ -203,6 +203,10 @@
         "cli": "<scene_dir>",
         "type": "string"
       },
+      "segments": {
+        "cli": "--segments",
+        "type": "boolean"
+      },
       "timeout": {
         "cli": "--timeout",
         "type": "number"

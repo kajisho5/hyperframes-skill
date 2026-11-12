@@ -43,6 +43,8 @@ Shared flags, on every tool: `--json` (one result document on stdout: `status`, 
 - `src` is a local path (relative to the request file). URLs are refused: this skill never fetches.
 - Colours: `#rgb`, `#rrggbb`, `#rrggbbaa`, `rgb()`, `rgba()`, `transparent`. Text is escaped, `\n` breaks lines.
 - `transition_in` / `transition_out` (optional, any layer): `fade`; `slide` with `direction` (`left|right|up|down`: the side it enters from / leaves towards) and `distance` (px); `zoom` with `scale` (the scale it starts from / ends at). `duration` in seconds, `easing` `linear` (default), `ease_in`, `ease_out`, `ease_in_out`. In starts at the layer's start, out ends at the layer's end; the two together may not exceed the layer. Slide and zoom also fade.
+- `loop_animation` (optional, any layer): `pulse` (`scale` at mid-cycle), `bob` (`direction`, `distance` px), `spin` (`direction` `cw|ccw`), each with `period` (s, one full cycle) and `easing`. It composes with the transitions.
+- `segments` (optional, top level): `{"in": 0.5, "loop": 4, "out": 0.5}`, whole frames, adding up to `duration`; `in`/`out` may be 0. The loop must be seamless, so `scene` refuses a layer that starts or ends inside it, a transition or video running in it, or a `period` that does not divide it (the error lists periods that fit). `render --segments` also writes `<stem>.in|loop|out<ext>`; report each `segments[].probe.video.frames` and `loop_seam.ok`.
 - Video layers are muted: the output has no audio in this release.
 - `fonts` (optional, top level): `[{"family": "JP Gothic", "src": "fonts/NotoSansJP-Bold.otf", "weight": 700, "style": "normal"}]`; `.otf/.ttf/.woff/.woff2`, local file, copied into the scene; a layer uses it by `style.font_family`. Omit `weight` to use the file for every weight.
 - Unknown keys are errors, not ignored.
@@ -51,7 +53,7 @@ Shared flags, on every tool: `--json` (one result document on stdout: `status`, 
 
 It turns an explicit scene into markup, renders it, and reports what came out. It does not write copy, choose timing, pick or crop to a subject, choose fonts or colours you did not give it, judge whether a frame looks good, or add a transition you did not ask for. Same request + same flags on the same machine gives byte-identical output; anything that depends on taste belongs to the caller.
 
-If a request needs something the five tools do not expose (audio, animation beyond the three transitions, captions, a layout no template has), say so. Never fall back to calling Chrome, ffmpeg or the `hyperframes` CLI directly: that bypasses every check here.
+If a request needs something the five tools do not expose (audio, animation beyond the three transitions and three loop animations, captions, a layout no template has), say so. Never fall back to calling Chrome, ffmpeg or the `hyperframes` CLI directly: that bypasses every check here.
 
 ## Gotchas
 
