@@ -46,9 +46,11 @@
   },
   "probe": {
     "properties": [
+      "alpha",
       "countFrames",
       "dryRun",
-      "file"
+      "file",
+      "sample"
     ],
     "required": [
       "file"

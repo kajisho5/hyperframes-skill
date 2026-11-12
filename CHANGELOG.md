@@ -20,7 +20,15 @@ All notable changes. The stability guarantee and deprecation policy are in
   probed frame counts add up to the full render's) and `loop_seam` (the loop file's last-to-first step is
   no larger than its largest step between its own frames, plus 1/255).
 
-The contract change is additive: one new flag, two new request keys, new result keys and steps that
+- Alpha deliveries (roadmap step 13, design-decisions D13): `render --codec png` writes a PNG sequence
+  directory (RGBA `frame_000001.png ...`, through HyperFrames' png-sequence format) beside WebM VP9 and ProRes
+  4444. Every alpha render decodes its first frame's alpha plane: `verification[]` gains `alpha`, and the result
+  gains `alpha: {mode: "straight", channel, first_frame: {min, max, mean, corners, ...}}` (`mode: "none"` for
+  h264). `probe --alpha [--sample X,Y]` reads the same from any file or a PNG sequence directory; probe reports
+  VP9's `alpha_mode` tag and reads PNG sequence directories. `--overwrite` replaces a PNG sequence directory
+  only when it holds nothing but frames. `batch` stays video-only.
+
+The contract change is additive: new flags (`render --segments`, `--codec png`, `probe --alpha` / `--sample`), two new request keys, new result keys and steps that
 appear only when they are used.
 
 ## 0.6.7

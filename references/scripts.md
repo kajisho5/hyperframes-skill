@@ -71,7 +71,7 @@ Dry run: same as render: validates and reports the planned command and expected 
 
 `hyperframes-skill/probe` · role `analysis`
 
-Read a media file back with ffprobe: duration, resolution, fps, frame count, codecs.
+Read a media file (or a PNG sequence directory) back with ffprobe: duration, resolution, fps, frame count, codecs; with --alpha, the first frame's alpha channel.
 
 Usage: `node scripts/probe.mjs <file> [options]`
 
@@ -80,8 +80,12 @@ Usage: `node scripts/probe.mjs <file> [options]`
 | `--json` | boolean |  | print one JSON result document on stdout |
 | `--dry-run` | boolean |  | validate and plan without launching Chrome or ffmpeg or writing files |
 | `--no-count-frames` | boolean |  | do not decode to count frames when the container does not state them (frames is then null) |
+| `--alpha` | boolean |  | decode the first frame's alpha plane: min, max, corners (0 transparent, 255 opaque) and the alpha mode |
+| `--sample` | string[] |  | with --alpha: also read the alpha at this pixel of the first frame (repeatable) |
 
 Dry run: read-only: ffprobe still runs under --dry-run (measuring is the tool's whole job); nothing is written either way.
+
+`--alpha` result: `probe.alpha` = `{mode, channel, first_frame: {min, max, mean, transparent_fraction, opaque_fraction, corners: {top_left, top_right, bottom_left, bottom_right}}, samples: [{x, y, alpha}]}`. `mode` is `straight` for every alpha file this skill writes and `none` (with `channel: false`) for a stream without alpha. VP9's alpha is decoded with libvpx-vp9 (ffmpeg's native VP9 decoder drops it). Given a PNG sequence directory, probe reads its first frame and counts the `frame_NNNNNN.png` files (`frames_source: "files"`, `contiguous`).
 
 ## render
 
@@ -96,7 +100,7 @@ Usage: `node scripts/render.mjs <scene_dir> [options]`
 | `--json` | boolean |  | print one JSON result document on stdout |
 | `--dry-run` | boolean |  | validate and plan without launching Chrome or ffmpeg or writing files |
 | `-o, --output` | string | required | video file to write; its extension must match --codec |
-| `--codec` | h264 \| vp9 \| prores | `h264` | h264 (.mp4), vp9 (.webm) or prores (.mov, ProRes 4444) |
+| `--codec` | h264 \| vp9 \| prores \| png | `h264` | h264 (.mp4), vp9 (.webm, with alpha), prores (.mov, ProRes 4444 with alpha) or png (a directory of RGBA PNG frames) |
 | `--quality` | integer |  | CRF, codec-neutral scale (lower is better): h264 0-51, vp9 0-63; not for prores. Default: HyperFrames' own default (CRF 16) |
 | `--fps` | integer |  | frame rate, integer 1-240 (default: the root's data-fps, else 30) |
 | `--workers` | integer\|auto | `auto` | parallel capture workers: auto or 1-8 |

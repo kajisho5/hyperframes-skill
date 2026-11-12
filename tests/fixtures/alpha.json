@@ -1,0 +1,13 @@
+{
+  "scene_version": 1,
+  "id": "alpha",
+  "width": 320,
+  "height": 180,
+  "duration": 0.5,
+  "fps": 10,
+  "background": "transparent",
+  "layers": [
+    { "type": "text", "id": "solid", "start": 0, "duration": 0.5, "text": " ", "box": { "x": 40, "y": 60, "width": 100, "height": 60 }, "style": { "background": "#2050ff" } },
+    { "type": "text", "id": "half", "start": 0, "duration": 0.5, "text": " ", "box": { "x": 180, "y": 60, "width": 100, "height": 60 }, "style": { "background": "rgba(0,0,255,0.5)" } }
+  ]
+}

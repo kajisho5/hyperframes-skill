@@ -179,3 +179,33 @@ Format:
 - **Pinned by:** `tests/segments.test.mjs`. It covers validation and refusals, the window markup, the dry-run plan,
   the seam measure on synthetic frames, and the real ProRes render (5 + 40 + 5 = 50 frames, colour frame-identical to
   the full render, seam passes). It also covers the edited loop that fails `loop_seam`.
+
+## D13. Alpha deliveries: VP9, ProRes 4444 and PNG sequences, all straight alpha, read back from the first frame
+
+- **Context:** roadmap step 13: web players take WebM with alpha, NLEs and After Effects take PNG sequences or
+  ProRes 4444, and the receiver must know whether the alpha is straight or premultiplied.
+- **Decision:**
+  - `render --codec png` renders through HyperFrames' own `--format png-sequence`. It writes a directory of RGBA
+    `frame_000001.png ...` at `-o`. The output may not carry a video extension. `--overwrite` replaces the directory
+    only when it holds nothing but such frames: a directory with anything else in it is refused and left untouched.
+    It is verified as a sequence: frames numbered 1..N with N the expected frame count, the first frame RGBA at the
+    scene's size. It has no fps or duration step, since a sequence has no rate of its own. ffmpeg-skill's probe
+    reads one media file, so a sequence is `UNCHECKED` there, with that reason. `batch` stays video-only.
+  - Every alpha render (vp9, prores, png) decodes its first frame's alpha plane. It adds the step `alpha` (the plane
+    decoded) and the result key `alpha: {mode, channel, first_frame: {min, max, mean, corners, ...}}`. `probe --alpha`
+    reads the same thing from any file or sequence, and `--sample X,Y` reads single pixels. VP9 is decoded with
+    libvpx-vp9, because ffmpeg's native VP9 decoder drops the alpha side stream. The probe also reports VP9's
+    `ALPHA_MODE` tag as `alpha_mode`, since its main stream reads as `yuv420p`.
+  - `alpha.mode` is stated, and it is `straight` for all three formats. There is no `--alpha premultiplied`:
+    HyperFrames encodes the frames, and premultiplying them would need a second encode of its output (D3, D12).
+- **Why straight:** HyperFrames captures every frame as a PNG screenshot, which is straight alpha by definition, and
+  pipes the PNGs into ffmpeg (`-f image2pipe -vcodec png`, visible in `commands`). prores_ks and libvpx-vp9 keep the
+  alpha as a plane beside the colour planes. Measured on a `rgba(0,0,255,0.5)` layer, the colour read back
+  as R,G,B,A = 0,0,255,128 (PNG), 0,0,255,129 (ProRes) and 0,0,254,129 (VP9). Premultiplied alpha would read back with
+  a blue near 128.
+- **Whether the background is transparent** is checked on the output frame by the test, not inferred by `render`.
+  `render` cannot tell an empty corner from a corner a full-frame layer covers, so it reports the corners and
+  min/max and leaves the judgement to the caller.
+- **Pinned by:** `tests/alpha.test.mjs`. For each format, the first frame reads alpha 0 in both empty corners,
+  255 on the solid layer and 128 ± 2 on the 50% layer, read back by `probe --alpha --sample`. The 50% layer's
+  colour is full blue. The `--codec png` refusals are covered, and so is a PNG sequence made by ffmpeg alone.

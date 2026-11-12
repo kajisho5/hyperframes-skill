@@ -93,8 +93,8 @@ As an agent skill, point the agent at `SKILL.md` (it names the scripts relative 
 | `doctor` | `hyperframes-skill/doctor` | analysis | probes Node, hyperframes, ffmpeg/ffprobe + encoders, a headless Chromium launch, temp space |
 | `template` | `hyperframes-skill/template` | execution | fills a shipped template (lower-third, title-card, session-slate, break) with caller values → scene request |
 | `scene` | `hyperframes-skill/scene` | execution | structured scene request → HyperFrames scene directory (index.html + copied assets), linted |
-| `render` | `hyperframes-skill/render` | execution | scene directory → .mp4 (h264) / .webm (vp9) / .mov (ProRes 4444), probed and verified; cross-checked with ffmpeg-skill/probe when present; `--segments`: one file per IN / LOOP / OUT segment too, with the loop's seam measured |
-| `probe` | `hyperframes-skill/probe` | analysis | ffprobe read-back: duration, resolution, fps, frame count, codecs |
+| `render` | `hyperframes-skill/render` | execution | scene directory → .mp4 (h264) / .webm (VP9 with alpha) / .mov (ProRes 4444) / a PNG sequence directory, probed and verified, alpha read back (`alpha.mode`: straight); cross-checked with ffmpeg-skill/probe when present; `--segments`: one file per IN / LOOP / OUT segment too, with the loop's seam measured |
+| `probe` | `hyperframes-skill/probe` | analysis | ffprobe read-back: duration, resolution, fps, frame count, codecs; PNG sequence directories; `--alpha` (and `--sample X,Y`) reads the first frame's alpha plane |
 | `batch` | `hyperframes-skill/batch` | execution | one verified render per row of a CSV/JSON through a template (every speaker's lower third from the programme sheet) |
 | `preview` | `hyperframes-skill/preview` | execution | fast proxy render: 10 fps, draft encoder preset, optionally the first N seconds |
 
@@ -213,6 +213,11 @@ and macOS:
   `kind: verification`; tiny ffmpeg-made h264 / ProRes 4444 / VP9 files, an empty file and random
   bytes read by the real ffmpeg-skill (`PASSED`, alpha seen in ProRes, VP9 alpha `UNCHECKED`,
   corrupt `FAILED`); no checkout → `UNCHECKED`;
+- alpha deliveries: a transparent scene with an opaque and a 50% layer rendered to WebM VP9, ProRes
+  4444 and a PNG sequence; on each first frame, read back by `probe --alpha`, both corners read alpha 0,
+  the opaque layer 255 and the 50% layer 128 ± 2, and the 50% layer's colour keeps full blue (straight
+  alpha, not premultiplied); `--codec png` refuses a video extension and never overwrites a
+  directory holding anything but frames;
 - segments: a lower third with in 0.5 s / loop 4 s / out 0.5 s (a pulse and a bob loop animation)
   renders to three ProRes files of 5 + 40 + 5 frames, the full render's 50, each frame equal in
   colour to the full render's frame at the same scene time; its loop seam passes, and a loop
