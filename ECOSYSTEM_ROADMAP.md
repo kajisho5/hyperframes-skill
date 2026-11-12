@@ -5,7 +5,7 @@ Written from a read-only audit of this repository on 2026-10-30. Each step below
 
 ## Where it stands
 
-v0.6.4, released by its workflow (step 2). Node 22. batch, doctor, preview, probe, render (h264/vp9/ProRes 4444 alpha), scene, template. 76 tests, CI on Ubuntu + macOS, and Windows since [#14](https://github.com/kajisho5/hyperframes-skill/pull/14).
+v0.8.0, released by its workflow (step 2). Node 22. batch, doctor, preview, probe, render (h264, VP9 with alpha, ProRes 4444, PNG sequence; straight alpha), scene, template (break, lower-third, session-slate, title-card). IN / LOOP / OUT segments with a measured loop seam (step 12) and alpha deliveries (step 13). CI on Ubuntu + macOS, and Windows since [#14](https://github.com/kajisho5/hyperframes-skill/pull/14). No stinger template, no `stinger.json` / `title.json`, and no brand input yet (steps 15-17).
 
 ## What this repository owns
 
@@ -14,10 +14,12 @@ v0.6.4, released by its workflow (step 2). Node 22. batch, doctor, preview, prob
 | Owned job | Status | Note |
 |---|---|---|
 | HTMLシーンの動画化(HyperFrames) | done | audio is a later theme |
+| テロップ・スティンガー・ループ素材 | partly | added by the [Velisa ownership decisions 2026-11-12](https://github.com/kajisho5/Velisa/pull/156) (O4, O9): title and stinger material files. The `motion-titles-skill` idea is folded in here, not a new repository. Lower thirds, title cards and IN / LOOP / OUT loops ship (steps 12-13); stingers, `title.json` / `stinger.json` and brand input are steps 15-17 |
+| キネティックタイポ・幾何学モーション | open | added by the same decisions (O17): steps 7, 9 and 10. Visualizers driven by measured audio belong to remotion-ffmpeg-skill, 3D depth to blender-skill |
 
 ## Wiring
 
-The agent names `hyperframes-skill/render` in a CONFIRM handoff from a pinned contract (step 5, video-production-agent#95); it does not run it yet. Calls ffmpeg/ffprobe directly, bypassing ffmpeg-skill (the engine bypass, [docs/design-decisions.md D3](docs/design-decisions.md)); `render` reads its output back through ffmpeg-skill/probe when a checkout is present and reports `ffmpeg_skill.status`.
+The agent names `hyperframes-skill/render` in a CONFIRM handoff from a pinned contract (step 5, video-production-agent#95); it does not run it yet. Under the [Velisa ownership decisions 2026-11-12](https://github.com/kajisho5/Velisa/pull/156) (O1), the animated-overlay path is: this skill renders the material (segments, alpha), and motion-graphics-skill's `rendered_layer` places it; the missing piece is an agent path that runs `render` and passes its output to `motion.layer` (step 18). Calls ffmpeg/ffprobe directly, bypassing ffmpeg-skill (the engine bypass, [docs/design-decisions.md D3](docs/design-decisions.md)); `render` reads its output back through ffmpeg-skill/probe when a checkout is present and reports `ffmpeg_skill.status`.
 
 ## Steps
 
@@ -38,6 +40,7 @@ The agent names `hyperframes-skill/render` in a CONFIRM handoff from a pinned co
 - [ ] **8. International typesetting and text fit** — language-aware layout from the layer's `lang`: right-to-left and bidirectional text (Arabic, Hebrew), CJK line breaking, line-break rules per language (Unicode UAX #14; phrase breaks with BudouX, Apache-2.0, run locally, where it supports the language), and `fit: shrink`, which reduces the font size inside the box down to a stated minimum and reports the size used. Text is never cut or ellipsised; a line that does not fit at the minimum is an error with the overflow in pixels. Regional profiles, opt-in and never the default: vertical writing (`writing_mode: vertical`) and ruby annotations for Japanese and Chinese, strict kinsoku
   - Why: long names, affiliations and talk titles in any language shrink and break cleanly, so a lower third never overflows（なぜ要るか：長い氏名・所属・演題を多言語で自動縮小・改行できる）
   - Done when: fixtures in English, Arabic (RTL), Hindi and Japanese render inside their boxes with the reported sizes; the vertical-writing and ruby profiles render as expected; the reported size equals the one in the HTML
+  - Re-scoped by the [Velisa ownership decisions 2026-11-12](https://github.com/kajisho5/Velisa/pull/156) (O4): this is now the typesetting of the title material this skill owns (the former motion-titles scope), so it covers every template that carries text (lower-third, title-card, session-slate, break, and the stingers of step 15), not only free scenes. The size used, the breaks and the font per text layer are written into `title.json` (step 17); burned-in titles keep their own fit in motion-graphics-skill
 - [ ] **9. Shape and pattern layers** — `shape` layers (rect, rounded rect, circle, line, polygon; stroke, gradient, rotation) with keyframed position / scale / rotation / opacity, and `pattern` presets drawn in SVG / CSS from a seed: grid, lines, dots, concentric rings, morphing polygons. Parameters are typed (count, speed, palette), never raw CSS
   - Why: geometric looks and logo backgrounds without any footage, reproducible from a seed（なぜ要るか：幾何学模様の映像を素材なしで再現性よく作れる）
   - Done when: each preset renders twice to the same framemd5; a changed seed changes the picture and nothing else
@@ -60,10 +63,19 @@ The agent names `hyperframes-skill/render` in a CONFIRM handoff from a pinned co
 - [ ] **15. Stinger templates with a cut point** — stinger scenes (geometric, particles, brush, glitch, logo reveal) of a stated length whose graphic covers the whole frame from a stated cut point (`--duration 1.2 --cut-point 0.5`), with optional audio; the result writes `stinger.json` beside the file (cut point in frames and seconds, the fully covered window, alpha mode) for video-editing-skill's stinger transition to cut at
   - Why: a stinger is a transition inside an edit: the cut happens while the graphic covers the picture, so its cut point must be exact data, not a guess（なぜ要るか：スティンガーのカット点をデータで渡し、編集で正確に切り替えられる）
   - Done when: a 1.2 s stinger with a cut point at 0.5 s has full cover at frame 15 (30 fps), checked by qc-skill's stinger cut-point check, and `stinger.json` gives the same frame
+  - Re-scoped by the [Velisa ownership decisions 2026-11-12](https://github.com/kajisho5/Velisa/pull/156) (O4): the stinger part of the former motion-titles scope lands here. `stinger.json` follows the Velisa spec for title and stinger metadata (in progress in Velisa), which documents the shape the receivers already read: video-editing-skill's CONCAT `transition: {type: stinger, stinger, cut_point, cover}` and qc-skill's `VideoRule.stinger {cut_point, cover}`. No field is invented here; a field the spec lacks is proposed to Velisa first. The templates take the brand kit of step 16, and key / fill or premultiplied copies come from ffmpeg-skill `export` (`key-fill`, `--alpha-mode`), not from a second encoder here
+- [ ] **16. Brand input (`kit@1`)** — every template and scene takes a brand kit in the Velisa `kit@1` shape (a superset of ffmpeg-skill's `brand.json`: colours, font and font file, logo, safe margin), mapped onto the template's typed values; the values used are written in the result. An explicit template value wins over the kit; a kit colour or font that a template cannot use is reported, not dropped silently. [Velisa ownership decisions 2026-11-12](https://github.com/kajisho5/Velisa/pull/156) (O4, O5)
+  - Why: lower thirds, title cards and stingers come out in the event's or channel's colours and font without listing them per template（なぜ要るか：ブランドの色・書体・ロゴを毎回並べずにテロップ素材へ反映できる）
+  - Done when: one `kit@1` file renders lower-third, title-card and a stinger whose sampled colours and font match the kit (pixels / the font reported by the result); the same file read as ffmpeg-skill `brand.json` gives the same colours
+- [ ] **17. `title.json` beside title material** — `render` of a title template (lower-third, title-card, session-slate, break) writes `title.json` beside the file, in the Velisa spec for title metadata (in progress in Velisa): segments with frame counts (as the result already has), alpha mode, the loop seam measurement, the safe area used, the text drawn and the font size used (step 8). Like `stinger.json`, it records the shape the receivers already read (motion-graphics-skill `rendered_layer` `in_duration` / `out_duration` / `loop`, qc-skill, the agent) and adds nothing they do not read. [Velisa ownership decisions 2026-11-12](https://github.com/kajisho5/Velisa/pull/156) (O4)
+  - Why: whoever places or checks the material reads its timing and alpha from a file, not from a guess or a second probe（なぜ要るか：配置・検査する側が IN/LOOP/OUT とアルファをファイルから読める）
+  - Done when: a lower third rendered with `--segments` writes a `title.json` that validates against the Velisa spec, and motion-graphics-skill places the same file from it with the in, loop and out at the right frames
+- [ ] **18. (agent side) Run `render` and pass the output to `rendered_layer`** — the agent's `html_scene_render` goes from a CONFIRM handoff to a run, and its ProRes 4444 output (`rendered_layer` refuses VP9 alpha WebM) with `title.json` goes to `motion.layer`. This is the one animated-overlay path under the [Velisa ownership decisions 2026-11-12](https://github.com/kajisho5/Velisa/pull/156) (O1); ffmpeg-skill overlay keyframes are not needed for it
+  - Done when: tracked in video-production-agent
 
 ## Boundaries
 
-title-card / lower-third templates overlap motion-graphics titles.
+Titles burned into a programme are motion-graphics-skill's (`タイトル・テロップ`); title and stinger material files are this skill's (`テロップ・スティンガー・ループ素材`); remotion-ffmpeg-skill's titles stay inside its own compositions ([Velisa ownership decisions 2026-11-12](https://github.com/kajisho5/Velisa/pull/156), O9). Kinetic typography and geometric motion are this skill's; audio visualizers and the beat- or lyric-measured versions are remotion-ffmpeg-skill's; blender-skill stays 3D only (O17). Placement on a programme is motion-graphics-skill's `rendered_layer`, a stinger between two clips is cut by video-editing-skill, and the checks on the material (cut-point cover, loop seam, alpha edge, key / fill) are qc-skill's.
 
 ---
 Engine for every media operation: [ffmpeg-skill](https://github.com/kajisho5/ffmpeg-skill) (3.x, 42 tools, contract_version 2.0; treated as complete, proposals go to Velisa's ROADMAP). Orchestrator: [video-production-agent](https://github.com/kajisho5/video-production-agent).
