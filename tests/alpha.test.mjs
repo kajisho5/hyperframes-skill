@@ -34,6 +34,10 @@ test("render --codec png: a video extension, a file, or a directory with other f
   writeFileSync(join(dir, "mixed", "notes.txt"), "keep me");
   assert.match(tool("render", [scene, "-o", join(dir, "mixed"), "--codec", "png", "--json"]).doc.error.message, /output exists/);
   assert.match(tool("render", [scene, "-o", join(dir, "mixed"), "--codec", "png", "--overwrite", "--json"]).doc.error.message, /holds files that are not frames of a PNG sequence \(notes\.txt\); nothing was touched/);
+  // a directory named like a frame is not a frame: --overwrite would delete what is inside it
+  mkdirSync(join(dir, "nested", "frame_000001.png"), { recursive: true });
+  writeFileSync(join(dir, "nested", "frame_000001.png", "notes.txt"), "keep me");
+  assert.match(tool("render", [scene, "-o", join(dir, "nested"), "--codec", "png", "--overwrite", "--json"]).doc.error.message, /not frames of a PNG sequence \(frame_000001\.png\/\)/);
   const ok = tool("render", [scene, "-o", join(dir, "frames"), "--codec", "png", "--dry-run", "--json"]);
   assert.equal(ok.code, 0, ok.stderr);
   const argv = ok.doc.planned_commands[0];

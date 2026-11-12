@@ -81,7 +81,7 @@ Usage: `node scripts/probe.mjs <file> [options]`
 | `--dry-run` | boolean |  | validate and plan without launching Chrome or ffmpeg or writing files |
 | `--no-count-frames` | boolean |  | do not decode to count frames when the container does not state them (frames is then null) |
 | `--alpha` | boolean |  | decode the first frame's alpha plane: min, max, corners (0 transparent, 255 opaque) and the alpha mode |
-| `--sample` | string[] |  | with --alpha: also read the alpha at this pixel of the first frame (repeatable) |
+| `--sample` | string[] |  | with --alpha: also read the alpha at this pixel of the first frame, e.g. --sample 10,20 (repeatable) |
 
 Dry run: read-only: ffprobe still runs under --dry-run (measuring is the tool's whole job); nothing is written either way.
 
@@ -99,14 +99,14 @@ Usage: `node scripts/render.mjs <scene_dir> [options]`
 |---|---|---|---|
 | `--json` | boolean |  | print one JSON result document on stdout |
 | `--dry-run` | boolean |  | validate and plan without launching Chrome or ffmpeg or writing files |
-| `-o, --output` | string | required | video file to write; its extension must match --codec |
+| `-o, --output` | string | required | video file to write, its extension matching --codec; with --codec png, the directory to write the frames into |
 | `--codec` | h264 \| vp9 \| prores \| png | `h264` | h264 (.mp4), vp9 (.webm, with alpha), prores (.mov, ProRes 4444 with alpha) or png (a directory of RGBA PNG frames) |
 | `--quality` | integer |  | CRF, codec-neutral scale (lower is better): h264 0-51, vp9 0-63; not for prores. Default: HyperFrames' own default (CRF 16) |
 | `--fps` | integer |  | frame rate, integer 1-240 (default: the root's data-fps, else 30) |
 | `--workers` | integer\|auto | `auto` | parallel capture workers: auto or 1-8 |
 | `--timeout` | number | `1800` | kill the render (Chrome and ffmpeg included) after this long; 0 disables |
 | `--segments` | boolean |  | also render each segment the scene declares (request `segments`: in, loop, out) to <stem>.<segment><ext> next to the output, and measure the loop file's seam |
-| `--overwrite` | boolean |  | replace an existing output file |
+| `--overwrite` | boolean |  | replace an existing output file (with --codec png: a directory that holds only frame_NNNNNN.png files) |
 | `--ffmpeg-skill` | string |  | ffmpeg-skill checkout to cross-check the output with (default: HYPERFRAMES_SKILL_FFMPEG_SKILL_DIR, VIDEO_AGENT_FFMPEG_SKILL_DIR, ~/.claude/skills/ffmpeg-skill, ./vendor/ffmpeg-skill, ../ffmpeg-skill next to this checkout; none found: ffmpeg_skill.status UNCHECKED) |
 
 Result: `ffmpeg_skill.status` is `PASSED` (ffmpeg-skill/probe read the file and codec, resolution, fps, duration and, for vp9/prores, alpha all match), `FAILED` (it refused the file or measured a mismatch; the render then fails with `kind: verification`) or `UNCHECKED` with a `reason` (no checkout, no Python, no usable result, or a property it cannot measure). UNCHECKED is never a pass.
