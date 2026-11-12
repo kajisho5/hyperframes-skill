@@ -125,11 +125,11 @@ stay deterministic and need no script or CDN.
 
 Optional top-level `segments` (`{"in": 0.5, "loop": 4, "out": 0.5}`, seconds, whole frames,
 adding up to the scene's duration) splits the scene into IN / LOOP / OUT, so an edit can hold a
-lower third for any length: IN, the loop repeated, OUT. `scene` writes each segment as its own
+lower third for any length: IN, the loop repeated, OUT. `scene` writes each non-empty segment as its own
 composition (`segments/<name>.html`) and refuses a loop that could not be seamless: a layer that
 starts or ends inside the loop, a transition running in it, a video playing through it, or a loop
 animation whose period does not divide the loop length (it lists the periods that do).
-`render --segments` renders the full scene to `-o` and each segment to `<stem>.in<ext>`,
+`render --segments` renders the full scene to `-o` and each non-empty segment to `<stem>.in<ext>`,
 `<stem>.loop<ext>`, `<stem>.out<ext>`, verifies each, checks that their frame counts add up to
 the full render's, and measures the loop file's seam (`loop_seam`: the step from its last frame
 back to its first is no larger than its largest step between two of its own frames). The full schema is in `SKILL.md`. Unknown keys, URLs,

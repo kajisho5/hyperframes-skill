@@ -42,6 +42,25 @@ test("segments are refused when they do not fill the scene in whole frames", () 
   assert.deepEqual(p({ in: 0, loop: 5, out: 0 }, { layers: [{ type: "text", id: "t", start: 0, duration: 5, text: "x" }] }), [], "in and out may be 0");
 });
 
+test("one-frame segments at 30 fps add up in frames, and their declaration reads back whole", () => {
+  const dir = tmp();
+  const req = { ...base(), duration: 0.1, fps: 30, segments: { in: 1 / 30, loop: 1 / 30, out: 1 / 30 }, layers: [{ type: "text", id: "t", start: 0, duration: 0.1, text: "x" }] };
+  const s = validateRequest(req, FIXTURES);
+  assert.deepEqual(s.segments.map((S) => [S.start_frame, S.frames]), [[0, 1], [1, 1], [2, 1]]);
+  const r = tool("scene", [writeJson(join(dir, "req.json"), req), "-o", join(dir, "scene"), "--json"]);
+  assert.equal(r.code, 0, r.stderr);
+  assert.equal(r.doc.verified, true);
+  const p = tool("render", [join(dir, "scene"), "-o", join(dir, "o.mp4"), "--segments", "--dry-run", "--json"]);
+  assert.equal(p.code, 0, p.stderr);
+  assert.deepEqual(p.doc.segments.map((S) => S.frames), [1, 1, 1]);
+});
+
+test("inherited object names are not loop types or easings", () => {
+  const p = (A) => problems({ ...base(), segments: undefined, layers: [{ type: "text", id: "t", start: 0, duration: 5, text: "x", loop_animation: A }] });
+  assert.match(p({ type: "constructor", period: 1 }).join(), /type must be one of pulse, bob, spin/);
+  assert.match(p({ type: "pulse", period: 1, scale: 2, easing: "constructor" }).join(), /easing must be one of/);
+});
+
 test("a loop that cannot be seamless is refused, with the reason", () => {
   const req = (mut) => {
     const r = base();
@@ -60,6 +79,8 @@ test("a loop that cannot be seamless is refused, with the reason", () => {
   one((L) => (L.transition_out.duration = 1), /transition_out starts at 4s, inside the loop segment/);
   one((L) => ((L.start = 1), (L.duration = 4), delete L.transition_in), /starts inside the loop segment/);
   one((L) => ((L.duration = 3), (L.transition_out.duration = 0.5)), /ends inside the loop segment/);
+  // compared at the microsecond precision the markup carries, not rounded to milliseconds
+  one((L) => ((L.start = 0.5004), (L.duration = 4.4996), delete L.transition_in), /starts inside the loop segment/);
   // a layer wholly outside the loop is fine, whatever it does
   assert.deepEqual(req((L) => ((L.duration = 0.5), (L.transition_in.duration = 0.25), (L.transition_out.duration = 0.25), (L.loop_animation.period = 0.3))), []);
 });
@@ -163,6 +184,8 @@ test("seam measure: a closing loop passes, a jump at the wrap does not", () => {
   assert.equal(broken.ok, false);
   assert.ok(broken.wrap_diff > broken.max_step_diff + broken.tolerance, JSON.stringify(broken));
   assert.deepEqual(seamFromFrames([frame(1), frame(1)]).wrap_diff, 0);
+  assert.deepEqual([seamFromFrames([frame(3)]).ok, seamFromFrames([frame(3)]).wrap_diff], [true, 0]);
+  assert.deepEqual(seamFromFrames([]), { measured: false, reason: "no frame was decoded", frames: 0, tolerance: 1, ok: false });
 });
 
 // colour planes only: HyperFrames' alpha plane for a scaled layer (pulse here, and the zoom
