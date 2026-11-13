@@ -26,7 +26,8 @@ function step(tool, args) {
 }
 
 // A demo is demos/<name>/request.json (a hand-written request) or demos/<name>/template.json
-// ({template, values}: the request is made by the template tool first).
+// ({template, values, kit?}: the request is made by the template tool first; `kit` is a brand kit
+// file beside it, passed as --kit).
 // A batch demo is demos/<name>/rows.csv + batch.json ({template, name_field?, codec?}).
 const hasInput = (name) => ["request.json", "template.json", "batch.json"].some((f) => existsSync(join(ROOT, "demos", name, f)));
 const demos = readdirSync(join(ROOT, "demos"), { withFileTypes: true }).filter((d) => d.isDirectory() && d.name !== "out" && hasInput(d.name));
@@ -54,10 +55,12 @@ for (const d of demos) {
   let request = join(ROOT, "demos", d.name, "request.json");
   const tpl = join(ROOT, "demos", d.name, "template.json");
   if (existsSync(tpl)) {
-    const { template, values } = JSON.parse(readFileSync(tpl, "utf8"));
+    const { template, values, kit } = JSON.parse(readFileSync(tpl, "utf8"));
     writeFileSync(join(out, "values.json"), JSON.stringify(values));
     request = join(out, "request.json");
-    if (!step("template", [template, "--values", join(out, "values.json"), "-o", request])) continue;
+    const t = step("template", [template, "--values", join(out, "values.json"), ...(kit ? ["--kit", join(ROOT, "demos", d.name, kit)] : []), "-o", request]);
+    if (!t) continue;
+    if (t.kit) for (const k of [...t.kit.applied, ...t.kit.unused]) console.log(`  kit ${k.field}: ${k.value ? `${k.to} = ${k.value}` : `unused (${k.reason})`}`);
   }
   if (!step("scene", [request, "-o", join(out, "scene")])) continue;
   if (!step("preview", [join(out, "scene"), "-o", join(out, "preview.mp4")])) continue;

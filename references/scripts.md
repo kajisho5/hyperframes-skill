@@ -20,6 +20,7 @@ Usage: `node scripts/batch.mjs <rows> [options]`
 | `-o, --output` | string | required | output directory (created) |
 | `--name-field` | string |  | column whose value names each file (<row number>-<value>); default: the row number only |
 | `--font` | string |  | font file shipped with every row's scene and used first for all text (see template --font) |
+| `--kit` | string |  | brand kit for every row (see template --kit); a row's own value and --font win |
 | `--encoding` | utf-8 \| shift_jis | `utf-8` | text encoding of a CSV file |
 | `--codec` | h264 \| vp9 \| prores | `h264` | h264 (.mp4), vp9 (.webm) or prores (.mov, keeps alpha) |
 | `--quality` | integer |  | CRF, as render's --quality |
@@ -148,7 +149,33 @@ Usage: `node scripts/template.mjs [name] [options]`
 | `--values` | string |  | JSON object of template values |
 | `--set` | string[] |  | one template value; repeatable; overrides --values |
 | `--font` | string |  | font file (.otf/.ttf/.woff2) shipped with the scene and used first for all text, e.g. a Japanese font for Japanese glyph forms |
+| `--kit` | string |  | brand kit (Velisa kit@1 or ffmpeg-skill brand.json): fills the values the template maps to it (colours, logo) and font_file as --font; explicit values and --font win; unused kit fields are reported |
 | `--list` | boolean |  | list the templates and the values each takes |
 | `--overwrite` | boolean |  | replace an existing output file |
 
 Dry run: resolves and validates the values and the filled request and reports it; writes nothing.
+
+### Brand kit (`--kit`)
+
+`--kit FILE` takes a Velisa `kit@1` file or an ffmpeg-skill `brand.json` (every `brand.json` is a
+valid `kit@1`). Only what the kit states is used, and only where a template value has the same
+meaning; an explicit value (`--values`, `--set`, a batch row) wins over the kit, and `--font` wins over
+`font_file`. Colours are `RRGGBB` (a leading `#` is accepted) and are written as `#RRGGBB`; `logo` and
+`font_file` are paths relative to the kit file. `colours` is read like `colors`; a `schema` other than
+`velisa/kit@1` is refused.
+
+| Kit field | Template value |
+|---|---|
+| `colors.background` | `background` (break, title-card, session-slate, stinger-particles, stinger-logo-reveal) |
+| `colors.accent` | `accent` (session-slate, stinger-glitch, stinger-particles) |
+| `colors.text` | `text_color` (stinger-logo-reveal) |
+| `logo` | `logo` (stinger-logo-reveal) |
+| `font_file` | `--font`, for a template whose text comes from the caller |
+
+The result's `kit` says what happened to every field the kit has: `applied` (`field`, the value
+`to` it filled, the `value` used), `overridden` (an explicit value or `--font` won) and `unused`
+(with the `reason`): `colors.primary`, `colors.secondary` and `colors.outline`, `font` (a family name;
+templates take a file), `logo_position` / `logo_scale` / `logo_opacity`, `safe_margin`, `lang`,
+`styles`, `caption`, `loudness`, `name`, and the proposed `fonts`, `logo_variants`, `contrast`.
+`template --list` shows each template's `kit` map. `scene` takes no kit: a hand-written request has no
+typed values to map onto, so its colours and fonts are the request's own.

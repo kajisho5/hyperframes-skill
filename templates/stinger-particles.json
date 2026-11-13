@@ -35,6 +35,10 @@
       "description": "the particles"
     }
   },
+  "kit": {
+    "background": "colors.background",
+    "accent": "colors.accent"
+  },
   "derived": {
     "frame_duration": {
       "sub": [

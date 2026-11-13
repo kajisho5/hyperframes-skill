@@ -33,6 +33,10 @@
         "cli": "--json",
         "type": "boolean"
       },
+      "kit": {
+        "cli": "--kit",
+        "type": "string"
+      },
       "nameField": {
         "cli": "--name-field",
         "type": "string"
@@ -273,6 +277,10 @@
       "json": {
         "cli": "--json",
         "type": "boolean"
+      },
+      "kit": {
+        "cli": "--kit",
+        "type": "string"
       },
       "list": {
         "cli": "--list",

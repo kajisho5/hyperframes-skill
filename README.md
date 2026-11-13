@@ -101,6 +101,19 @@ result lists both kinds). A stinger has no sound in this release (`audio: false`
 For Japanese names add `--font NotoSansJP-Bold.otf` (any .otf/.ttf/.woff2): the font is copied
 into every scene, so the glyphs do not depend on the machine's fonts (see "What is verified").
 
+A brand kit fills the values it has a clear counterpart for: `--kit brand.json` on `template` or
+`batch` takes a Velisa `kit@1` file or an ffmpeg-skill `brand.json`, and maps `colors.background`,
+`colors.accent`, `colors.text`, `logo` and `font_file` onto the template's own values
+(`references/scripts.md`, "Brand kit"). A value you give wins over the kit. The result's `kit` lists
+every kit field as `applied` (with the value used), `overridden` or `unused` with the reason, so a
+colour a template has no place for is reported, not dropped.
+
+```bash
+node scripts/template.mjs title-card --kit brand.json --set title="Opening" -o /tmp/tc.json --json
+# "kit": {"applied": [{"field": "colors.background", "to": "background", "value": "#203040"}, ...],
+#         "unused": [{"field": "colors.primary", "reason": "template title-card has no value for this colour role"}, ...]}
+```
+
 Every row is validated before the first render, so a typo in row 30 stops the batch before
 anything is written.
 
@@ -230,7 +243,10 @@ and macOS:
   failure and `--fail-fast` reporting with a real failing Chrome;
 - fonts shipped with the scene: `@font-face` on a copied file, accepted by `hyperframes lint`, and
   a render whose glyphs differ from the default font's and repeat exactly; `--font` on `template`
-  and `batch`; `doctor`'s fontconfig report is `unknown` (never `missing`) without fontconfig;
+  and `batch`;
+- brand kits: `--kit` on `template` and `batch` fills exactly the mapped values, an explicit value
+  and `--font` win, every other field is reported; a title card rendered from a kit is frame-for-frame
+  identical (per-frame md5) to the same values given with `--set` and `--font`; `doctor`'s fontconfig report is `unknown` (never `missing`) without fontconfig;
 - the MCP server over real stdio: initialize, tools/list equal to the contract, tools/call results
   equal to the tools' own documents, `isError` on failures, notifications unanswered, unknown
   arguments refused;

@@ -1,0 +1,10 @@
+{
+  "template": "session-slate",
+  "kit": "kit.json",
+  "values": {
+    "session": "Session 4",
+    "title": "Brand Colours from One Kit",
+    "speaker": "Alex Morgan, Example Studio",
+    "duration": 3
+  }
+}

@@ -3,6 +3,22 @@
 All notable changes. The stability guarantee and deprecation policy are in
 [docs/contract.md](docs/contract.md).
 
+## Unreleased
+### Added
+
+- Brand input (roadmap step 16, design-decisions D15): `--kit FILE` on `template` and `batch` takes a
+  Velisa `kit@1` file or an ffmpeg-skill `brand.json` and fills the template values it maps:
+  `colors.background` -> `background`, `colors.accent` -> `accent`, `colors.text` -> `text_color`,
+  `logo` -> `logo`, and `font_file` as `--font` for templates whose text comes from the caller. Only what
+  the kit states is used; an explicit value and `--font` win. The result gains `kit` (`applied` with the
+  values used, `overridden`, `unused` with the reason for every other field the kit has), and
+  `template --list` shows each template's `kit` map. Templates may declare `kit` (value -> kit field).
+  Additive: no existing flag, value or result key changes.
+
+## 0.9.1
+
+- Roadmap step 18 ticked (the agent runs `render` for `rendered_layer`); no code change.
+
 ## 0.9.0
 ### Added
 

@@ -244,3 +244,37 @@ Format:
   the spec's field lists, dry-run sidecar planning and refusals; with renders: the default
   `stinger-geometric` opaque from frame 15 to 20 and not at 14, its `stinger.json`, and a lower third's
   `title.json` with `--segments`, both checked against the spec's rules).
+
+## D15. A brand kit fills only the template values with the same meaning; every other kit field is reported, nothing is defaulted
+
+- **Reported as:** expected while building roadmap step 16: the kit could fill more (`colors.primary`
+  as a stinger's `color` or `color_1`, `safe_margin` as a layout margin, `font` by family name, `lang`
+  as the template's `lang`, `logo_position` / `logo_scale` for the logo reveal), `scene` could take a kit
+  too, and a kit without a colour could fall back to ffmpeg-skill's `brand.json` defaults.
+- **Decision:** `--kit FILE` on `template` and `batch` reads a Velisa `kit@1` file or an ffmpeg-skill
+  `brand.json` (`schema` absent or `velisa/kit@1`; `colours` read like `colors`, both together refused).
+  Each template declares in `templates/<name>.json` which of its values a kit field fills (`kit`:
+  value -> `colors.<role>` or `logo`), and only fields with one meaning there are mapped:
+  `colors.background` -> `background`, `colors.accent` -> `accent`, `colors.text` -> `text_color`,
+  `logo` -> `logo`, and `font_file` as `--font` when the template draws caller-given text. Colours go
+  from `RRGGBB` to `#RRGGBB` (the templates' `color` type requires `#`); `logo` and `font_file` resolve
+  against the kit file's directory. An explicit value (`--values`, `--set`, a batch row) wins, and
+  `--font` wins over `font_file`. The result's `kit` lists every field the kit has once: `applied`
+  (with the value used), `overridden`, or `unused` with the reason. A malformed colour or path is
+  refused only when it would be applied. `scene` takes no kit.
+- **Why:** the Velisa kit spec's hyperframes row has no field-level mapping ("the caller fills
+  template values from the kit"), so this skill maps only what has the same meaning in a template and
+  reports the rest; a mapping the spec does not state is to be proposed to Velisa before it is added.
+  `primary` against `color_1` or a stinger's single `color` is a creative choice, not a translation,
+  and the spec's converter rules say only what the kit states is passed on: filling ffmpeg-skill's
+  defaults would put colours in the picture the user never chose. A kit's `lang` is a script hint for
+  ffmpeg-skill's `--lang`, not necessarily a BCP 47 tag. Template layouts are fixed, so there is no
+  margin, logo position or logo size to set. A hand-written scene request has no typed values, so
+  there is nothing for a kit to map onto; its colours and fonts are already the caller's. Explicit
+  values winning keeps every existing call unchanged: without `--kit` the result has no `kit` key and
+  every template default stays as it was.
+- **Pinned by:** `tests/kit.test.mjs` (every template's map against its value types; a full kit@1
+  with every field reported exactly once; explicit values and `--font` winning; a `brand.json` with
+  only `primary` filling nothing; `font_file` unused without caller text; refusals; `template --list`;
+  `batch --kit` per row; with renders: a title card from a kit is frame-for-frame identical, per-frame
+  md5, to the same values given with `--set` and `--font`, and its background is the kit's colour).
