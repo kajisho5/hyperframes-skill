@@ -3,7 +3,7 @@
 All notable changes. The stability guarantee and deprecation policy are in
 [docs/contract.md](docs/contract.md).
 
-## Unreleased
+## 0.10.0
 ### Added
 
 - Brand input (roadmap step 16, design-decisions D15): `--kit FILE` on `template` and `batch` takes a
