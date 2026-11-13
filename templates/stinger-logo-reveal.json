@@ -1,0 +1,181 @@
+{
+  "template_version": 1,
+  "name": "stinger-logo-reveal",
+  "description": "Stinger: a solid backdrop fades in over the picture while the logo zooms up, covering the whole frame from the cut point for the hold, then both clear. The logo is a local image file (PNG, SVG, ...). Render with --codec prores (.mov), vp9 (.webm) or png; render writes <stem>.stinger.json with the cut point and the cover window.",
+  "values": {
+    "duration": {
+      "type": "number",
+      "default": 1.2,
+      "min": 0.3,
+      "max": 10,
+      "description": "seconds, the whole stinger: enter, hold full cover, exit"
+    },
+    "cut_point": {
+      "type": "number",
+      "default": 0.5,
+      "min": 0.1,
+      "max": 9,
+      "description": "seconds from the stinger's first frame to the frame the graphic first covers the whole picture, where the edit cuts underneath it; must be on a frame at 30 fps (x 30 a whole number)"
+    },
+    "hold": {
+      "type": "number",
+      "default": 0.2,
+      "min": 0.1,
+      "max": 9,
+      "description": "seconds the graphic holds full cover from the cut point; the stated cover window is [cut_point, cut_point + hold)"
+    },
+    "logo": {
+      "type": "string",
+      "required": true,
+      "max_length": 1024,
+      "description": "logo image file (.png, .svg, .jpg, .webp), a path relative to where template runs"
+    },
+    "text": {
+      "type": "string",
+      "required": false,
+      "max_length": 80,
+      "description": "one line under the logo; omitted when absent"
+    },
+    "background": {
+      "type": "color",
+      "default": "#111111",
+      "description": "the backdrop that covers the frame"
+    },
+    "text_color": {
+      "type": "color",
+      "default": "#ffffff",
+      "description": "the line under the logo"
+    },
+    "lang": {
+      "type": "string",
+      "default": "en",
+      "max_length": 16,
+      "description": "BCP 47 language tag of the text (e.g. ja). It does not by itself give Japanese glyph forms: pass --font with a Japanese font for that"
+    }
+  },
+  "derived": {
+    "frame_duration": {
+      "sub": [
+        "duration"
+      ],
+      "description": "duration on the frame grid: rounded to whole frames at 30 fps"
+    },
+    "cover_end": {
+      "add": [
+        "cut_point",
+        "hold"
+      ],
+      "description": "the end of the cover window: cut_point + hold"
+    },
+    "exit": {
+      "sub": [
+        "duration",
+        "cut_point",
+        "hold"
+      ],
+      "description": "the exit after the cover window: duration - cut_point - hold"
+    }
+  },
+  "request": {
+    "scene_version": 1,
+    "id": "stinger-logo-reveal",
+    "width": 1920,
+    "height": 1080,
+    "duration": "{{frame_duration}}",
+    "fps": 30,
+    "background": "transparent",
+    "stinger": {
+      "cut_point": "{{cut_point}}",
+      "cover": {
+        "start": "{{cut_point}}",
+        "end": "{{cover_end}}"
+      }
+    },
+    "lang": "{{lang}}",
+    "layers": [
+      {
+        "type": "text",
+        "id": "backdrop",
+        "start": 0,
+        "duration": "{{frame_duration}}",
+        "text": " ",
+        "box": {
+          "x": 0,
+          "y": 0,
+          "width": 1920,
+          "height": 1080
+        },
+        "style": {
+          "font_size": 8,
+          "background": "{{background}}"
+        },
+        "transition_in": {
+          "type": "fade",
+          "duration": "{{cut_point}}",
+          "easing": "ease_out"
+        },
+        "transition_out": {
+          "type": "fade",
+          "duration": "{{exit}}",
+          "easing": "ease_in"
+        }
+      },
+      {
+        "type": "image",
+        "id": "logo",
+        "start": 0,
+        "duration": "{{frame_duration}}",
+        "src": "{{logo}}",
+        "box": {
+          "x": 560,
+          "y": 240,
+          "width": 800,
+          "height": 420
+        },
+        "fit": "contain",
+        "transition_in": {
+          "type": "zoom",
+          "duration": "{{cut_point}}",
+          "scale": 0.6,
+          "easing": "ease_out"
+        },
+        "transition_out": {
+          "type": "zoom",
+          "duration": "{{exit}}",
+          "scale": 1.3,
+          "easing": "ease_in"
+        }
+      },
+      {
+        "when": "text",
+        "type": "text",
+        "id": "text",
+        "start": 0,
+        "duration": "{{frame_duration}}",
+        "text": "{{text}}",
+        "box": {
+          "x": 160,
+          "y": 720,
+          "width": 1600,
+          "height": 120
+        },
+        "style": {
+          "font_size": 56,
+          "font_weight": 700,
+          "color": "{{text_color}}"
+        },
+        "transition_in": {
+          "type": "slide",
+          "duration": "{{cut_point}}",
+          "direction": "down",
+          "distance": 60,
+          "easing": "ease_out"
+        },
+        "transition_out": {
+          "type": "fade",
+          "duration": "{{exit}}"
+        }
+      }
+    ]
+  }
+}

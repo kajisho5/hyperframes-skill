@@ -1,0 +1,480 @@
+{
+  "template_version": 1,
+  "name": "stinger-particles",
+  "description": "Stinger: a colour field bursts in from the centre with a scatter of particles, covers the whole frame from the cut point for the hold, and blows out as the particles fly off. Transparent around the field: render with --codec prores (.mov), vp9 (.webm) or png; render writes <stem>.stinger.json with the cut point and the cover window.",
+  "values": {
+    "duration": {
+      "type": "number",
+      "default": 1.2,
+      "min": 0.3,
+      "max": 10,
+      "description": "seconds, the whole stinger: enter, hold full cover, exit"
+    },
+    "cut_point": {
+      "type": "number",
+      "default": 0.5,
+      "min": 0.1,
+      "max": 9,
+      "description": "seconds from the stinger's first frame to the frame the graphic first covers the whole picture, where the edit cuts underneath it; must be on a frame at 30 fps (x 30 a whole number)"
+    },
+    "hold": {
+      "type": "number",
+      "default": 0.2,
+      "min": 0.1,
+      "max": 9,
+      "description": "seconds the graphic holds full cover from the cut point; the stated cover window is [cut_point, cut_point + hold)"
+    },
+    "background": {
+      "type": "color",
+      "default": "#14213d",
+      "description": "the field that covers the frame"
+    },
+    "accent": {
+      "type": "color",
+      "default": "#fca311",
+      "description": "the particles"
+    }
+  },
+  "derived": {
+    "frame_duration": {
+      "sub": [
+        "duration"
+      ],
+      "description": "duration on the frame grid: rounded to whole frames at 30 fps"
+    },
+    "cover_end": {
+      "add": [
+        "cut_point",
+        "hold"
+      ],
+      "description": "the end of the cover window: cut_point + hold"
+    },
+    "exit": {
+      "sub": [
+        "duration",
+        "cut_point",
+        "hold"
+      ],
+      "description": "the exit after the cover window: duration - cut_point - hold"
+    }
+  },
+  "request": {
+    "scene_version": 1,
+    "id": "stinger-particles",
+    "width": 1920,
+    "height": 1080,
+    "duration": "{{frame_duration}}",
+    "fps": 30,
+    "background": "transparent",
+    "stinger": {
+      "cut_point": "{{cut_point}}",
+      "cover": {
+        "start": "{{cut_point}}",
+        "end": "{{cover_end}}"
+      }
+    },
+    "layers": [
+      {
+        "type": "text",
+        "id": "field",
+        "start": 0,
+        "duration": "{{frame_duration}}",
+        "text": " ",
+        "box": {
+          "x": 0,
+          "y": 0,
+          "width": 1920,
+          "height": 1080
+        },
+        "style": {
+          "font_size": 8,
+          "background": "{{background}}"
+        },
+        "transition_in": {
+          "type": "zoom",
+          "duration": "{{cut_point}}",
+          "scale": 0.2,
+          "easing": "ease_out"
+        },
+        "transition_out": {
+          "type": "zoom",
+          "duration": "{{exit}}",
+          "scale": 1.6,
+          "easing": "ease_in"
+        }
+      },
+      {
+        "type": "text",
+        "id": "dot_1",
+        "start": 0,
+        "duration": "{{frame_duration}}",
+        "text": "●",
+        "box": {
+          "x": 180,
+          "y": 140,
+          "width": 90,
+          "height": 90
+        },
+        "style": {
+          "font_size": 90,
+          "color": "{{accent}}",
+          "line_height": 1
+        },
+        "transition_in": {
+          "type": "zoom",
+          "duration": "{{cut_point}}",
+          "scale": 3,
+          "easing": "ease_out"
+        },
+        "transition_out": {
+          "type": "slide",
+          "duration": "{{exit}}",
+          "direction": "up",
+          "distance": 400,
+          "easing": "ease_in"
+        }
+      },
+      {
+        "type": "text",
+        "id": "dot_2",
+        "start": 0,
+        "duration": "{{frame_duration}}",
+        "text": "●",
+        "box": {
+          "x": 1500,
+          "y": 120,
+          "width": 140,
+          "height": 140
+        },
+        "style": {
+          "font_size": 140,
+          "color": "{{accent}}",
+          "line_height": 1
+        },
+        "transition_in": {
+          "type": "zoom",
+          "duration": "{{cut_point}}",
+          "scale": 0.3,
+          "easing": "ease_out"
+        },
+        "transition_out": {
+          "type": "slide",
+          "duration": "{{exit}}",
+          "direction": "down",
+          "distance": 600,
+          "easing": "ease_in"
+        }
+      },
+      {
+        "type": "text",
+        "id": "dot_3",
+        "start": 0,
+        "duration": "{{frame_duration}}",
+        "text": "●",
+        "box": {
+          "x": 860,
+          "y": 40,
+          "width": 70,
+          "height": 70
+        },
+        "style": {
+          "font_size": 70,
+          "color": "{{accent}}",
+          "line_height": 1
+        },
+        "transition_in": {
+          "type": "zoom",
+          "duration": "{{cut_point}}",
+          "scale": 2.5,
+          "easing": "ease_out"
+        },
+        "transition_out": {
+          "type": "slide",
+          "duration": "{{exit}}",
+          "direction": "left",
+          "distance": 500,
+          "easing": "ease_in"
+        }
+      },
+      {
+        "type": "text",
+        "id": "dot_4",
+        "start": 0,
+        "duration": "{{frame_duration}}",
+        "text": "●",
+        "box": {
+          "x": 320,
+          "y": 760,
+          "width": 160,
+          "height": 160
+        },
+        "style": {
+          "font_size": 160,
+          "color": "{{accent}}",
+          "line_height": 1
+        },
+        "transition_in": {
+          "type": "zoom",
+          "duration": "{{cut_point}}",
+          "scale": 0.4,
+          "easing": "ease_out"
+        },
+        "transition_out": {
+          "type": "slide",
+          "duration": "{{exit}}",
+          "direction": "right",
+          "distance": 700,
+          "easing": "ease_in"
+        }
+      },
+      {
+        "type": "text",
+        "id": "dot_5",
+        "start": 0,
+        "duration": "{{frame_duration}}",
+        "text": "●",
+        "box": {
+          "x": 1680,
+          "y": 820,
+          "width": 110,
+          "height": 110
+        },
+        "style": {
+          "font_size": 110,
+          "color": "{{accent}}",
+          "line_height": 1
+        },
+        "transition_in": {
+          "type": "zoom",
+          "duration": "{{cut_point}}",
+          "scale": 4,
+          "easing": "ease_out"
+        },
+        "transition_out": {
+          "type": "slide",
+          "duration": "{{exit}}",
+          "direction": "up",
+          "distance": 400,
+          "easing": "ease_in"
+        }
+      },
+      {
+        "type": "text",
+        "id": "dot_6",
+        "start": 0,
+        "duration": "{{frame_duration}}",
+        "text": "●",
+        "box": {
+          "x": 1180,
+          "y": 560,
+          "width": 60,
+          "height": 60
+        },
+        "style": {
+          "font_size": 60,
+          "color": "{{accent}}",
+          "line_height": 1
+        },
+        "transition_in": {
+          "type": "zoom",
+          "duration": "{{cut_point}}",
+          "scale": 0.5,
+          "easing": "ease_out"
+        },
+        "transition_out": {
+          "type": "slide",
+          "duration": "{{exit}}",
+          "direction": "down",
+          "distance": 600,
+          "easing": "ease_in"
+        }
+      },
+      {
+        "type": "text",
+        "id": "dot_7",
+        "start": 0,
+        "duration": "{{frame_duration}}",
+        "text": "●",
+        "box": {
+          "x": 560,
+          "y": 420,
+          "width": 120,
+          "height": 120
+        },
+        "style": {
+          "font_size": 120,
+          "color": "{{accent}}",
+          "line_height": 1
+        },
+        "transition_in": {
+          "type": "zoom",
+          "duration": "{{cut_point}}",
+          "scale": 3,
+          "easing": "ease_out"
+        },
+        "transition_out": {
+          "type": "slide",
+          "duration": "{{exit}}",
+          "direction": "left",
+          "distance": 500,
+          "easing": "ease_in"
+        }
+      },
+      {
+        "type": "text",
+        "id": "dot_8",
+        "start": 0,
+        "duration": "{{frame_duration}}",
+        "text": "●",
+        "box": {
+          "x": 1360,
+          "y": 300,
+          "width": 80,
+          "height": 80
+        },
+        "style": {
+          "font_size": 80,
+          "color": "{{accent}}",
+          "line_height": 1
+        },
+        "transition_in": {
+          "type": "zoom",
+          "duration": "{{cut_point}}",
+          "scale": 0.3,
+          "easing": "ease_out"
+        },
+        "transition_out": {
+          "type": "slide",
+          "duration": "{{exit}}",
+          "direction": "right",
+          "distance": 700,
+          "easing": "ease_in"
+        }
+      },
+      {
+        "type": "text",
+        "id": "dot_9",
+        "start": 0,
+        "duration": "{{frame_duration}}",
+        "text": "●",
+        "box": {
+          "x": 80,
+          "y": 980,
+          "width": 70,
+          "height": 70
+        },
+        "style": {
+          "font_size": 70,
+          "color": "{{accent}}",
+          "line_height": 1
+        },
+        "transition_in": {
+          "type": "zoom",
+          "duration": "{{cut_point}}",
+          "scale": 2.5,
+          "easing": "ease_out"
+        },
+        "transition_out": {
+          "type": "slide",
+          "duration": "{{exit}}",
+          "direction": "up",
+          "distance": 400,
+          "easing": "ease_in"
+        }
+      },
+      {
+        "type": "text",
+        "id": "dot_10",
+        "start": 0,
+        "duration": "{{frame_duration}}",
+        "text": "●",
+        "box": {
+          "x": 980,
+          "y": 900,
+          "width": 130,
+          "height": 130
+        },
+        "style": {
+          "font_size": 130,
+          "color": "{{accent}}",
+          "line_height": 1
+        },
+        "transition_in": {
+          "type": "zoom",
+          "duration": "{{cut_point}}",
+          "scale": 0.4,
+          "easing": "ease_out"
+        },
+        "transition_out": {
+          "type": "slide",
+          "duration": "{{exit}}",
+          "direction": "down",
+          "distance": 600,
+          "easing": "ease_in"
+        }
+      },
+      {
+        "type": "text",
+        "id": "dot_11",
+        "start": 0,
+        "duration": "{{frame_duration}}",
+        "text": "●",
+        "box": {
+          "x": 1760,
+          "y": 480,
+          "width": 60,
+          "height": 60
+        },
+        "style": {
+          "font_size": 60,
+          "color": "{{accent}}",
+          "line_height": 1
+        },
+        "transition_in": {
+          "type": "zoom",
+          "duration": "{{cut_point}}",
+          "scale": 4,
+          "easing": "ease_out"
+        },
+        "transition_out": {
+          "type": "slide",
+          "duration": "{{exit}}",
+          "direction": "left",
+          "distance": 500,
+          "easing": "ease_in"
+        }
+      },
+      {
+        "type": "text",
+        "id": "dot_12",
+        "start": 0,
+        "duration": "{{frame_duration}}",
+        "text": "●",
+        "box": {
+          "x": 700,
+          "y": 980,
+          "width": 90,
+          "height": 90
+        },
+        "style": {
+          "font_size": 90,
+          "color": "{{accent}}",
+          "line_height": 1
+        },
+        "transition_in": {
+          "type": "zoom",
+          "duration": "{{cut_point}}",
+          "scale": 0.5,
+          "easing": "ease_out"
+        },
+        "transition_out": {
+          "type": "slide",
+          "duration": "{{exit}}",
+          "direction": "right",
+          "distance": 700,
+          "easing": "ease_in"
+        }
+      }
+    ]
+  }
+}

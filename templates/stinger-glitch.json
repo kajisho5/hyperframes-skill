@@ -1,0 +1,301 @@
+{
+  "template_version": 1,
+  "name": "stinger-glitch",
+  "description": "Stinger: six horizontal bars tear in from alternate sides at different speeds with an accent slice, cover the whole frame from the cut point for the hold, and tear out. Transparent around the bars: render with --codec prores (.mov), vp9 (.webm) or png; render writes <stem>.stinger.json with the cut point and the cover window.",
+  "values": {
+    "duration": {
+      "type": "number",
+      "default": 1.2,
+      "min": 0.3,
+      "max": 10,
+      "description": "seconds, the whole stinger: enter, hold full cover, exit"
+    },
+    "cut_point": {
+      "type": "number",
+      "default": 0.5,
+      "min": 0.1,
+      "max": 9,
+      "description": "seconds from the stinger's first frame to the frame the graphic first covers the whole picture, where the edit cuts underneath it; must be on a frame at 30 fps (x 30 a whole number)"
+    },
+    "hold": {
+      "type": "number",
+      "default": 0.2,
+      "min": 0.1,
+      "max": 9,
+      "description": "seconds the graphic holds full cover from the cut point; the stated cover window is [cut_point, cut_point + hold)"
+    },
+    "color_1": {
+      "type": "color",
+      "default": "#0b0c10",
+      "description": "odd bars"
+    },
+    "color_2": {
+      "type": "color",
+      "default": "#1f2833",
+      "description": "even bars"
+    },
+    "accent": {
+      "type": "color",
+      "default": "#66fcf1",
+      "description": "the thin slice across the middle"
+    }
+  },
+  "derived": {
+    "frame_duration": {
+      "sub": [
+        "duration"
+      ],
+      "description": "duration on the frame grid: rounded to whole frames at 30 fps"
+    },
+    "cover_end": {
+      "add": [
+        "cut_point",
+        "hold"
+      ],
+      "description": "the end of the cover window: cut_point + hold"
+    },
+    "exit": {
+      "sub": [
+        "duration",
+        "cut_point",
+        "hold"
+      ],
+      "description": "the exit after the cover window: duration - cut_point - hold"
+    }
+  },
+  "request": {
+    "scene_version": 1,
+    "id": "stinger-glitch",
+    "width": 1920,
+    "height": 1080,
+    "duration": "{{frame_duration}}",
+    "fps": 30,
+    "background": "transparent",
+    "stinger": {
+      "cut_point": "{{cut_point}}",
+      "cover": {
+        "start": "{{cut_point}}",
+        "end": "{{cover_end}}"
+      }
+    },
+    "layers": [
+      {
+        "type": "text",
+        "id": "bar_1",
+        "start": 0,
+        "duration": "{{frame_duration}}",
+        "text": " ",
+        "box": {
+          "x": 0,
+          "y": 0,
+          "width": 1920,
+          "height": 180
+        },
+        "style": {
+          "font_size": 8,
+          "background": "{{color_1}}"
+        },
+        "transition_in": {
+          "type": "slide",
+          "duration": "{{cut_point}}",
+          "direction": "left",
+          "distance": 1920,
+          "easing": "linear"
+        },
+        "transition_out": {
+          "type": "slide",
+          "duration": "{{exit}}",
+          "direction": "right",
+          "distance": 1920,
+          "easing": "linear"
+        }
+      },
+      {
+        "type": "text",
+        "id": "bar_2",
+        "start": 0,
+        "duration": "{{frame_duration}}",
+        "text": " ",
+        "box": {
+          "x": 0,
+          "y": 180,
+          "width": 1920,
+          "height": 180
+        },
+        "style": {
+          "font_size": 8,
+          "background": "{{color_2}}"
+        },
+        "transition_in": {
+          "type": "slide",
+          "duration": "{{cut_point}}",
+          "direction": "right",
+          "distance": 2880,
+          "easing": "ease_out"
+        },
+        "transition_out": {
+          "type": "slide",
+          "duration": "{{exit}}",
+          "direction": "left",
+          "distance": 3456,
+          "easing": "linear"
+        }
+      },
+      {
+        "type": "text",
+        "id": "bar_3",
+        "start": 0,
+        "duration": "{{frame_duration}}",
+        "text": " ",
+        "box": {
+          "x": 0,
+          "y": 360,
+          "width": 1920,
+          "height": 180
+        },
+        "style": {
+          "font_size": 8,
+          "background": "{{color_1}}"
+        },
+        "transition_in": {
+          "type": "slide",
+          "duration": "{{cut_point}}",
+          "direction": "left",
+          "distance": 2304,
+          "easing": "linear"
+        },
+        "transition_out": {
+          "type": "slide",
+          "duration": "{{exit}}",
+          "direction": "right",
+          "distance": 2496,
+          "easing": "linear"
+        }
+      },
+      {
+        "type": "text",
+        "id": "bar_4",
+        "start": 0,
+        "duration": "{{frame_duration}}",
+        "text": " ",
+        "box": {
+          "x": 0,
+          "y": 540,
+          "width": 1920,
+          "height": 180
+        },
+        "style": {
+          "font_size": 8,
+          "background": "{{color_2}}"
+        },
+        "transition_in": {
+          "type": "slide",
+          "duration": "{{cut_point}}",
+          "direction": "right",
+          "distance": 1920,
+          "easing": "ease_in_out"
+        },
+        "transition_out": {
+          "type": "slide",
+          "duration": "{{exit}}",
+          "direction": "left",
+          "distance": 1920,
+          "easing": "linear"
+        }
+      },
+      {
+        "type": "text",
+        "id": "bar_5",
+        "start": 0,
+        "duration": "{{frame_duration}}",
+        "text": " ",
+        "box": {
+          "x": 0,
+          "y": 720,
+          "width": 1920,
+          "height": 180
+        },
+        "style": {
+          "font_size": 8,
+          "background": "{{color_1}}"
+        },
+        "transition_in": {
+          "type": "slide",
+          "duration": "{{cut_point}}",
+          "direction": "left",
+          "distance": 3456,
+          "easing": "linear"
+        },
+        "transition_out": {
+          "type": "slide",
+          "duration": "{{exit}}",
+          "direction": "right",
+          "distance": 2880,
+          "easing": "linear"
+        }
+      },
+      {
+        "type": "text",
+        "id": "bar_6",
+        "start": 0,
+        "duration": "{{frame_duration}}",
+        "text": " ",
+        "box": {
+          "x": 0,
+          "y": 900,
+          "width": 1920,
+          "height": 180
+        },
+        "style": {
+          "font_size": 8,
+          "background": "{{color_2}}"
+        },
+        "transition_in": {
+          "type": "slide",
+          "duration": "{{cut_point}}",
+          "direction": "right",
+          "distance": 2496,
+          "easing": "ease_out"
+        },
+        "transition_out": {
+          "type": "slide",
+          "duration": "{{exit}}",
+          "direction": "left",
+          "distance": 2304,
+          "easing": "linear"
+        }
+      },
+      {
+        "type": "text",
+        "id": "slice",
+        "start": 0,
+        "duration": "{{frame_duration}}",
+        "text": " ",
+        "box": {
+          "x": 0,
+          "y": 500,
+          "width": 1920,
+          "height": 40
+        },
+        "style": {
+          "font_size": 8,
+          "background": "{{accent}}"
+        },
+        "transition_in": {
+          "type": "slide",
+          "duration": "{{cut_point}}",
+          "direction": "right",
+          "distance": 3840,
+          "easing": "linear"
+        },
+        "transition_out": {
+          "type": "slide",
+          "duration": "{{exit}}",
+          "direction": "left",
+          "distance": 3840,
+          "easing": "linear"
+        }
+      }
+    ]
+  }
+}

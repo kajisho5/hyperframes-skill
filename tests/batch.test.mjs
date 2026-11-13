@@ -1,6 +1,6 @@
 // batch: rows files, validation of every row before any render, per-row results that don't lie.
 import assert from "node:assert/strict";
-import { existsSync, readdirSync, writeFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { test } from "node:test";
 import { loadRows, parseCsv, slug } from "../lib/rows.mjs";
@@ -85,7 +85,11 @@ test("batch renders one verified file per row and refuses to overwrite them", { 
   assert.deepEqual(r.doc.summary, { total: 2, completed: 2, failed: 0, skipped: 0 });
   assert.deepEqual(r.doc.rows.map((x) => [x.name, x.status, x.verified]), [["001-Coffee-Break", "completed", true], ["002-Lunch", "completed", true]]);
   for (const x of r.doc.rows) assert.ok(x.verification.find((s) => s.step === "frames").ok);
-  assert.deepEqual(readdirSync(out).sort(), ["001-Coffee-Break.mp4", "002-Lunch.mp4", "scenes"]);
+  // break is title material: each row's title.json sits beside its file (roadmap step 17)
+  assert.deepEqual(readdirSync(out).sort(), ["001-Coffee-Break.mp4", "001-Coffee-Break.title.json", "002-Lunch.mp4", "002-Lunch.title.json", "scenes"]);
+  const tj = JSON.parse(readFileSync(join(out, "002-Lunch.title.json"), "utf8"));
+  assert.deepEqual([tj.file, tj.segments, tj.alpha], ["002-Lunch.mp4", { in: 0, loop: 1, out: 0 }, undefined]);
+  assert.deepEqual(r.doc.rows[1].sidecar.content, tj);
   const again = tool("batch", [rows, "--template", "break", "--name-field", "message", "-o", out, "--json"]);
   assert.equal(again.code, 1);
   assert.equal(again.doc.error.kind, "input");

@@ -136,7 +136,7 @@ Dry run: validates the request and every asset path and reports the files it wou
 
 `hyperframes-skill/template` · role `execution`
 
-Fill one of the skill's scene templates (lower-third, title-card, session-slate, break) with caller-given values and write the resulting scene request JSON for `scene`. --list shows every template and the values it takes.
+Fill one of the skill's scene templates (titles: lower-third, title-card, session-slate, break; stingers: stinger-geometric, stinger-glitch, stinger-particles, stinger-brush, stinger-logo-reveal) with caller-given values and write the resulting scene request JSON for `scene`. --list shows every template and the values it takes.
 
 Usage: `node scripts/template.mjs [name] [options]`
 

@@ -34,21 +34,48 @@
       "description": "BCP 47 language tag of the text (e.g. ja). It does not by itself give Japanese glyph forms: pass --font with a Japanese font for that"
     }
   },
+  "derived": {
+    "frame_duration": {
+      "sub": [
+        "duration"
+      ],
+      "description": "duration on the frame grid: rounded to whole frames at 30 fps, as the render's frame count always was"
+    },
+    "loop": {
+      "sub": [
+        "frame_duration"
+      ],
+      "description": "the loop segment: duration (no transitions: the whole title loops)"
+    }
+  },
   "request": {
     "scene_version": 1,
     "id": "break",
     "width": 1920,
     "height": 1080,
-    "duration": "{{duration}}",
+    "duration": "{{frame_duration}}",
     "fps": 30,
     "background": "{{background}}",
     "lang": "{{lang}}",
+    "segments": {
+      "in": 0,
+      "loop": "{{loop}}",
+      "out": 0
+    },
+    "title": {
+      "safe_area": {
+        "x": 160,
+        "y": 300,
+        "width": 1600,
+        "height": 460
+      }
+    },
     "layers": [
       {
         "type": "text",
         "id": "message",
         "start": 0,
-        "duration": "{{duration}}",
+        "duration": "{{frame_duration}}",
         "text": "{{message}}",
         "box": {
           "x": 160,
@@ -68,7 +95,7 @@
         "type": "text",
         "id": "resume",
         "start": 0,
-        "duration": "{{duration}}",
+        "duration": "{{frame_duration}}",
         "text": "{{resume}}",
         "box": {
           "x": 160,
