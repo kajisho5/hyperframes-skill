@@ -3,7 +3,7 @@
 All notable changes. The stability guarantee and deprecation policy are in
 [docs/contract.md](docs/contract.md).
 
-## Unreleased
+## 0.9.0
 ### Added
 
 - Stinger templates with a cut point (roadmap step 15, design-decisions D14): `stinger-geometric`,
