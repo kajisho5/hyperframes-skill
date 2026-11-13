@@ -6,6 +6,7 @@
       "encoding",
       "failFast",
       "font",
+      "kit",
       "nameField",
       "output",
       "overwrite",
@@ -91,6 +92,7 @@
     "properties": [
       "dryRun",
       "font",
+      "kit",
       "list",
       "name",
       "output",

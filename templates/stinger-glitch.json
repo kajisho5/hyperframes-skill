@@ -40,6 +40,9 @@
       "description": "the thin slice across the middle"
     }
   },
+  "kit": {
+    "accent": "colors.accent"
+  },
   "derived": {
     "frame_duration": {
       "sub": [

@@ -1,0 +1,12 @@
+{
+  "schema": "velisa/kit@1",
+  "name": "Example Studio",
+  "colors": {
+    "primary": "FFD200",
+    "text": "FFFFFF",
+    "outline": "000000",
+    "background": "203040",
+    "accent": "E84855"
+  },
+  "safe_margin": 48
+}

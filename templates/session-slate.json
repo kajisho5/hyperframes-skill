@@ -51,6 +51,10 @@
       "description": "BCP 47 language tag of the text (e.g. ja). It does not by itself give Japanese glyph forms: pass --font with a Japanese font for that"
     }
   },
+  "kit": {
+    "background": "colors.background",
+    "accent": "colors.accent"
+  },
   "derived": {
     "frame_duration": {
       "sub": [
