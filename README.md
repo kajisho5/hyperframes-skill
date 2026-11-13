@@ -78,6 +78,26 @@ node scripts/batch.mjs speakers.csv --template lower-third --name-field name --c
 # out/001-佐藤-花子.mov, out/002-..., and each row's scene under out/scenes/
 ```
 
+Title and stinger material carry their timing in a file beside the render. A title template
+(lower-third, title-card, session-slate, break) declares IN / LOOP / OUT segments, and `render`
+writes `<stem>.title.json`; a stinger template writes `<stem>.stinger.json` with the cut point and
+the window the graphic covers the whole frame, after measuring every frame of that window opaque:
+
+```bash
+node scripts/template.mjs stinger-geometric --set duration=1.2 --set cut_point=0.5 -o /tmp/st.json
+node scripts/scene.mjs /tmp/st.json -o /tmp/st
+node scripts/render.mjs /tmp/st -o /tmp/st.mov --codec prores --json
+# /tmp/st.stinger.json: "cut_point": 0.5, "cut_point_frame": 15, "cover": {"start": 0.5, "end": 0.7}, ...
+node scripts/render.mjs /tmp/lt -o /tmp/lt.mov --codec prores --segments --json
+# /tmp/lt.title.json: "segments": {"in": 0.5, "loop": 7, "out": 0.5}, "segment_frames", "loop_seam", ...
+```
+
+Both follow the Velisa spec for title and stinger metadata. No receiver opens them: the caller
+passes `cut_point` and `cover` to video-editing-skill's stinger transition or qc-skill's stinger
+check, and `segments` to motion-graphics-skill's `rendered_layer` (`in_duration`, `out_duration`,
+`loop`), unrounded. The other fields are the ones the spec marks proposed (`sidecar.fields` in the
+result lists both kinds). A stinger has no sound in this release (`audio: false`).
+
 For Japanese names add `--font NotoSansJP-Bold.otf` (any .otf/.ttf/.woff2): the font is copied
 into every scene, so the glyphs do not depend on the machine's fonts (see "What is verified").
 
@@ -91,7 +111,7 @@ As an agent skill, point the agent at `SKILL.md` (it names the scripts relative 
 | Tool | Id | Role | What it does |
 |---|---|---|---|
 | `doctor` | `hyperframes-skill/doctor` | analysis | probes Node, hyperframes, ffmpeg/ffprobe + encoders, a headless Chromium launch, temp space |
-| `template` | `hyperframes-skill/template` | execution | fills a shipped template (lower-third, title-card, session-slate, break) with caller values → scene request |
+| `template` | `hyperframes-skill/template` | execution | fills a shipped template (titles: lower-third, title-card, session-slate, break; stingers: stinger-geometric, -glitch, -particles, -brush, -logo-reveal) with caller values → scene request |
 | `scene` | `hyperframes-skill/scene` | execution | structured scene request → HyperFrames scene directory (index.html + copied assets), linted |
 | `render` | `hyperframes-skill/render` | execution | scene directory → .mp4 (h264) / .webm (VP9 with alpha) / .mov (ProRes 4444) / a PNG sequence directory, probed and verified, alpha read back (`alpha.mode`: straight); cross-checked with ffmpeg-skill/probe when present; `--segments`: one file per IN / LOOP / OUT segment too, with the loop's seam measured |
 | `probe` | `hyperframes-skill/probe` | analysis | ffprobe read-back: duration, resolution, fps, frame count, codecs; PNG sequence directories; `--alpha` (and `--sample X,Y`) reads the first frame's alpha plane |
@@ -132,7 +152,13 @@ animation whose period does not divide the loop length (it lists the periods tha
 `render --segments` renders the full scene to `-o` and each non-empty segment to `<stem>.in<ext>`,
 `<stem>.loop<ext>`, `<stem>.out<ext>`, verifies each, checks that their frame counts add up to
 the full render's, and measures the loop file's seam (`loop_seam`: the step from its last frame
-back to its first is no larger than its largest step between two of its own frames). The full schema is in `SKILL.md`. Unknown keys, URLs,
+back to its first is no larger than its largest step between two of its own frames).
+
+Optional top-level `stinger` (`{"cut_point": 0.5, "cover": {"start": 0.5, "end": 0.7}}`, each on
+a frame, the cut point inside `[start, end)`) and `title` (`{"safe_area": {x, y, width, height}}`,
+with `segments`, every text box inside the safe area) mark the scene as stinger or title material:
+`scene` writes the facts to `hfs-material.json` in the scene directory and `render` writes the
+sidecar from them (a stinger needs `--codec prores`, `vp9` or `png`). The full schema is in `SKILL.md`. Unknown keys, URLs,
 missing files, layers running past the scene's end and values that could escape the style
 block are refused with every problem listed at once (`kind: input`).
 
@@ -223,6 +249,13 @@ and macOS:
   colour to the full render's frame at the same scene time; its loop seam passes, and a loop
   composition edited to a period that does not divide the loop fails `loop_seam`; every refusal
   of a loop that cannot be seamless;
+- stingers and titles: the default `stinger-geometric` (1.2 s, cut point 0.5 s) rendered to ProRes
+  4444 is opaque in every pixel from frame 15 to frame 20 and not before, and its `stinger.json` says
+  `cut_point_frame` 15 and `cut_point` 0.5; a lower third rendered with `--segments` writes a
+  `title.json` whose segments, frame counts and loop seam match the render; both are checked
+  against the Velisa spec's rules (times on a frame, the cut point inside the cover, segments
+  adding up to the clip, only the spec's fields); at 24 fps a cut point at frame 25 is written as
+  25/24, not rounded;
 - `--dry-run` of every tool behind recording fake binaries;
 - docs ↔ contract consistency and the frozen CLI surface.
 

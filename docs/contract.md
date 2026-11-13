@@ -43,7 +43,7 @@ major.
 | Exit codes (0 success, 1 failure, 2 `doctor` undecidable, 124 timeout, 127 missing tool, 128+signal interrupted) | unchanged |
 | `error.kind` values (`input`, `render`, `encode`, `missing_tool`, `timeout`, `verification`, `interrupted`, `internal`) | never removed or renamed; new kinds may be added |
 | `contract_version` | unchanged; a ToolSpec shape change bumps it and is a major |
-| Scene request `scene_version: 1` | a request that validates today keeps validating and renders the same markup; a new request shape gets a new `scene_version`. New optional keys may be added (0.2.0: `transition_in` / `transition_out`; 0.5.0: top-level `fonts`); a request without them renders byte-identical markup, pinned by `tests/fixtures/*.index.html` |
+| Scene request `scene_version: 1` | a request that validates today keeps validating and renders the same markup; a new request shape gets a new `scene_version`. New optional keys may be added (0.2.0: `transition_in` / `transition_out`; 0.5.0: top-level `fonts`; 0.7.0: `segments`; 0.9.0: `stinger`, `title`); a request without them renders byte-identical markup, pinned by `tests/fixtures/*.index.html` |
 | MCP `tools/list` names and `inputSchema` property names (`mcp/server.mjs`, 0.6.0) | derived from the above, so covered by the same promise; frozen by `tests/fixtures/mcp_tools.json` |
 | Behaviour of a tool for the same input and arguments | may change only to fix a defect or to track a HyperFrames / Chrome / FFmpeg change, and every such change gets a CHANGELOG line |
 
@@ -217,13 +217,15 @@ from the CLI or any later MCP server.
 | `status` | `"completed"` only from `emit()`; every failure path goes through `fail()` | a Chrome capture error reported as success |
 | `exit_code` | the process exit code, repeated | – |
 | `verified` | computed inside `emit()` as the conjunction of the `verification[]` steps this run performed; never passed in; `false` on a dry run and on every failure | `true` for a file never probed |
-| `verification[]` | `{step, ok, expected?, actual?, detail?}`: render/preview: `exists`, `probe`, `codec`, `resolution`, `fps`, `frames`, `duration` (a PNG sequence: `exists`, `probe`, `codec`, `resolution`, `frames`), `alpha` (vp9, prores, png: the first frame's alpha plane decoded), `input_preserved`, then for render `ffmpeg_skill` only when `ffmpeg_skill.status` is `PASSED` or `FAILED`, then with `render --segments` `segments` and `loop_seam`; scene: `exists`, `assets_copied` (only with assets), `declared_values`, `segments` (only with segments), `hyperframes_lint` | a step listed that did not run |
+| `verification[]` | `{step, ok, expected?, actual?, detail?}`: render/preview: `exists`, `probe`, `codec`, `resolution`, `fps`, `frames`, `duration` (a PNG sequence: `exists`, `probe`, `codec`, `resolution`, `frames`), `alpha` (vp9, prores, png: the first frame's alpha plane decoded), `input_preserved`, then for render `ffmpeg_skill` only when `ffmpeg_skill.status` is `PASSED` or `FAILED`, then with `render --segments` `segments` and `loop_seam`, then for a stinger `stinger_cover` and for stinger or title material `sidecar` (written only when every earlier step held); scene: `exists`, `assets_copied` (only with assets), `declared_values`, `segments` (only with segments), `material` (only with `stinger` or `title`), `hyperframes_lint` | a step listed that did not run |
 | `error.kind` | see below | a generic catch-all |
 | `error.retryable` | always `false` | `true` invites a blind retry loop |
 | `commands[]` | `{program, argv, exit_code, via?, role?}` for every process that ran, in start order: the hyperframes CLI, then each chrome/ffmpeg/ffprobe process it started (`via: "hyperframes"`, `role` = `chrome` / `ffmpeg` / `ffprobe`); `program` is the executable's file name without a Windows `.exe`, then this skill's own ffprobe, then (render, when present) ffmpeg-skill's probe (`role: "ffmpeg-skill/probe"`) | a command that wasn't the one executed |
 | `segments` (scene; render with `--segments`) | scene: each segment's `start`, `duration`, `start_frame`, `frames` from the validated request and the composition it wrote (`html`, `null` for a 0-frame segment); render: the same plus each segment file's own `probe`, `verification[]` and `ffmpeg_skill`, rendered from `segments/<name>.html` (design-decisions D12) | frame counts computed rather than probed |
 | `alpha` (render; probe with `--alpha`) | the first frame's alpha plane, decoded by ffmpeg `alphaextract` (`lib/alpha.mjs`): `min`, `max`, `corners`, `samples`; `mode` is stated, `straight` for every alpha output (HyperFrames pipes straight-alpha PNG captures into the encoder; pinned by a 50% layer whose colour keeps full blue, design-decisions D13), `none` for h264 | an alpha value reported without the frame being decoded |
 | `loop_seam` (render with `--segments`) | the loop file decoded to 64x64 grey: `wrap_diff` (last frame → first) against `max_step_diff` (largest step between consecutive frames) + `tolerance`; `measured: false` with a `reason` when it could not be decoded, which fails the step | a seam reported without the file being decoded |
+| `stinger` (render, stinger material) | the alpha plane of every frame in the stated cover window `[cover.start, cover.end)`, decoded by ffmpeg `alphaextract` (`lib/alpha.mjs`): per frame `min` and `below` (pixels under 253/255, qc-skill's opaque threshold), and `cut_point_min_alpha`; `stinger_cover` fails when any pixel of any of those frames is below | a cover reported without the frames being decoded |
+| `sidecar` (render and batch rows, stinger or title material) | `{kind, path, schema, fields: {read, proposed}, content}`: `<stem>.stinger.json` / `<stem>.title.json` as written beside the output (`lib/sidecar.mjs`, design-decisions D14); `fields.read` are the ones a receiver reads today (`cut_point`, `cover`; `segments`), `fields.proposed` the ones the Velisa spec marks PROPOSED; `written: false` when a verification step failed, since a sidecar only describes a verified file | a sidecar for a file that failed verification |
 | `ffmpeg_skill` (render) | `PASSED` / `FAILED` / `UNCHECKED` from reading the output back through ffmpeg-skill/probe (`lib/ffmpeg-skill.mjs`, design-decisions D3), with `skill.version`, `measured`, `checks[]`; `UNCHECKED` always has a `reason` and adds no `verification[]` step | `PASSED` without ffmpeg-skill having run |
 
 `exit_code` inside `commands` is `null` for chrome: HyperFrames ends the browser itself at the end
@@ -241,3 +243,49 @@ of every render, so its exit status says nothing about the render and is not rec
 | `verification` | 1 | the artifact was written but a verification step failed (including `ffmpeg_skill` when ffmpeg-skill measured a mismatch or refused the file); the document still carries `verification[]`, `probe` and, for render, `ffmpeg_skill` |
 | `interrupted` | 128+signal | SIGINT/SIGTERM/SIGHUP; the process group was killed |
 | `internal` | 1 | a bug in this skill (an exception that is not a ToolError) |
+
+## Sidecars: `stinger.json` and `title.json`
+
+`render` (and each `batch` row) writes one beside the output when the scene is stinger or title
+material: `final.mov` → `final.stinger.json` / `final.title.json` (a PNG sequence directory
+`frames/` → `frames.stinger.json`). The shape is the Velisa spec for title and stinger metadata
+(AI-video-production-OS `docs/specs/title-and-stinger.md`). No receiver opens the file; the
+caller reads it and passes the values on as request fields, unrounded. Nothing outside the spec
+is written. Every field is one of two kinds, and the result's `sidecar.fields` lists which:
+
+- **read**: a receiver reads it today;
+- **proposed**: the spec marks it PROPOSED; no receiver reads it yet, and a caller must not rely
+  on a receiver checking it.
+
+Times are seconds on the file's own timeline, written as `frame / frame_rate` exactly (at 24 fps
+frame 25 is `1.0416666666666667`, never `1.042`), so a receiver's "on a frame within 1/1000"
+check holds.
+
+`stinger.json`:
+
+| Field | Kind | Value |
+|---|---|---|
+| `cut_point` | read (video-editing-skill, qc-skill, the agent) | the frame the edit cuts at, seconds |
+| `cover` | read (video-editing-skill, qc-skill, the agent) | `{start, end}`, seconds: every pixel of every frame at `start <= t < end` is at alpha >= 253/255, measured by `stinger_cover` |
+| `schema` | proposed | `"velisa/stinger@1"` |
+| `file` | proposed | the output's file name (a PNG sequence: its directory name) |
+| `sha256` | proposed | the output file's content; absent for a PNG sequence directory |
+| `frame_rate` | proposed | `"<fps>/1"` |
+| `duration`, `frames` | proposed | as probed |
+| `cut_point_frame` | proposed | `cut_point * frame_rate` |
+| `cover_frames` | proposed | `{start, end}` in frames |
+| `alpha` | proposed | `"straight"` (every alpha output of this skill) |
+| `audio` | proposed | `false`: a render carries no sound in this release |
+
+`title.json`:
+
+| Field | Kind | Value |
+|---|---|---|
+| `segments` | read (hyperframes-skill's own `scene` / `render --segments`; the caller maps it to motion-graphics-skill `rendered_layer` `in_duration` / `out_duration` / `loop`) | `{in, loop, out}` seconds, whole frames, adding up to the clip |
+| `schema` | proposed | `"velisa/title@1"` |
+| `file`, `sha256`, `frame_rate` | proposed | as in `stinger.json` |
+| `alpha` | proposed | `"straight"`; absent for h264 (no alpha plane) |
+| `segment_frames` | proposed | `{in, loop, out}` in frames |
+| `loop_seam` | proposed | the result's `loop_seam`, copied; only with `--segments` |
+| `safe_area` | proposed | the request's `title.safe_area`: every text box is inside it |
+| `text` | proposed | `[{role, text, lang, font, font_size}]` per text layer: the layer id, the text, the scene's `lang`, `style.font_family` and `style.font_size` (no text is fitted yet, so the size used is the size given) |

@@ -209,3 +209,38 @@ Format:
 - **Pinned by:** `tests/alpha.test.mjs`. For each format, the first frame reads alpha 0 in both empty corners,
   255 on the solid layer and 128 ± 2 on the 50% layer, read back by `probe --alpha --sample`. The 50% layer's
   colour is full blue. The `--codec png` refusals are covered, and so is a PNG sequence made by ffmpeg alone.
+
+## D14. Stinger and title material write a sidecar of the Velisa spec's fields only; the cover is measured before it is written
+
+- **Reported as:** expected while building roadmap steps 15 and 17: the sidecars could carry more
+  (the template name, the colours, per-segment files), `cut_point` could be rounded to
+  milliseconds like the other result times, a stinger could be rendered to h264, and a title
+  template's `duration` is now put on the frame grid.
+- **Decision:** a scene request may declare `stinger: {cut_point, cover: {start, end}}` or
+  `title: {safe_area}` (not both). `scene` validates them (each stinger time on a frame, the cut
+  point inside `[start, end)`, the cover inside the scene; a title has `segments` and every text box
+  inside the safe area) and writes the facts to `hfs-material.json` in the scene directory. `render`
+  reads that file, refuses a stinger without an alpha codec, decodes the alpha plane of every frame
+  of the stated cover (`stinger_cover`: every pixel >= 253/255, qc-skill's threshold), and only when
+  every step held writes `<stem>.stinger.json` / `<stem>.title.json` (`lib/sidecar.mjs`). Each holds
+  the fields the spec names and nothing else: the receiver-read ones (`cut_point`, `cover`;
+  `segments`) and the ones it marks PROPOSED, listed apart in the result's `sidecar.fields` and in
+  docs/contract.md. Times are `frame / frame_rate` exactly. The five stinger templates (geometric,
+  glitch, particles, brush, logo reveal) take `duration`, `cut_point` and `hold`: the graphic enters
+  over `[0, cut_point)`, covers `[cut_point, cut_point + hold)` and exits over the rest. The four title
+  templates declare segments (in and out = their transitions; break: in and out 0). Template timings
+  are computed by `derived` sums and differences in whole frames.
+- **Why:** no receiver opens the sidecar, so it is a contract with the caller; a field the spec does
+  not have would be one nobody checks, and the spec asks for new fields to be proposed to Velisa
+  first. Rounding `cut_point` to milliseconds breaks the receivers' 1/1000-of-a-frame rule at 24 fps
+  (1.042 s is frame 25.008, refused as `cut_point_not_on_frame`). A stinger with no alpha plane is
+  refused by video-editing-skill (`stinger_no_alpha`), so it is refused here before rendering. A
+  stated cover that is not measured would be a guess; the measurement is on every frame of the
+  window, not just the cut point, since that is what `cover` states. Template arithmetic in frames
+  keeps 1.2 - 0.5 - 0.2 at 15 frames instead of 0.49999999999999994 s; a title template's duration
+  was already rendered as a whole number of frames, so putting the declared duration on that grid
+  changes no frame count. A stinger has no sound until audio lands (roadmap step 11): `audio: false`.
+- **Pinned by:** `tests/material.test.mjs` (request validation, derived values, the 24 fps precision,
+  the spec's field lists, dry-run sidecar planning and refusals; with renders: the default
+  `stinger-geometric` opaque from frame 15 to 20 and not at 14, its `stinger.json`, and a lower third's
+  `title.json` with `--segments`, both checked against the spec's rules).

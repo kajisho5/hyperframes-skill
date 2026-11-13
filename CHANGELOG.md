@@ -3,6 +3,47 @@
 All notable changes. The stability guarantee and deprecation policy are in
 [docs/contract.md](docs/contract.md).
 
+## Unreleased
+### Added
+
+- Stinger templates with a cut point (roadmap step 15, design-decisions D14): `stinger-geometric`,
+  `stinger-glitch`, `stinger-particles`, `stinger-brush` and `stinger-logo-reveal`, each taking `duration`,
+  `cut_point` and `hold` (`--set duration=1.2 --set cut_point=0.5`): the graphic enters until the cut point,
+  covers the whole frame for the hold and exits. A scene request may declare `stinger: {cut_point, cover:
+  {start, end}}` (on frames, the cut point inside the cover). `render` refuses a stinger without an alpha codec,
+  decodes the alpha plane of every frame of the cover (`stinger_cover`: every pixel >= 253/255, qc-skill's
+  threshold; the result gains `stinger`) and writes `<stem>.stinger.json` beside the output: `cut_point` and
+  `cover` (what video-editing-skill's stinger transition and qc-skill's stinger check read) plus the spec's
+  proposed fields (`cut_point_frame`, `cover_frames`, `frame_rate`, `alpha`, `sha256`, ...). Times are written
+  as `frame / frame_rate`, never rounded. No audio yet: `audio: false`.
+- `title.json` beside title material (roadmap step 17): the four title templates now declare IN / LOOP / OUT
+  `segments` (in and out are their transitions; `break` loops whole) and a `title: {safe_area}` that every text
+  box must lie inside. `render` writes `<stem>.title.json`: `segments` (seconds, as motion-graphics-skill's
+  `rendered_layer` takes them) plus the proposed `segment_frames`, `alpha`, `loop_seam` (with `--segments`),
+  `safe_area` and `text` (each text layer with its font and font size). `batch` writes the same beside each row.
+- Both sidecars follow the Velisa spec for title and stinger metadata and hold only its fields; the result's
+  `sidecar.fields` lists which a receiver reads and which are only proposed (docs/contract.md, "Sidecars").
+  `scene` writes the facts to `hfs-material.json` in the scene directory (`verification[]` gains `material`).
+- Templates may compute timings with `derived` sums and differences in whole frames, and ship their own
+  assets under `templates/assets/` (written into the request as absolute paths).
+
+### Changed
+
+- A title template's `duration` is put on the 30 fps frame grid in the request (7.05 becomes 7.066667: the
+  render already had 212 frames), so its segments add up.
+- A PNG frame with no transparent pixel, which HyperFrames can write as RGB, reads as alpha 255 in the cover
+  measurement.
+
+The contract change is additive: two new request keys, new templates, new result keys and verification steps
+that appear only for stinger or title material, and no flag added, removed or renamed.
+
+## 0.8.1
+### Changed
+
+- docs: the roadmap takes title and stinger material, `kit@1` brand input and `title.json` from the 2026-11-12
+  ownership decisions (steps 15-18); the 0.8.0 entry got its own heading. (This heading was added afterwards:
+  the release left 0.8.1 without one.)
+
 ## 0.8.0
 ### Added
 
