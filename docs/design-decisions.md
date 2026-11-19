@@ -278,3 +278,21 @@ Format:
   only `primary` filling nothing; `font_file` unused without caller text; refusals; `template --list`;
   `batch --kit` per row; with renders: a title card from a kit is frame-for-frame identical, per-frame
   md5, to the same values given with `--set` and `--font`, and its background is the kit's colour).
+
+## D16. Test temporary directories are removed when the test process ends, unless kept on purpose
+
+- **Reported as:** a full `npm test` left about 110 `hfs-*` directories in the OS temp directory
+  (scene copies, fake tools, fixture renders), and repeated runs filled a shared disk.
+- **Decision:** test files make temporary directories only through `tmp()` in `tests/helpers.mjs`.
+  It records each one and removes them all when the test file's process ends: a normal exit, a
+  failed assertion or uncaught error, SIGINT or SIGTERM (after which the process still ends by that
+  signal). `HYPERFRAMES_SKILL_TEST_TMPDIR=DIR` makes them under DIR instead of the OS temp
+  directory; `HYPERFRAMES_SKILL_KEEP_TEST_TMP=1` keeps them and prints their paths on stderr. The
+  tools themselves already removed their own work directory in a `finally` (`render-core.mjs`).
+- **Why:** `node --test` runs each file in its own process, so the end of that process is the one
+  point every test of the file has passed through, whether it passed or not. Removing per test
+  would need every test to be rewritten and would still miss a timeout. Keeping is opt-in so that a
+  debugging session is the only thing that leaves files behind. SIGKILL cannot be handled.
+- **Pinned by:** `tests/tmp-dirs.test.mjs` (removed on exit, on an uncaught error and on SIGTERM;
+  kept and printed with `HYPERFRAMES_SKILL_KEEP_TEST_TMP=1`; three whole test files leave an empty
+  root; no test file calls `mkdtemp` or `tmpdir()` itself).
