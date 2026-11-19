@@ -18,7 +18,7 @@ version-resolver:
   minor:
     labels: ['minor', 'feature', 'enhancement']
   patch:
-    labels: ['patch', 'fix', 'bug']
+    labels: ['patch', 'fix', 'bug', 'dependencies']
   default: patch
 
 # `major` / `breaking` is never applied from title or body text: the autolabeler runs on
