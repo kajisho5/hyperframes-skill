@@ -13,7 +13,10 @@ name: Release
 # What gets released (.github/scripts/release.mjs, docs/design-decisions.md D1):
 #   - package.json's version not tagged yet -> that version, unchanged (the first release: 0.6.0)
 #   - already tagged and PRs merged since    -> their labels pick major / minor / patch
-#                                               (.github/release-drafter.yml `version-resolver`)
+#                                               (.github/release-drafter.yml `version-resolver`);
+#                                               nothing when they are all chore / ci / docs / test (D17)
+#   - the release commit is tested here before it is pushed: no workflow runs on a push made with
+#     GITHUB_TOKEN, so main's CI never sees it (D17)
 on:
   workflow_run:
     workflows: ["CI"]
@@ -55,7 +58,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: node .github/scripts/release.mjs plan
 
-      - name: Bump (label-decided releases only), tag and push
+      - name: Bump (label-decided releases only) and tag, not pushed yet
         if: steps.plan.outputs.tag_needed == 'true'
         env:
           MODE: ${{ steps.plan.outputs.mode }}
@@ -64,16 +67,33 @@ jobs:
           set -eu
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # the tests below and contract/generate.mjs need the dependencies
+          npm ci --ignore-scripts --no-audit --no-fund
           if [ "$MODE" = "auto" ]; then
             node .github/scripts/release.mjs bump "$VERSION"
             # contract/contract.json carries the version: regenerated after the bump, so the tag's committed
             # file is that tag's own contract output (the CLI needs its dependencies to print it)
-            npm ci --ignore-scripts --no-audit --no-fund
             node contract/generate.mjs
             git add package.json package-lock.json docs/contract.md CHANGELOG.md contract/contract.json
             git commit -m "chore(release): v$VERSION"
           fi
           git tag -a "v$VERSION" -m "v$VERSION"
+
+      # The release commit is pushed with GITHUB_TOKEN, so no workflow runs on it on main: test it here, before
+      # it is pushed. A failure stops the release; main and the tags stay as they were (Velisa ADR-023, D17).
+      - name: Test the release commit before pushing it
+        if: steps.plan.outputs.tag_needed == 'true'
+        env:
+          HYPERFRAMES_SKILL_SKIP_RENDER_TESTS: "1"
+        run: node --test tests/release.test.mjs tests/contract.test.mjs tests/contract-file.test.mjs
+
+      - name: Push the release commit and tag
+        if: steps.plan.outputs.tag_needed == 'true'
+        env:
+          MODE: ${{ steps.plan.outputs.mode }}
+          VERSION: ${{ steps.plan.outputs.version }}
+        run: |
+          set -eu
           if [ "$MODE" = "auto" ]; then
             # atomic: if main moved on since this CI run, neither the commit nor the tag lands;
             # the next push's CI run releases instead

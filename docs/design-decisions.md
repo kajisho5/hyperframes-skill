@@ -296,3 +296,16 @@ Format:
 - **Pinned by:** `tests/tmp-dirs.test.mjs` (removed on exit, on an uncaught error and on SIGTERM;
   kept and printed with `HYPERFRAMES_SKILL_KEEP_TEST_TMP=1`; three whole test files leave an empty
   root; no test file calls `mkdtemp` or `tmpdir()` itself).
+
+## D17. The release commit is tested before it is pushed; chore / ci / docs / test PRs release nothing
+
+2026-11-19. The ecosystem rule is Velisa ADR-023 (decision D37).
+
+**Context.** The v0.10.3 release commit (2c02b62) released #28, a `ci:` PR that wrote no `## Unreleased` entry. `release.mjs bump` only renames `## Unreleased`, so CHANGELOG.md got no `## 0.10.3` section. Two tests in `tests/release.test.mjs` failed on main from then on, and #29 could not merge. CI did not see it: the release commit is pushed with `GITHUB_TOKEN`, and GitHub starts no workflow for that push.
+
+**Decision.**
+- `bump` writes a `## X.Y.Z` section from the commit subjects since the previous tag when there is no `## Unreleased` section. The missing 0.10.3 section is added. A test checks that every version heading is `## X.Y.Z` and that the current version has one.
+- The release job commits and tags locally, runs `tests/release.test.mjs`, `tests/contract.test.mjs` and `tests/contract-file.test.mjs` on that commit, and only then pushes. A failure pushes nothing.
+- In auto mode a push releases only if a merged PR carries a release-level label (`version-resolver`'s major / minor / patch lists) or no label at all. PRs labelled only `chore`, `ci`, `documentation`, `docs` or `test` release nothing; those labels no longer map to a patch. This is imagemagick-skill's rule. release-drafter's `default` cannot say "no release", so `release.mjs plan` decides it.
+
+**Consequences.** A hand bump is released whatever the labels. A release that fails these tests is not made; a later push retries.
