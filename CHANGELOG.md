@@ -3,7 +3,7 @@
 All notable changes. The stability guarantee and deprecation policy are in
 [docs/contract.md](docs/contract.md).
 
-## Unreleased
+## 0.10.2
 ### Fixed
 
 - Tests no longer leave `hfs-*` directories in the OS temp directory: every directory made by
