@@ -180,7 +180,10 @@ block are refused with every problem listed at once (`kind: input`).
 `node bin/hyperframes-skill.mjs contract --json` describes every tool: id, role, required and
 optional capabilities, `input_schema` generated from the tool's own parser, dry-run behaviour,
 verification policy, repeatability. [`docs/contract.md`](docs/contract.md) explains it, with
-the stability guarantee and the deprecation policy.
+the stability guarantee and the deprecation policy. `contract/contract.json` is the same contract
+committed as a file (one line, sorted keys, compact separators, a final newline), so any release's
+contract is `git show vX.Y.Z:contract/contract.json`, with nothing installed or run; regenerate it
+with `node contract/generate.mjs` (a test fails when it is stale).
 
 | Promise | |
 |---|---|
