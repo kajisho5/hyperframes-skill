@@ -5,30 +5,60 @@ import { spawnSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { test } from "node:test";
-import { bumpFiles, bumpVersion, changelogSection, latestTag, parseResolver, plan, resolveLevel } from "../.github/scripts/release.mjs";
+import { bumpFiles, bumpVersion, changelogSection, latestTag, parseResolver, plan, pullReleases, resolveLevel } from "../.github/scripts/release.mjs";
 import { ROOT, tmp } from "./helpers.mjs";
 
 const read = (f) => readFileSync(join(ROOT, f), "utf8");
 const resolver = parseResolver(read(".github/release-drafter.yml"));
 const SCRIPT = join(ROOT, ".github", "scripts", "release.mjs");
 
-test("release-drafter.yml version-resolver parses: labels decide the bump, default patch", () => {
+test("release-drafter.yml version-resolver parses: only release-level labels bump, default patch for no label", () => {
   assert.deepEqual(resolver.major, ["major", "breaking"]);
   assert.deepEqual(resolver.minor, ["minor", "feature", "enhancement"]);
-  assert.ok(resolver.patch.includes("fix") && resolver.patch.includes("documentation"));
+  assert.deepEqual(resolver.patch, ["patch", "fix", "bug"]);
   assert.equal(resolver.default, "patch");
   assert.equal(resolveLevel(["documentation", "feature"], resolver), "minor");
   assert.equal(resolveLevel(["fix", "major"], resolver), "major");
-  assert.equal(resolveLevel(["chore"], resolver), "patch");
   assert.equal(resolveLevel([], resolver), "patch");
 });
 
-test("every label the autolabeler applies maps to a bump", () => {
+test("every label the autolabeler applies either bumps or is a maintenance label that releases nothing (D17)", () => {
   const applied = [...read(".github/release-drafter.yml").matchAll(/^ {2}- label: '([^']+)'/gm)].map((m) => m[1]);
   assert.ok(applied.length >= 5, applied.join());
   const mapped = new Set([...resolver.major, ...resolver.minor, ...resolver.patch]);
-  for (const l of applied) assert.ok(mapped.has(l), `autolabeler label ${l} is not in version-resolver`);
+  const maintenance = new Set(["chore", "ci", "documentation", "docs", "test"]);
+  for (const l of applied) assert.ok(mapped.has(l) || maintenance.has(l), `autolabeler label ${l} is neither a bump nor a maintenance label`);
   assert.ok(!applied.includes("major") && !applied.includes("breaking"), "major is applied by hand only");
+});
+
+test("chore / ci / docs / test PRs alone release nothing; a release-level label or no label releases (D17)", () => {
+  for (const labels of [["feature"], ["fix"], ["bug"], ["minor"], ["breaking"], ["ci", "fix"], []]) assert.ok(pullReleases(labels, resolver), labels.join());
+  for (const labels of [["ci"], ["documentation"], ["docs"], ["chore"], ["test"], ["ci", "contract:none"]]) assert.ok(!pullReleases(labels, resolver), labels.join());
+  const tags = ["v0.6.0"];
+  const none = plan({ current: "0.6.0", tags, commitsSinceTag: 2, labels: ["ci", "documentation"], resolver, pulls: [["ci"], ["documentation"]] });
+  assert.deepEqual([none.mode, none.tag_needed], ["none", false]);
+  const fix = plan({ current: "0.6.0", tags, commitsSinceTag: 2, labels: ["ci", "fix"], resolver, pulls: [["ci"], ["fix"]] });
+  assert.deepEqual([fix.mode, fix.version], ["auto", "0.6.1"]);
+  const unlabelled = plan({ current: "0.6.0", tags, commitsSinceTag: 1, labels: [], resolver, pulls: [[]] });
+  assert.deepEqual([unlabelled.mode, unlabelled.version], ["auto", "0.6.1"]);
+  // a hand bump is released whatever the labels
+  assert.equal(plan({ current: "0.7.0", tags, commitsSinceTag: 1, labels: ["ci"], resolver, pulls: [["ci"]] }).mode, "manual");
+});
+
+test("bump without an Unreleased section writes a `## X.Y.Z` section from the commit subjects", () => {
+  const changelog = "# Changelog\n\nIntro.\n\n## 0.6.0\n\n- old\n";
+  const files = { "package.json": JSON.stringify({ name: "x", version: "0.6.0" }, null, 2) + "\n", "CHANGELOG.md": changelog };
+  const out = bumpFiles(files, "0.6.0", "0.6.1", "- ci: a thing (abc1234)\n");
+  assert.equal(out["CHANGELOG.md"], "# Changelog\n\nIntro.\n\n## 0.6.1\n\n- ci: a thing (abc1234)\n\n## 0.6.0\n\n- old\n");
+  assert.equal(changelogSection(out["CHANGELOG.md"], "0.6.1"), "- ci: a thing (abc1234)");
+  // a section that already exists is left alone
+  assert.equal(bumpFiles({ ...files, "CHANGELOG.md": "## 0.6.1\n\n- x\n\n" + changelog }, "0.6.0", "0.6.1")["CHANGELOG.md"], undefined);
+});
+
+test("every CHANGELOG.md version heading is `## X.Y.Z`, and the current version has one", () => {
+  const headings = read("CHANGELOG.md").split("\n").filter((l) => l.startsWith("## "));
+  for (const h of headings) assert.match(h, /^## (\d+\.\d+\.\d+|Unreleased)$/, h);
+  assert.ok(headings.includes(`## ${JSON.parse(read("package.json")).version}`));
 });
 
 test("semver bumps and newest tag by version order", () => {
