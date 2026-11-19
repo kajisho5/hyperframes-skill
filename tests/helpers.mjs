@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, readdirSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -10,8 +10,47 @@ export const FIXTURES = join(ROOT, "tests", "fixtures");
 /** Real renders need Chrome + ffmpeg; set HYPERFRAMES_SKILL_SKIP_RENDER_TESTS=1 to skip them. CI runs them. */
 export const SKIP_RENDER = process.env.HYPERFRAMES_SKILL_SKIP_RENDER_TESTS === "1" ? "HYPERFRAMES_SKILL_SKIP_RENDER_TESTS=1" : false;
 
+/**
+ * Temporary directories of the tests (docs/design-decisions.md D16). Every directory tmp() makes is
+ * removed when the test file's process ends: a normal exit, a failed assertion, or SIGINT / SIGTERM
+ * (a CI cancel, the test runner's timeout). SIGKILL cannot be caught.
+ *   HYPERFRAMES_SKILL_TEST_TMPDIR=DIR   make them under DIR instead of the OS temp directory
+ *   HYPERFRAMES_SKILL_KEEP_TEST_TMP=1   keep them for debugging; their paths are printed on stderr
+ */
+export const TMP_ROOT = process.env.HYPERFRAMES_SKILL_TEST_TMPDIR || tmpdir();
+const KEEP_TMP = process.env.HYPERFRAMES_SKILL_KEEP_TEST_TMP === "1";
+const madeTmp = new Set();
+
+export function removeTmpDirs() {
+  for (const dir of madeTmp) rmSync(dir, { recursive: true, force: true, maxRetries: 3 });
+  madeTmp.clear();
+}
+
+let cleanupHooked = false;
+function hookCleanup() {
+  if (cleanupHooked) return;
+  cleanupHooked = true;
+  if (KEEP_TMP) {
+    process.on("exit", () => {
+      for (const dir of madeTmp) process.stderr.write(`kept test temp dir: ${dir}\n`);
+    });
+    return;
+  }
+  process.on("exit", removeTmpDirs);
+  for (const sig of ["SIGINT", "SIGTERM"]) {
+    // remove, then end the way the signal would have (the listener is gone after once())
+    process.once(sig, () => {
+      removeTmpDirs();
+      process.kill(process.pid, sig);
+    });
+  }
+}
+
 export function tmp(prefix = "hfs-test-") {
-  return mkdtempSync(join(tmpdir(), prefix));
+  hookCleanup();
+  const dir = mkdtempSync(join(TMP_ROOT, prefix));
+  madeTmp.add(dir);
+  return dir;
 }
 
 /** Run scripts/<tool>.mjs; returns {code, doc (parsed stdout JSON or null), stdout, stderr}. */

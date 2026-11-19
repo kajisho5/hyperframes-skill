@@ -3,6 +3,15 @@
 All notable changes. The stability guarantee and deprecation policy are in
 [docs/contract.md](docs/contract.md).
 
+## Unreleased
+### Fixed
+
+- Tests no longer leave `hfs-*` directories in the OS temp directory: every directory made by
+  `tmp()` in `tests/helpers.mjs` is removed when the test file's process ends (normal exit, failure,
+  SIGINT or SIGTERM). One full run used to leave about 110 directories behind.
+  `HYPERFRAMES_SKILL_TEST_TMPDIR=DIR` moves them, `HYPERFRAMES_SKILL_KEEP_TEST_TMP=1` keeps them
+  for debugging (design-decisions D16). Test-only; the tools and the contract are unchanged.
+
 ## 0.10.1
 ### Changed
 
