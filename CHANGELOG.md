@@ -3,6 +3,10 @@
 All notable changes. The stability guarantee and deprecation policy are in
 [docs/contract.md](docs/contract.md).
 
+## 0.10.4
+
+- fix(release): a CHANGELOG section for every release; test the release commit before pushing; no release for chore/ci/docs-only PRs (#31) (faaa409)
+
 ## 0.10.3
 ### Changed
 
