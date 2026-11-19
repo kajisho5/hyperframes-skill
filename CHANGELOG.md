@@ -3,6 +3,14 @@
 All notable changes. The stability guarantee and deprecation policy are in
 [docs/contract.md](docs/contract.md).
 
+## 0.10.3
+### Changed
+
+- CI only: pull requests that change the contract are checked by Velisa's reusable contract-diff
+  workflow, one run per pull request (#28). The tools and the contract are unchanged. This section
+  was missing from the release commit: that pull request wrote no `## Unreleased` entry, so the
+  bump had nothing to rename (fixed in the release script, design-decisions D17).
+
 ## 0.10.2
 ### Fixed
 

@@ -83,10 +83,14 @@ on a push to `main` and calls `.github/scripts/release.mjs plan`:
   how the first release came out as 0.6.0, and how a hand bump in a PR is released as written.
 - It equals the newest tag and PRs merged since: their labels pick the bump, highest wins
   (`.github/release-drafter.yml` `version-resolver`: `major`/`breaking` → major,
-  `minor`/`feature`/`enhancement` → minor, anything else or no label → patch). The workflow then
+  `minor`/`feature`/`enhancement` → minor, `fix`/`bug`/`patch` or no label → patch). When every
+  PR merged since the tag is labelled only `chore`/`ci`/`documentation`/`docs`/`test`, nothing is
+  released (D17). The workflow then
   bumps `package.json`, `package-lock.json` and `docs/contract.md`, regenerates
   `contract/contract.json` (the committed contract, `node contract/generate.mjs`), renames `## Unreleased` in
-  `CHANGELOG.md` to the version, and commits `chore(release): vX.Y.Z` with the tag.
+  `CHANGELOG.md` to the version (or, without one, writes a `## X.Y.Z` section from the commit subjects),
+  commits `chore(release): vX.Y.Z` with the tag, runs the release and contract tests on that commit,
+  and only then pushes.
 
 So: don't bump the version in a PR, put its entry under `## Unreleased` at the top of
 `CHANGELOG.md` (that section becomes the release notes; without one the notes are the commit

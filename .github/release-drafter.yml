@@ -5,6 +5,10 @@
 #                                    to a bump through `version-resolver` below (highest wins).
 #                                    Keep each `labels:` list inline: that is the shape it parses,
 #                                    and tests/release.test.mjs fails if it stops parsing.
+# Only release-level labels bump. A PR labelled only chore / ci / documentation / docs releases
+# nothing (Velisa ADR-023, docs/design-decisions.md D17): release.mjs stops before the bump when
+# no merged PR carries one of the labels below. `default` (release-drafter accepts only major,
+# minor or patch there) is reached only by a PR with no label at all, which ships as a patch.
 name-template: 'v$RESOLVED_VERSION'
 tag-template: 'v$RESOLVED_VERSION'
 
@@ -14,7 +18,7 @@ version-resolver:
   minor:
     labels: ['minor', 'feature', 'enhancement']
   patch:
-    labels: ['patch', 'fix', 'bug', 'chore', 'ci', 'documentation', 'docs']
+    labels: ['patch', 'fix', 'bug']
   default: patch
 
 # `major` / `breaking` is never applied from title or body text: the autolabeler runs on
