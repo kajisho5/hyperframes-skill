@@ -1,0 +1,14 @@
+{
+  "schema": "velisa/stinger@1",
+  "frame_rate": "24/1",
+  "cut_point": 1.0416666666666667,
+  "cut_point_frame": 25,
+  "cover": {
+    "start": 1.0,
+    "end": 1.25
+  },
+  "cover_frames": {
+    "start": 24,
+    "end": 30
+  }
+}
