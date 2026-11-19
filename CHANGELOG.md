@@ -3,6 +3,15 @@
 All notable changes. The stability guarantee and deprecation policy are in
 [docs/contract.md](docs/contract.md).
 
+## Unreleased
+### Changed
+
+- `contract/contract.json`: the contract committed as a file (`contract --json` as one line with sorted
+  keys, compact separators and a final newline), so a release's contract is
+  `git show vX.Y.Z:contract/contract.json` without running the code. `node contract/generate.mjs`
+  regenerates it; a test fails when it is stale, and the release commit regenerates it after the bump.
+  The contract itself is unchanged.
+
 ## 0.10.0
 ### Added
 

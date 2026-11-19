@@ -66,7 +66,11 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           if [ "$MODE" = "auto" ]; then
             node .github/scripts/release.mjs bump "$VERSION"
-            git add package.json package-lock.json docs/contract.md CHANGELOG.md
+            # contract/contract.json carries the version: regenerated after the bump, so the tag's committed
+            # file is that tag's own contract output (the CLI needs its dependencies to print it)
+            npm ci --ignore-scripts --no-audit --no-fund
+            node contract/generate.mjs
+            git add package.json package-lock.json docs/contract.md CHANGELOG.md contract/contract.json
             git commit -m "chore(release): v$VERSION"
           fi
           git tag -a "v$VERSION" -m "v$VERSION"

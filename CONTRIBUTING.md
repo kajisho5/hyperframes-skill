@@ -84,7 +84,8 @@ on a push to `main` and calls `.github/scripts/release.mjs plan`:
 - It equals the newest tag and PRs merged since: their labels pick the bump, highest wins
   (`.github/release-drafter.yml` `version-resolver`: `major`/`breaking` → major,
   `minor`/`feature`/`enhancement` → minor, anything else or no label → patch). The workflow then
-  bumps `package.json`, `package-lock.json` and `docs/contract.md`, renames `## Unreleased` in
+  bumps `package.json`, `package-lock.json` and `docs/contract.md`, regenerates
+  `contract/contract.json` (the committed contract, `node contract/generate.mjs`), renames `## Unreleased` in
   `CHANGELOG.md` to the version, and commits `chore(release): vX.Y.Z` with the tag.
 
 So: don't bump the version in a PR, put its entry under `## Unreleased` at the top of
