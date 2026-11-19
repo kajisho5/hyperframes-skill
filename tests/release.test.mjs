@@ -15,7 +15,7 @@ const SCRIPT = join(ROOT, ".github", "scripts", "release.mjs");
 test("release-drafter.yml version-resolver parses: only release-level labels bump, default patch for no label", () => {
   assert.deepEqual(resolver.major, ["major", "breaking"]);
   assert.deepEqual(resolver.minor, ["minor", "feature", "enhancement"]);
-  assert.deepEqual(resolver.patch, ["patch", "fix", "bug"]);
+  assert.deepEqual(resolver.patch, ["patch", "fix", "bug", "dependencies"]);
   assert.equal(resolver.default, "patch");
   assert.equal(resolveLevel(["documentation", "feature"], resolver), "minor");
   assert.equal(resolveLevel(["fix", "major"], resolver), "major");
@@ -29,6 +29,14 @@ test("every label the autolabeler applies either bumps or is a maintenance label
   const maintenance = new Set(["chore", "ci", "documentation", "docs", "test"]);
   for (const l of applied) assert.ok(mapped.has(l) || maintenance.has(l), `autolabeler label ${l} is neither a bump nor a maintenance label`);
   assert.ok(!applied.includes("major") && !applied.includes("breaking"), "major is applied by hand only");
+});
+
+test("a dependencies (Dependabot) PR releases, as a patch (Velisa D37 addendum)", () => {
+  assert.ok(resolver.patch.includes("dependencies"), resolver.patch.join());
+  for (const labels of [["dependencies"], ["dependencies", "github_actions"], ["dependencies", "chore"]]) assert.ok(pullReleases(labels, resolver), labels.join());
+  assert.equal(resolveLevel(["dependencies"], resolver), "patch");
+  const deps = plan({ current: "0.6.0", tags: ["v0.6.0"], commitsSinceTag: 1, labels: ["dependencies"], resolver, pulls: [["dependencies"]] });
+  assert.deepEqual([deps.mode, deps.version], ["auto", "0.6.1"]);
 });
 
 test("chore / ci / docs / test PRs alone release nothing; a release-level label or no label releases (D17)", () => {
