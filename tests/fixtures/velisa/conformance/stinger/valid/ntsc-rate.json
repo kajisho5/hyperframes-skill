@@ -1,0 +1,9 @@
+{
+  "frame_rate": "30000/1001",
+  "cut_point": 0.5005,
+  "cut_point_frame": 15,
+  "cover": {
+    "start": 0.4004,
+    "end": 0.6673333333333333
+  }
+}

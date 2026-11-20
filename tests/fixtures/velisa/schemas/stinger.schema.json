@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kajisho5/Velisa/blob/main/registry/schemas/stinger.schema.json",
+  "title": "velisa/stinger@1: metadata beside a stinger file",
+  "description": "docs/specs/title-and-stinger.md, stinger.json. cut_point and cover are read by receivers (video-editing-skill, qc-skill, video-production-agent) through the caller; every other field is PROPOSED. Times are seconds on the file's own timeline, written with at least 6 decimals or as frame / frame_rate exactly. What JSON Schema cannot state (a time on a frame, cut_point inside cover, the frame numbers agreeing with the seconds) is checked by registry/spec_conformance.py.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["cut_point", "cover"],
+  "properties": {
+    "cut_point": {"$ref": "#/$defs/seconds", "description": "the frame the clips switch at"},
+    "cover": {"$ref": "#/$defs/window", "description": "the window the maker states is fully covered: frames at start <= t < end; contains cut_point"},
+    "schema": {"const": "velisa/stinger@1"},
+    "file": {"$ref": "#/$defs/text", "description": "the media file this describes, relative to the sidecar"},
+    "sha256": {"$ref": "#/$defs/sha256", "description": "the media file's content"},
+    "frame_rate": {"$ref": "#/$defs/frame_rate"},
+    "cut_point_frame": {"type": "integer", "minimum": 0, "description": "round(cut_point * frame_rate)"},
+    "cover_frames": {"$ref": "#/$defs/frame_window"},
+    "alpha": {"$ref": "#/$defs/alpha"},
+    "duration": {"type": "number", "exclusiveMinimum": 0, "description": "seconds, as probed"},
+    "frames": {"type": "integer", "minimum": 1, "description": "as probed"},
+    "audio": {"type": "boolean", "description": "whether the stinger carries sound"}
+  },
+  "$defs": {
+    "text": {"type": "string", "minLength": 1},
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "seconds": {"type": "number", "minimum": 0},
+    "frame_rate": {"type": "string", "pattern": "^[1-9][0-9]*/[1-9][0-9]*$", "description": "num/den, as ffprobe's r_frame_rate"},
+    "alpha": {"enum": ["straight", "premultiplied"]},
+    "window": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["start", "end"],
+      "properties": {"start": {"$ref": "#/$defs/seconds"}, "end": {"$ref": "#/$defs/seconds"}}
+    },
+    "frame_window": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["start", "end"],
+      "properties": {"start": {"type": "integer", "minimum": 0}, "end": {"type": "integer", "minimum": 0}}
+    }
+  }
+}

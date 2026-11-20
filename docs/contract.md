@@ -258,6 +258,11 @@ is written. Every field is one of two kinds, and the result's `sidecar.fields` l
 - **proposed**: the spec marks it PROPOSED; no receiver reads it yet, and a caller must not rely
   on a receiver checking it.
 
+The spec's owner publishes the shape as JSON Schemas with valid and invalid examples (Velisa
+`registry/schemas/title.schema.json`, `stinger.schema.json`, `registry/conformance/`). A copy pinned to a
+Velisa commit is in `tests/fixtures/velisa/`, and `tests/velisa-conformance.test.mjs` checks what
+`buildSidecar` writes, and the `read` / `proposed` lists, against it.
+
 Times are seconds on the file's own timeline, written as `frame / frame_rate` exactly (at 24 fps
 frame 25 is `1.0416666666666667`, never `1.042`), so a receiver's "on a frame within 1/1000"
 check holds.
