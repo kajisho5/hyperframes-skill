@@ -70,7 +70,7 @@ Format:
   adapter): `--ffmpeg-skill DIR` alone when given, else `HYPERFRAMES_SKILL_FFMPEG_SKILL_DIR`,
   `VIDEO_AGENT_FFMPEG_SKILL_DIR`, `~/.claude/skills/ffmpeg-skill`, `./vendor/ffmpeg-skill`, and
   `ffmpeg-skill` next to this checkout. Its version comes from its `package.json`. There is no
-  version gate (the declared range `>=2.0.0 <4.0.0` in the contract's `dependencies` is what it was
+  version gate (the declared range `>=2.0.0 <5.0.0` in the contract's `dependencies` is what it was
   checked against): the probe document's keys are read directly and a missing one is `UNCHECKED`.
 - **Why:** HyperFrames streams each captured frame into ffmpeg as it is captured (`image2pipe`,
   visible in `commands`). ffmpeg-skill has no tool that takes such a stream: `sequence.py` encodes
@@ -327,3 +327,19 @@ Format:
 **Consequences.**
 - The contract change is additive. `render --fps` is now `type: string` and still takes an integer. Every `expected` object (scene, template, batch, render, preview) gains `frame_rate`. `preview --fps` stays an integer proxy rate.
 - At integer rates the markup, the argv and every frame count are unchanged.
+
+## D19. ffmpeg-skill 4.0.0 is inside the declared range; CI cross-checks against 4.0.0 too
+
+2026-11-20.
+
+- **Context:** ffmpeg-skill 4.0.0 keeps `contract_version` 2.0 and removes no tool or flag. Its breaking changes are in
+  `export` (loudness by default on platform presets; `kind: verification` for an unmet required field), `fit`
+  (`--method` beyond 1.15x), `join --copy` (AAC drift), `waveform` (conditional audio re-encode) and `--transcribe`
+  (`english_only`). The declared range `>=2.0.0 <4.0.0` excluded it.
+- **Decision:** the range becomes `>=2.0.0 <5.0.0`. The cross-check still runs `probe.py` only and reads the same keys
+  (D11). `probe` is one of 4.x's `stable` tools, so those keys and their types hold for the whole of 4.x. None of the
+  changed tools is called. The range stays informational: there is still no version gate (D3). Python ≥ 3.10 and
+  FFmpeg ≥ 6.1 are unchanged from 3.x.
+- **CI:** the matrix gains v4.0.0 on Linux, macOS and Windows. The v3.0.0 legs (every OS) and v2.23.1 (Linux) stay.
+- **Consequences:** the contract's `dependencies[ffmpeg-skill].version_range` changes (the contract file is
+  regenerated), so a byte-for-byte pin of this contract needs a re-pin. No tool, argument or output changed.
