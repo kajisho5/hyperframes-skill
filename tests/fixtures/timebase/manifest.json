@@ -1,0 +1,9 @@
+{
+  "description": "timebase-vectors.json is a byte-for-byte copy of Velisa docs/specs/timebase-vectors.json (spec velisa/timebase@1); do not edit. Update by copying it again and recording the commit here.",
+  "source": {
+    "repository": "kajisho5/Velisa",
+    "commit": "b7df1d82586f0b7c00fed4074aecac75cbadf893",
+    "path": "docs/specs/timebase-vectors.json"
+  },
+  "sha256": "fecd9730470fd79fb0b8dce6a55ef1ac8fd743ea044a1f1541474ebd249e5aa1"
+}

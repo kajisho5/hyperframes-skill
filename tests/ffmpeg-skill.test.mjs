@@ -50,7 +50,7 @@ function probeDoc({ width = 320, height = 180, fps = 30, duration = 1, codec = "
   return { file: "x", format: "mov,mp4,m4a,3gp,3g2,mj2", duration, size_bytes: 1000, video: { codec, width, height, fps, pix_fmt, nb_frames, duration }, audio: null };
 }
 
-const EXPECTED = { width: 320, height: 180, duration: 1, fps: 30, frames: 30, codec: "h264", fps_source: "data-fps" };
+const EXPECTED = { width: 320, height: 180, duration: 1, fps: 30, frame_rate: "30", frames: 30, codec: "h264", fps_source: "data-fps" };
 
 function verify(skillDir, file, { expected = EXPECTED, codec = "h264" } = {}) {
   const ctx = new Context({ json: true });

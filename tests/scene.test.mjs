@@ -35,7 +35,7 @@ test("every problem in a request is reported, not just the first", () => {
   req.extra = true;
   const p = problems(req);
   assert.ok(p.some((m) => m.startsWith("width must be an even integer")), p.join("\n"));
-  assert.ok(p.some((m) => m.startsWith("fps must be an integer")));
+  assert.ok(p.some((m) => m.startsWith("fps must be a frame rate")));
   assert.ok(p.some((m) => m.includes("after the scene's duration")));
   assert.ok(p.some((m) => m.includes("is used twice")));
   assert.ok(p.some((m) => m === 'unknown key "extra"'));
@@ -106,7 +106,7 @@ test("scene writes index.html, verifies it (lint included) and is byte-identical
   assert.equal(r.doc.status, "completed");
   assert.equal(r.doc.verified, true);
   assert.deepEqual(r.doc.verification.map((s) => s.step), ["exists", "declared_values", "hyperframes_lint"]);
-  assert.deepEqual(r.doc.expected, { width: 320, height: 180, duration: 1, fps: 30, frames: 30 });
+  assert.deepEqual(r.doc.expected, { width: 320, height: 180, duration: 1, fps: 30, frame_rate: "30", frames: 30 });
   assert.equal(r.doc.commands.length, 1);
   assert.deepEqual(r.doc.commands[0].argv.slice(2, 3), ["lint"]);
   const first = readFileSync(join(dir, "s", "index.html"), "utf8");
@@ -183,4 +183,40 @@ test("transition values are validated, never defaulted except easing", () => {
   assert.ok(problems(layer({ transition_in: { type: "fade", duration: 0.5, distance: 3 } })).some((m) => m.includes('unknown key "distance" for a fade transition')));
   assert.ok(problems(layer({ transition_in: { type: "fade", duration: 0.6 }, transition_out: { type: "fade", duration: 0.5 } })).some((m) => m.includes("is longer than the layer")));
   assert.deepEqual(problems(layer({ transition_in: { type: "fade", duration: 0.5 }, transition_out: { type: "fade", duration: 0.5 } })), []);
+});
+
+// velisa/timebase@1 (D18): a scene can be made at an NTSC rate, given as N/D or as the NTSC decimal.
+test("fps takes exact NTSC rates: N/D as written, 29.97 / 59.94 / 23.976 as N/1001, never a rounded decimal", () => {
+  const at = (fps, extra = {}) => validateRequest({ ...base(), fps, ...extra }, FIXTURES);
+  assert.deepEqual([at("30000/1001").fps, at("30000/1001").frame_rate], [30000 / 1001, "30000/1001"]);
+  assert.equal(at(29.97).frame_rate, "30000/1001");
+  assert.equal(at("59.94").frame_rate, "60000/1001");
+  assert.equal(at(23.976).frame_rate, "24000/1001");
+  assert.equal(at("23.98").frame_rate, "24000/1001");
+  assert.equal(at("2997/100").frame_rate, "2997/100"); // an explicit ratio is never "corrected"
+  assert.equal(at(25).frame_rate, "25");
+  for (const bad of ["abc", "0", "241", "30/0", true]) {
+    assert.ok(problems({ ...base(), fps: bad }).some((m) => m.startsWith("fps must be a frame rate")), String(bad));
+  }
+  const s = at("30000/1001", { duration: 10 });
+  assert.match(renderHtml(s), /data-fps="30000\/1001"/);
+  const d = readDeclared(renderHtml(s), "x");
+  assert.deepEqual([d.frame_rate, d.duration], ["30000/1001", 10]);
+});
+
+test("at 30000/1001 the frame count multiplies by the exact rate, and segments must be whole NTSC frames", () => {
+  // 10 s is 299.7 frames: 300; 1.001 s is exactly 30 frames
+  const s = validateRequest({ ...base(), fps: "30000/1001", duration: 10, layers: [{ ...base().layers[0], duration: 10 }] }, FIXTURES);
+  assert.equal(s.frame_rate, "30000/1001");
+  const ok = validateRequest({ ...base(), fps: "30000/1001", duration: 3.003, segments: { in: 1.001, loop: 1.001, out: 1.001 }, layers: [{ ...base().layers[0], duration: 3.003 }] }, FIXTURES);
+  assert.deepEqual(ok.segments.map((S) => [S.start_frame, S.frames]), [[0, 30], [30, 30], [60, 30]]);
+  const p = problems({ ...base(), fps: "30000/1001", duration: 3, segments: { in: 1, loop: 1, out: 1 }, layers: [{ ...base().layers[0], duration: 3 }] });
+  assert.ok(p.some((m) => m.includes("is not a whole number of frames at")), p.join("\n"));
+});
+
+test("a root data-fps is read exactly; a decimal HyperFrames would not read is refused in N/D form", () => {
+  const html = (fps) => `<div data-composition-id="m" data-width="320" data-height="180" data-duration="1" data-fps="${fps}"></div>`;
+  assert.equal(readDeclared(html("60000/1001"), "x").frame_rate, "60000/1001");
+  assert.equal(readDeclared(html("25"), "x").fps, 25);
+  assert.throws(() => readDeclared(html("0"), "x"), /data-fps must be a frame rate/);
 });
