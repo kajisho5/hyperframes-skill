@@ -63,3 +63,14 @@ test("NTSC rates are exact: frame counts multiply by 30000/1001, not by 29.97", 
   assert.equal(framesAt(417, "2997/100"), 12497);
   assert.equal(framesAt(0.35, 30), 11); // a half up, as Math.round
 });
+
+test("the rendered frame count is HyperFrames' rule: nearest within 1/1000 of a frame, else every started frame", async () => {
+  const { renderedFrames } = await import("../lib/timebase.mjs");
+  assert.equal(renderedFrames(30, "30000/1001"), 900); // 899.1 frames: HyperFrames renders 900
+  assert.equal(renderedFrames(1, "30000/1001"), 30); // 29.97
+  assert.equal(renderedFrames("1.001", "30000/1001"), 30); // exactly 30
+  assert.equal(renderedFrames(1, 30), 30);
+  assert.equal(renderedFrames(1.01, 30), 31); // 30.3: the started frame is rendered
+  assert.equal(renderedFrames(0.0333, 30), 1); // 0.999, within 1/1000 of a frame of 1
+  assert.throws(() => parseRate("30499999999999999/1000000000000000"), /too large to keep exact/);
+});
