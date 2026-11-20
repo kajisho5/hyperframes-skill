@@ -95,6 +95,14 @@ test("NTSC rates render at their exact rate: 30000/1001 from the request, 60000/
   assert.equal(d.verified, true, JSON.stringify(d.verification));
   assert.deepEqual([d.expected.frame_rate, d.expected.frames, d.expected.fps_source], ["60000/1001", 60, "--fps"]);
   assert.equal(d.probe.video.r_frame_rate, "60000/1001");
+  // a duration that is not a whole number of frames: HyperFrames renders every started frame (1.01 s x 30 = 30.3: 31)
+  req.fps = 30;
+  req.duration = 1.01;
+  const odd = makeScene(tmp(), writeJson(join(dir, "odd.json"), req));
+  r = tool("render", [odd, "-o", join(dir, "odd.mp4"), "--json"]);
+  assert.equal(r.code, 0, r.stderr);
+  assert.equal(r.doc.verified, true, JSON.stringify(r.doc.verification));
+  assert.deepEqual([r.doc.expected.frames, r.doc.probe.video.frames], [31, 31]);
 });
 
 test("determinism: the same scene renders to byte-identical files", { skip: SKIP_RENDER }, () => {
