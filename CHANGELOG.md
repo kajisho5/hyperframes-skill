@@ -3,8 +3,7 @@
 All notable changes. The stability guarantee and deprecation policy are in
 [docs/contract.md](docs/contract.md).
 
-## Unreleased
-
+## 0.11.0
 ### Added
 
 - NTSC and other non-integer frame rates (#33, velisa/timebase@1, D18). A scene request's `fps` and
