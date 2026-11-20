@@ -3,6 +3,10 @@
 All notable changes. The stability guarantee and deprecation policy are in
 [docs/contract.md](docs/contract.md).
 
+## 0.11.1
+
+- fix: declare ffmpeg-skill 4.x (>=2.0.0 <5.0.0) (#36) (18b6826)
+
 ## 0.11.0
 ### Added
 
