@@ -103,7 +103,7 @@ Usage: `node scripts/render.mjs <scene_dir> [options]`
 | `-o, --output` | string | required | video file to write, its extension matching --codec; with --codec png, the directory to write the frames into |
 | `--codec` | h264 \| vp9 \| prores \| png | `h264` | h264 (.mp4), vp9 (.webm, with alpha), prores (.mov, ProRes 4444 with alpha) or png (a directory of RGBA PNG frames) |
 | `--quality` | integer |  | CRF, codec-neutral scale (lower is better): h264 0-51, vp9 0-63; not for prores. Default: HyperFrames' own default (CRF 16) |
-| `--fps` | integer |  | frame rate, integer 1-240 (default: the root's data-fps, else 30) |
+| `--fps` | string |  | frame rate 1-240: an integer, an exact N/D such as 30000/1001, or an NTSC decimal such as 29.97 (default: the root's data-fps, else 30) |
 | `--workers` | integer\|auto | `auto` | parallel capture workers: auto or 1-8 |
 | `--timeout` | number | `1800` | kill the render (Chrome and ffmpeg included) after this long; 0 disables |
 | `--segments` | boolean |  | also render each segment the scene declares (request `segments`: in, loop, out) to <stem>.<segment><ext> next to the output, and measure the loop file's seam |

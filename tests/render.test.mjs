@@ -42,7 +42,7 @@ test("end to end: scene -> render -> probe on the two-line fixture", { skip: SKI
     d.verification.map((s) => [s.step, s.ok]),
     [["exists", true], ["probe", true], ["codec", true], ["resolution", true], ["fps", true], ["frames", true], ["duration", true], ["input_preserved", true], ...(ffs.status === "PASSED" ? [["ffmpeg_skill", true]] : [])],
   );
-  assert.deepEqual(d.expected, { width: 320, height: 180, duration: 1, fps: 30, frames: 30, codec: "h264", fps_source: "data-fps" });
+  assert.deepEqual(d.expected, { width: 320, height: 180, duration: 1, fps: 30, frame_rate: "30", frames: 30, codec: "h264", fps_source: "data-fps" });
   // commands: the hyperframes CLI, then what it really started, then our own probe
   assert.deepEqual(d.commands[0].argv.slice(1, 3), ["--require", ARGV_RECORDER], "HyperFrames runs with the argv recorder (D10)");
   assert.equal(d.commands[0].argv[4], "render");
@@ -69,6 +69,32 @@ test("end to end: scene -> render -> probe on the two-line fixture", { skip: SKI
   assert.equal(countPixels(f1, yellow), 0, "no yellow text in frame 7");
   assert.ok(countPixels(f2, yellow) > 50, "yellow text in frame 22");
   assert.equal(countPixels(f2, white), 0, "no white text in frame 22");
+});
+
+test("NTSC rates render at their exact rate: 30000/1001 from the request, 60000/1001 from --fps 59.94 (D18)", { skip: SKIP_RENDER }, () => {
+  const dir = tmp();
+  const req = JSON.parse(readFileSync(join(FIXTURES, "two-line.json"), "utf8"));
+  req.fps = "30000/1001";
+  const scene = makeScene(dir, writeJson(join(dir, "ntsc.json"), req));
+  assert.match(readFileSync(join(scene, "index.html"), "utf8"), /data-fps="30000\/1001"/);
+  const out = join(dir, "ntsc.mp4");
+  let r = tool("render", [scene, "-o", out, "--json"]);
+  assert.equal(r.code, 0, r.stderr);
+  let d = r.doc;
+  assert.equal(d.verified, true, JSON.stringify(d.verification));
+  assert.equal(d.expected.frame_rate, "30000/1001");
+  assert.equal(d.expected.frames, 30); // 1 s x 30000/1001 = 29.97 -> 30
+  assert.equal(d.probe.video.r_frame_rate, "30000/1001");
+  assert.equal(d.probe.video.frames, 30);
+  const hf = d.commands[0].argv;
+  assert.equal(hf[hf.indexOf("--fps") + 1], "30000/1001");
+  const out60 = join(dir, "ntsc60.mp4");
+  r = tool("render", [scene, "-o", out60, "--fps", "59.94", "--json"]);
+  assert.equal(r.code, 0, r.stderr);
+  d = r.doc;
+  assert.equal(d.verified, true, JSON.stringify(d.verification));
+  assert.deepEqual([d.expected.frame_rate, d.expected.frames, d.expected.fps_source], ["60000/1001", 60, "--fps"]);
+  assert.equal(d.probe.video.r_frame_rate, "60000/1001");
 });
 
 test("determinism: the same scene renders to byte-identical files", { skip: SKIP_RENDER }, () => {

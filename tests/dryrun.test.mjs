@@ -105,3 +105,17 @@ test("every tool in the contract supports --dry-run and is covered above", () =>
   assert.deepEqual(names, ["batch", "doctor", "preview", "probe", "render", "scene", "template"]);
   for (const t of buildContract().tools) assert.equal(t.supports_dry_run, true, t.name);
 });
+
+test("render --dry-run at --fps 29.97 plans the exact rate: hyperframes gets 30000/1001", () => {
+  const f = fakes();
+  const scene = join(sceneDir(), "scene");
+  const r = tool("render", [scene, "-o", join(tmp(), "o.mp4"), "--fps", "29.97", "--dry-run", "--json"], { env: f.env });
+  assert.equal(r.code, 0, r.stderr);
+  assert.deepEqual([r.doc.expected.fps, r.doc.expected.frame_rate, r.doc.expected.frames, r.doc.expected.fps_source], [30000 / 1001, "30000/1001", 30, "--fps"]);
+  const argv = r.doc.planned_commands[0];
+  assert.equal(argv[argv.indexOf("--fps") + 1], "30000/1001");
+  assert.deepEqual(calls(f), []);
+  const bad = tool("render", [scene, "-o", join(tmp(), "o.mp4"), "--fps", "fast", "--dry-run", "--json"], { env: f.env });
+  assert.notEqual(bad.code, 0);
+  assert.match(bad.doc.error?.message ?? bad.stderr, /--fps must be a frame rate/);
+});

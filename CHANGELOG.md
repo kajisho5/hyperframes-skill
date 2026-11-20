@@ -3,6 +3,19 @@
 All notable changes. The stability guarantee and deprecation policy are in
 [docs/contract.md](docs/contract.md).
 
+## Unreleased
+
+### Added
+
+- NTSC and other non-integer frame rates (#33, velisa/timebase@1, D18). A scene request's `fps` and
+  `render --fps` take an integer, an exact `N/D` (`"30000/1001"`), or an NTSC decimal (`23.976`, `29.97`,
+  `59.94`), read as the exact N/1001 rate and never as 2997/100. The scene writes `data-fps="30000/1001"`,
+  HyperFrames renders with `--fps 30000/1001`, and frame counts multiply by the exact rate, a half up.
+  Additive contract change: `render --fps` is a string (an integer still works), and every `expected` gains
+  `frame_rate` (`"30"`, `"30000/1001"`). A stinger or title sidecar's `frame_rate` is the exact rate.
+  The timebase conformance vectors (copied from Velisa, commit in `tests/fixtures/timebase/manifest.json`)
+  run in `tests/timebase.test.mjs`.
+
 ## 0.10.4
 
 - fix(release): a CHANGELOG section for every release; test the release commit before pushing; no release for chore/ci/docs-only PRs (#31) (faaa409)

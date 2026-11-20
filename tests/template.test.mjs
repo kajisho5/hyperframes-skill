@@ -63,7 +63,7 @@ test("template writes the request, verifies it, is byte-identical on re-run and 
   assert.equal(r.doc.verified, true);
   assert.deepEqual(r.doc.verification.map((s) => s.step), ["exists", "request_valid"]);
   assert.equal(r.doc.values.duration, 4, "--set overrides --values");
-  assert.deepEqual(r.doc.expected, { width: 1920, height: 1080, duration: 4, fps: 30, frames: 120 });
+  assert.deepEqual(r.doc.expected, { width: 1920, height: 1080, duration: 4, fps: 30, frame_rate: "30", frames: 120 });
   const first = readFileSync(out, "utf8");
   const again = tool("template", ["title-card", "--values", values, "--set", "duration=4", "-o", out, "--json"]);
   assert.equal(again.code, 1);

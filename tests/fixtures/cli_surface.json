@@ -193,7 +193,7 @@
       },
       "fps": {
         "cli": "--fps",
-        "type": "integer"
+        "type": "string"
       },
       "json": {
         "cli": "--json",

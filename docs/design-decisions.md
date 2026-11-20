@@ -309,3 +309,21 @@ Format:
 - In auto mode a push releases only if a merged PR carries a release-level label (`version-resolver`'s major / minor / patch lists) or no label at all. PRs labelled only `chore`, `ci`, `documentation`, `docs` or `test` release nothing; those labels no longer map to a patch. This is imagemagick-skill's rule. release-drafter's `default` cannot say "no release", so `release.mjs plan` decides it.
 
 **Consequences.** A hand bump is released whatever the labels. A release that fails these tests is not made; a later push retries.
+
+## D18. Frame rates are exact fractions: NTSC rates render at their own rate
+
+2026-11-20. The ecosystem rule is Velisa ADR-026 (decision D40, spec `velisa/timebase@1`, rule TB-1). Issue #33.
+
+**Context.** `fps` had to be an integer in the scene request (`scene-spec.mjs`), in the root's `data-fps` and in `render --fps`. So a scene for a 23.976, 29.97 or 59.94 programme could only be rendered at 24, 30 or 60 and then conformed, which changes its length by 0.1 %. The rule says that a Skill that writes video at a rate the caller chooses accepts every rate the spec reads. HyperFrames 0.8.61 already renders `--fps 30000/1001` and reads `data-fps="30000/1001"`. It refuses a decimal such as `29.97` as ambiguous.
+
+**Decision.**
+- `lib/timebase.mjs` reads a rate by TB-2. An `N/D` is taken as written (`2997/100` stays 2997/100). An integer is N/1. A decimal that is not an integer and lies within 0.005 of base x 1000/1001 (base 24, 30, 48, 60, 120, 240) is that NTSC rate (`29.97` is 30000/1001). Any other decimal is its exact value. This skill renders 1-240 fps of these.
+- The scene keeps `fps` (a number) and `frame_rate`, the canonical text (`"30"`, `"30000/1001"`). The HTML carries `data-fps="<frame_rate>"`, HyperFrames gets `--fps <frame_rate>`, and a sidecar's `frame_rate` is `"N/D"`.
+- A frame count is `floor(t x rate + 1/2)` on exact fractions (BigInt). This is the result `Math.round` gave at integer rates. At an NTSC rate it multiplies by 30000/1001, not by a rounded 29.97. Whole-frame checks on segments, stinger times and loop periods keep their tolerance, on the exact rate. A stinger's frame at the scene's rate is carried to the render's rate exactly.
+- Template-derived values (`deriveValues`) round each operand to the nearest frame of the template's rate the same way.
+- Verification is unchanged: the probed fps within 0.01 of the rate, the frame count exactly, the duration within one frame.
+- `tests/fixtures/timebase/timebase-vectors.json` is a byte-for-byte copy of Velisa's `docs/specs/timebase-vectors.json`. `manifest.json` beside it records the Velisa commit (`b7df1d82586f0b7c00fed4074aecac75cbadf893`) and the sha256. `tests/timebase.test.mjs` runs the 61 vectors of the functions this skill has (`parse_rate`, `rate_str`, `same_rate`, `parse_seconds`, `frames_at`, `seconds_of`) and counts the other 73.
+
+**Consequences.**
+- The contract change is additive. `render --fps` is now `type: string` and still takes an integer. Every `expected` object (scene, template, batch, render, preview) gains `frame_rate`. `preview --fps` stays an integer proxy rate.
+- At integer rates the markup, the argv and every frame count are unchanged.

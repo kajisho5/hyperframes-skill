@@ -276,7 +276,7 @@ check holds.
 | `schema` | proposed | `"velisa/stinger@1"` |
 | `file` | proposed | the output's file name (a PNG sequence: its directory name) |
 | `sha256` | proposed | the output file's content; absent for a PNG sequence directory |
-| `frame_rate` | proposed | `"<fps>/1"` |
+| `frame_rate` | proposed | the render's exact rate as `"N/D"`: `"30/1"`, `"30000/1001"` |
 | `duration`, `frames` | proposed | as probed |
 | `cut_point_frame` | proposed | `cut_point * frame_rate` |
 | `cover_frames` | proposed | `{start, end}` in frames |
