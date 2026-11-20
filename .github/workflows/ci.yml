@@ -29,8 +29,8 @@ jobs:
         # Windows since roadmap step 4: the argv of what HyperFrames starts is recorded by a Node preload
         # (lib/argv-recorder.cjs, docs/design-decisions.md D10), not by POSIX sh shims.
         os: [ubuntu-latest, macos-latest, windows-latest]
-        # the cross-check's ffmpeg-skill release: 3.0.0 everywhere, and the last checked 2.x on Linux (D11)
-        ffmpeg_skill: [v3.0.0]
+        # the cross-check's ffmpeg-skill release: 3.0.0 and 4.0.0 everywhere, and the last checked 2.x on Linux (D11, D19)
+        ffmpeg_skill: [v3.0.0, v4.0.0]
         include:
           - os: ubuntu-latest
             ffmpeg_skill: v2.23.1
