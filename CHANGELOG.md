@@ -3,7 +3,7 @@
 All notable changes. The stability guarantee and deprecation policy are in
 [docs/contract.md](docs/contract.md).
 
-## Unreleased
+## 0.12.0
 ### Added
 
 - Generative layers (roadmap step 10, design-decisions D23). `type: generative` runs one of the programs
