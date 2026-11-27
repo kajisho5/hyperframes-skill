@@ -395,3 +395,27 @@ Format:
 **Measured** (block test font, every OS). English, Arabic, Hindi and Japanese layers shrink from 48 px to 25, 25, 25 and 33 px. Each is the largest size whose lines fit: two lines of 1.2 x 25 px in a 60 px box, and BudouX's `国際学会で / 基調講演を行います` at 33 px in 100 px. The render's ink lies inside the four boxes. Arabic `start` hugs the right edge and English the left. `あいうえおょかきくけ` in a five-character line breaks before ょ with `normal` and before お with `strict`. A vertical layer reports its columns, with the ruby widening its base. At a 40 px minimum the English name overflows its box by 132 px (four lines), and the scene is refused.
 
 **Pinned by:** `tests/typeset.test.mjs`.
+
+## D22. Shapes are static SVG inside animated HTML boxes; patterns are seeded presets whose cycle closes
+
+2026-11-27. Roadmap step 9.
+
+**Context.** Geometric looks and logo backgrounds without footage, reproducible from a seed, with typed parameters, never raw CSS.
+
+**Decision.**
+- **Nothing inside an SVG is animated.** HyperFrames' CSS adapter discovers animated elements with `querySelectorAll("*")` and keeps only those in the XHTML namespace. A CSS animation on an SVG element would play on the browser's own clock instead of being seeked, and the frames would depend on capture speed. So an SVG is only ever drawn, and everything that moves is an HTML element.
+- **Shapes.** A `shape` layer is a static inline SVG the size of its box (`rect`, `rounded_rect`, `circle` as the box's ellipse, `line`, `polygon` from points or `sides`). It has a solid fill or an SVG linear / radial gradient, and a stroke inset by half its width so it stays in the box. The SVG sits in two HTML boxes: the inner one holds the static `rotation`, and the outer one runs the `keyframes` (`translate`, `scale`, `rotate`, `opacity`, the individual properties, linear). Those compose with the layer's transitions (`transform`, `opacity` on the layer) and its loop animation, because they are on another element. Like kinetic units (D20), the inner box runs on the composition's clock, so its delay is the layer's start in that composition.
+- **Patterns.** A `pattern` layer is one of five presets drawn from `seed` (mulberry32) with `speed` (cycles per second), `palette` and typed `params`:
+  - `grid` and `lines`: HTML lines in a field rotated by `angle`. Line k has palette colour (k + offset) mod n, and the field shifts by n spacings per cycle, so a cycle ends with every colour back in place.
+  - `dots`: dots that pulse, each with a seeded colour and phase.
+  - `rings`: one box with a `repeating-radial-gradient` whose start is a registered `<length>` (`@property`). It grows by n ring spacings per cycle, which is the gradient's own repeat.
+  - `polygons`: boxes clipped by `clip-path: polygon()`, morphing between two seeded vertex sets of the same count (0 % = 100 %) and turning once per cycle.
+  The seed picks only colours, phases and, for polygons, places and shapes. Sizes, timing and the file stay the same.
+- **Loops.** A pattern's cycle is 1 / speed, and a cycle ends on its first picture. Inside a seamless loop segment the cycle must be whole frames that divide the loop, like a loop animation's period. A shape's keyframe tracks must hold one value through the loop.
+- Bounds: at most 4000 elements per pattern, 64 points per polygon, 8 palette colours.
+
+**Why.** Typed presets keep the request a description, not code. A seeded PRNG in Node makes the markup itself the reproducible artefact: the same request gives byte-identical HTML. Registered custom properties are animated by the same CSS animation engine HyperFrames seeks, so the rings need no script.
+
+**Measured.** Each preset (320x180, 0.5 s at 10 fps) renders twice to the same framemd5. With another seed the framemd5 differs, while width, height, frame count, codec, fps and duration are equal. Changing the seed in the request changes only lines that belong to the pattern layer. A red square with a `position` track from 0 to 180 px moves its centroid from x 60 to 240 with the same 6400 pixels. A `lines` pattern and a `rings` pattern at 2.5 cycles per second in a 0.8 s loop segment pass the loop seam check while moving.
+
+**Pinned by:** `tests/shapes.test.mjs`.

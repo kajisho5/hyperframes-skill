@@ -56,3 +56,34 @@ A text layer's `transition_in` / `transition_out` may reveal the text unit by un
 - The first family of `font_family` must be shipped in `fonts` (or with `--font`), so the size measured is the size rendered. Tracking and `font_variation` keyframes cannot be combined with fit.
 - `template --fit` / `batch --fit` (with `--font` or a kit's `font_file`) fit every caller text of a title template and of the logo reveal, down to the template's own minimum.
 - Title material: `title.json` `text[]` carries each layer's `lang`, the `font_size` used and, for a fitted layer, the text with its measured breaks (`\n`).
+
+## Shape layers
+
+```json
+{"type": "shape", "id": "badge", "start": 0, "duration": 3, "box": {"x": 80, "y": 80, "width": 240, "height": 120},
+ "shape": "rounded_rect", "radius": 24,
+ "fill": {"type": "linear", "angle": 90, "stops": [{"offset": 0, "color": "#ff0066"}, {"offset": 1, "color": "#3300ff"}]},
+ "stroke": {"color": "#ffffff", "width": 4}, "rotation": 0,
+ "keyframes": {"position": [{"t": 0, "value": [-200, 0]}, {"t": 0.6, "value": [0, 0]}], "opacity": [{"t": 0, "value": 0}, {"t": 0.3, "value": 1}]}}
+```
+
+- `shape`: `rect`, `rounded_rect` (needs `radius`, px), `circle` (the ellipse of the box), `line` (`points: [[x1, y1], [x2, y2]]`, needs `stroke`), `polygon` (`points: [[x, y], ...]`, 3..64, or `sides` for a regular polygon in the box). Points are pixels from the box's top left.
+- `fill`: a colour, or `{"type": "linear", "angle": deg, "stops": [...]}` (0 is left to right, 90 is top to bottom) or `{"type": "radial", "stops": [...]}`; stops are `{offset 0..1, color}`. `stroke`: `{color, width}`. The stroke stays inside the box. `rotation`: degrees, clockwise.
+- `keyframes`: `position` (`[dx, dy]` px from the box's place), `scale`, `rotation` (degrees), `opacity` (0..1); `t` from the layer's start, linear, held outside the stops. They compose with the layer's transitions and loop animation.
+
+## Pattern layers
+
+```json
+{"type": "pattern", "id": "bg", "start": 0, "duration": 4, "pattern": "rings", "seed": 7, "speed": 0.5,
+ "palette": ["#ffffff", "#ff3366"], "params": {"count": 8, "line_width": 3}}
+```
+
+- `pattern` and its `params` (all optional, with defaults):
+  - `grid`: `count`, `line_width`. Lines shift diagonally.
+  - `lines`: `count`, `line_width`, `angle`. Stripes shift across.
+  - `dots`: `count`, `size`. Each dot pulses.
+  - `rings`: `count`, `line_width`. Concentric rings grow outward.
+  - `polygons`: `count`, `size`, `sides`. Each polygon morphs and turns.
+- `seed` (integer) decides the colours, the phases and, for polygons, the places and shapes. The same seed draws the same picture; another seed changes nothing else.
+- `speed` is cycles per second (0 is still). A cycle ends on the picture it started with, so inside a seamless loop segment the cycle (1 / speed) must divide the loop.
+- `palette`: 1..8 colours. There is no raw CSS.

@@ -6,6 +6,16 @@ All notable changes. The stability guarantee and deprecation policy are in
 ## Unreleased
 ### Added
 
+- Shape and pattern layers (roadmap step 9, design-decisions D22). `type: shape` draws a `rect`,
+  `rounded_rect` (`radius`), `circle`, `line` (`points`) or `polygon` (`points` or `sides`), with `fill` (a
+  colour or a `linear` / `radial` gradient), `stroke` and `rotation`. Its `keyframes` move, scale, turn
+  and fade it (`position`, `scale`, `rotation`, `opacity`). `type: pattern` draws one of the presets
+  `grid`, `lines`, `dots`, `rings` and `polygons` from a `seed`, with `speed` (cycles per second),
+  `palette` and the preset's typed `params` (`count`, `line_width`, `angle`, `size`, `sides`). There is
+  no raw CSS. A cycle ends on the picture it started with, so a pattern can run in a seamless loop
+  segment when its cycle divides the loop. The same seed draws the same picture, and another seed changes
+  only the pattern's own markup.
+
 - International typesetting and text fit (roadmap step 8, design-decisions D21). A text layer takes its
   own `lang` (BCP 47), and its direction follows it: Arabic, Hebrew, Persian, Urdu and the other
   right-to-left languages get `dir="rtl"`. `style.direction` (`auto`, `ltr`, `rtl`) states it, and

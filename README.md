@@ -168,6 +168,11 @@ headless Chromium, and reports the size used (`text_fit`); a text that does not 
 an error with the overflow in pixels, never cut. `template --fit` does this for every caller text of
 a title template. The details are in [references/scene-request.md](references/scene-request.md).
 
+Two layer types draw without footage: `shape` (rect, rounded rect, circle, line, polygon; a colour or
+gradient fill, stroke, rotation, and keyframes for position, scale, rotation and opacity) and `pattern`
+(grid, lines, dots, rings or morphing polygons drawn from a `seed` with typed `speed`, `palette` and
+`params`). The same seed always draws the same picture.
+
 Optional top-level `segments` (`{"in": 0.5, "loop": 4, "out": 0.5}`, seconds, whole frames,
 adding up to the scene's duration) splits the scene into IN / LOOP / OUT, so an edit can hold a
 lower third for any length: IN, the loop repeated, OUT. `scene` writes each non-empty segment as its own
