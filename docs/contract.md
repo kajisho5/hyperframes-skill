@@ -43,7 +43,7 @@ major.
 | Exit codes (0 success, 1 failure, 2 `doctor` undecidable, 124 timeout, 127 missing tool, 128+signal interrupted) | unchanged |
 | `error.kind` values (`input`, `render`, `encode`, `missing_tool`, `timeout`, `verification`, `interrupted`, `internal`) | never removed or renamed; new kinds may be added |
 | `contract_version` | unchanged; a ToolSpec shape change bumps it and is a major |
-| Scene request `scene_version: 1` | a request that validates today keeps validating and renders the same markup; a new request shape gets a new `scene_version`. New optional keys may be added (0.2.0: `transition_in` / `transition_out`; 0.5.0: top-level `fonts`; 0.7.0: `segments`; 0.9.0: `stinger`, `title`); a request without them renders byte-identical markup, pinned by `tests/fixtures/*.index.html` |
+| Scene request `scene_version: 1` | a request that validates today keeps validating and renders the same markup; a new request shape gets a new `scene_version`. New optional keys may be added (0.2.0: `transition_in` / `transition_out`; 0.5.0: top-level `fonts`; 0.7.0: `segments`; 0.9.0: `stinger`, `title`; 0.12.0: transition types `wipe`, `chars`, `words`, `lines` and a text layer's `keyframes`); a request without them renders byte-identical markup, pinned by `tests/fixtures/*.index.html` |
 | MCP `tools/list` names and `inputSchema` property names (`mcp/server.mjs`, 0.6.0) | derived from the above, so covered by the same promise; frozen by `tests/fixtures/mcp_tools.json` |
 | Behaviour of a tool for the same input and arguments | may change only to fix a defect or to track a HyperFrames / Chrome / FFmpeg change, and every such change gets a CHANGELOG line |
 
