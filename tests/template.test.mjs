@@ -8,6 +8,7 @@ import { fillTemplate, listTemplates, loadTemplate, resolveValues, TEMPLATE_DIR 
 import { ffmpeg, SKIP_RENDER, tmp, tool, writeJson } from "./helpers.mjs";
 
 function sample(spec, k) {
+  if (spec.type === "choice") return Object.keys(spec.options)[0];
   if (spec.type === "number") return spec.min ?? 3;
   if (spec.type === "color") return "#123456";
   if (k === "lang") return "ja";
@@ -17,7 +18,7 @@ function sample(spec, k) {
 
 test("every shipped template fills into a valid request, with only required values and with all values", () => {
   const all = listTemplates();
-  assert.deepEqual(all.map((t) => t.name), ["break", "lower-third", "session-slate", "stinger-brush", "stinger-geometric", "stinger-glitch", "stinger-logo-reveal", "stinger-particles", "title-card"]);
+  assert.deepEqual(all.map((t) => t.name), ["break", "lower-third", "session-slate", "stinger-brush", "stinger-geometric", "stinger-glitch", "stinger-logo-reveal", "stinger-particles", "style-corporate", "style-glitch", "style-minimal", "style-neon", "style-swiss", "style-wafu", "title-card"]);
   for (const t of all) {
     for (const mode of ["required", "all"]) {
       const given = Object.fromEntries(Object.entries(t.values).filter(([, s]) => mode === "all" || s.required).map(([k, s]) => [k, sample(s, k)]));
@@ -80,11 +81,11 @@ test("template writes the request, verifies it, is byte-identical on re-run and 
 test("--list describes every template and its values", () => {
   const r = tool("template", ["--list", "--json"]);
   assert.equal(r.code, 0);
-  assert.deepEqual(r.doc.templates.map((t) => t.name), ["break", "lower-third", "session-slate", "stinger-brush", "stinger-geometric", "stinger-glitch", "stinger-logo-reveal", "stinger-particles", "title-card"]);
+  assert.deepEqual(r.doc.templates.map((t) => t.name), ["break", "lower-third", "session-slate", "stinger-brush", "stinger-geometric", "stinger-glitch", "stinger-logo-reveal", "stinger-particles", "style-corporate", "style-glitch", "style-minimal", "style-neon", "style-swiss", "style-wafu", "title-card"]);
   for (const t of r.doc.templates) for (const v of Object.values(t.values)) assert.ok(v.description, t.name);
   const unknown = tool("template", ["nope", "-o", join(tmp(), "x.json"), "--json"]);
   assert.equal(unknown.doc.error.kind, "input");
-  assert.match(unknown.doc.error.message, /templates: break, lower-third, session-slate, stinger-brush, stinger-geometric, stinger-glitch, stinger-logo-reveal, stinger-particles, title-card/);
+  assert.match(unknown.doc.error.message, /templates: break, lower-third, session-slate, stinger-brush, stinger-geometric, stinger-glitch, stinger-logo-reveal, stinger-particles, style-corporate, style-glitch, style-minimal, style-neon, style-swiss, style-wafu, title-card/);
 });
 
 // The lower third's whole point is keying over a live feed: its background must come out

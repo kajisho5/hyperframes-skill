@@ -94,7 +94,8 @@ test("explicit values and --font win over the kit; the kit fills nothing it lack
   // a plain brand.json with only a primary colour: no template value is filled from ffmpeg-skill's defaults
   const dir = tmp("hfs-kit-");
   const B = loadKit(writeJson(join(dir, "brand.json"), { colors: { primary: "FFD200" } }));
-  for (const t of listTemplates()) {
+  // (the style presets name a primary colour value, so it is theirs: tests/presets.test.mjs)
+  for (const t of listTemplates().filter((x) => !x.gallery)) {
     const b = applyKit(t, B, {});
     assert.deepEqual(b.given, {}, t.name);
     assert.equal(b.font, undefined);

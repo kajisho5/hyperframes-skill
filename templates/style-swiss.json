@@ -1,0 +1,286 @@
+{
+  "template_version": 1,
+  "name": "style-swiss",
+  "description": "Swiss style: a fine grid, a bold flush-left title that steps in word by word on the beat, a red bar and a small square. Flat colours only.",
+  "gallery": {
+    "at": 2.5
+  },
+  "values": {
+    "title": {
+      "type": "string",
+      "default": "Form follows function",
+      "max_length": 40,
+      "description": "the main line of copy"
+    },
+    "subtitle": {
+      "type": "string",
+      "default": "Design conference 2026",
+      "max_length": 60,
+      "description": "a second, smaller line"
+    },
+    "background": {
+      "type": "color",
+      "default": "#f2f0eb",
+      "description": "page colour"
+    },
+    "primary": {
+      "type": "color",
+      "default": "#e30613",
+      "description": "the bar"
+    },
+    "secondary": {
+      "type": "color",
+      "default": "#d6d2c8",
+      "description": "the grid lines"
+    },
+    "accent": {
+      "type": "color",
+      "default": "#111111",
+      "description": "the small square"
+    },
+    "text_color": {
+      "type": "color",
+      "default": "#111111",
+      "description": "the type"
+    },
+    "bpm": {
+      "type": "number",
+      "default": 120,
+      "min": 60,
+      "max": 180,
+      "description": "tempo: every layer starts on a beat and the words step one beat apart (beat lock)"
+    },
+    "aspect": {
+      "type": "choice",
+      "default": "landscape",
+      "options": {
+        "landscape": {
+          "width": 1920,
+          "height": 1080,
+          "full_x": 0,
+          "full_y": 0,
+          "full_w": 1920,
+          "full_h": 1080,
+          "bar_x": 134,
+          "bar_y": 130,
+          "bar_w": 35,
+          "bar_h": 497,
+          "title_x": 230,
+          "title_y": 130,
+          "title_w": 1536,
+          "title_h": 605,
+          "sub_x": 230,
+          "sub_y": 799,
+          "sub_w": 1536,
+          "sub_h": 108,
+          "dot_x": 1732,
+          "dot_y": 950,
+          "dot_w": 54,
+          "dot_h": 54,
+          "title_size": 130,
+          "sub_size": 49
+        },
+        "portrait": {
+          "width": 1080,
+          "height": 1920,
+          "full_x": 0,
+          "full_y": 0,
+          "full_w": 1080,
+          "full_h": 1920,
+          "bar_x": 76,
+          "bar_y": 230,
+          "bar_w": 19,
+          "bar_h": 883,
+          "title_x": 130,
+          "title_y": 230,
+          "title_w": 864,
+          "title_h": 1075,
+          "sub_x": 130,
+          "sub_y": 1421,
+          "sub_w": 864,
+          "sub_h": 192,
+          "dot_x": 950,
+          "dot_y": 1732,
+          "dot_w": 54,
+          "dot_h": 54,
+          "title_size": 130,
+          "sub_size": 49
+        },
+        "square": {
+          "width": 1080,
+          "height": 1080,
+          "full_x": 0,
+          "full_y": 0,
+          "full_w": 1080,
+          "full_h": 1080,
+          "bar_x": 76,
+          "bar_y": 130,
+          "bar_w": 19,
+          "bar_h": 497,
+          "title_x": 130,
+          "title_y": 130,
+          "title_w": 864,
+          "title_h": 605,
+          "sub_x": 130,
+          "sub_y": 799,
+          "sub_w": 864,
+          "sub_h": 108,
+          "dot_x": 950,
+          "dot_y": 950,
+          "dot_w": 54,
+          "dot_h": 54,
+          "title_size": 130,
+          "sub_size": 49
+        }
+      },
+      "description": "landscape 1920x1080, portrait 1080x1920 or square 1080x1080"
+    }
+  },
+  "kit": {
+    "background": "colors.background",
+    "primary": "colors.primary",
+    "secondary": "colors.secondary",
+    "accent": "colors.accent",
+    "text_color": "colors.text"
+  },
+  "request": {
+    "scene_version": 1,
+    "id": "style-swiss",
+    "width": "{{aspect.width}}",
+    "height": "{{aspect.height}}",
+    "duration": 4,
+    "fps": 30,
+    "background": "{{background}}",
+    "lang": "en",
+    "beat": {
+      "bpm": "{{bpm}}"
+    },
+    "layers": [
+      {
+        "type": "pattern",
+        "id": "grid",
+        "start": 0,
+        "duration": 4,
+        "box": {
+          "x": "{{aspect.full_x}}",
+          "y": "{{aspect.full_y}}",
+          "width": "{{aspect.full_w}}",
+          "height": "{{aspect.full_h}}"
+        },
+        "pattern": "grid",
+        "seed": 1,
+        "speed": 0,
+        "palette": [
+          "{{secondary}}"
+        ],
+        "params": {
+          "count": 12,
+          "line_width": 3
+        }
+      },
+      {
+        "type": "shape",
+        "id": "bar",
+        "start": 0,
+        "duration": 4,
+        "box": {
+          "x": "{{aspect.bar_x}}",
+          "y": "{{aspect.bar_y}}",
+          "width": "{{aspect.bar_w}}",
+          "height": "{{aspect.bar_h}}"
+        },
+        "shape": "rect",
+        "fill": "{{primary}}",
+        "transition_in": {
+          "type": "wipe",
+          "duration": 0.5,
+          "direction": "down",
+          "easing": "ease_out"
+        }
+      },
+      {
+        "type": "text",
+        "id": "title",
+        "start": 0.5,
+        "duration": 3.5,
+        "text": "{{title}}",
+        "box": {
+          "x": "{{aspect.title_x}}",
+          "y": "{{aspect.title_y}}",
+          "width": "{{aspect.title_w}}",
+          "height": "{{aspect.title_h}}"
+        },
+        "style": {
+          "font_family": "sans-serif",
+          "font_size": "{{aspect.title_size}}",
+          "font_weight": 700,
+          "color": "{{text_color}}",
+          "align": "left",
+          "valign": "top",
+          "line_height": 1.1
+        },
+        "transition_in": {
+          "type": "words",
+          "duration": 0.4,
+          "stagger": 0.5,
+          "easing": "ease_out",
+          "effect": "slide",
+          "direction": "down",
+          "distance": 40
+        }
+      },
+      {
+        "type": "text",
+        "id": "subtitle",
+        "start": 2,
+        "duration": 2,
+        "text": "{{subtitle}}",
+        "box": {
+          "x": "{{aspect.sub_x}}",
+          "y": "{{aspect.sub_y}}",
+          "width": "{{aspect.sub_w}}",
+          "height": "{{aspect.sub_h}}"
+        },
+        "style": {
+          "font_family": "sans-serif",
+          "font_size": "{{aspect.sub_size}}",
+          "font_weight": 400,
+          "color": "{{text_color}}",
+          "align": "left",
+          "valign": "top",
+          "line_height": 1.1
+        },
+        "transition_in": {
+          "type": "fade",
+          "duration": 0.5
+        }
+      },
+      {
+        "type": "shape",
+        "id": "dot",
+        "start": 2.5,
+        "duration": 1.5,
+        "box": {
+          "x": "{{aspect.dot_x}}",
+          "y": "{{aspect.dot_y}}",
+          "width": "{{aspect.dot_w}}",
+          "height": "{{aspect.dot_h}}"
+        },
+        "shape": "rect",
+        "fill": "{{accent}}",
+        "keyframes": {
+          "scale": [
+            {
+              "t": 0,
+              "value": 0
+            },
+            {
+              "t": 0.25,
+              "value": 1
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

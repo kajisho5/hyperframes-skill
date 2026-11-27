@@ -6,6 +6,16 @@ All notable changes. The stability guarantee and deprecation policy are in
 ## Unreleased
 ### Added
 
+- Style presets and the gallery (roadmap step 14, design-decisions D25). There are six templates built
+  on the layers above: `style-swiss`, `style-minimal`, `style-neon`, `style-glitch`, `style-corporate`
+  (a logo reveal) and `style-wafu` (Japanese, a regional option: vertical title, waves, a seal). Each
+  takes typed values: `title`, `subtitle`, colours by kit role, `bpm` (beat lock) and `aspect`
+  (`landscape`, `portrait`, `square`, a new `choice` value type whose option fields fill
+  `{{aspect.width}}` and so on). A brand kit fills every colour and the font. The presets have no fixed
+  colour, so with a kit the picture uses only the kit's colours. `template --gallery -o DIR` renders one
+  PNG still per preset (at its own `gallery.at`, through the same scene and render path), with `--set`,
+  `--values`, `--kit` and `--font` applied to each. `template --list` shows each preset's `gallery`.
+
 - Audio and beat lock (roadmap step 11, design-decisions D24). An `audio` layer (local `.wav`, `.mp3`,
   `.m4a`, `.aac`, `.ogg`, `.opus` or `.flac`; `media_start`, `volume`, `fade_in`, `fade_out`) is mixed into
   the output by HyperFrames: AAC in .mp4 / .mov, Opus in .webm. `render` then verifies an `audio` step:

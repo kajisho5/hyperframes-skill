@@ -1,0 +1,268 @@
+{
+  "template_version": 1,
+  "name": "style-wafu",
+  "description": "Wafu (Japanese, a regional option): a vertical title that steps in phrase by phrase on washi-coloured ground, slow concentric waves below and a red seal. Pass --font with a Japanese font for Japanese glyph forms.",
+  "gallery": {
+    "at": 3
+  },
+  "values": {
+    "title": {
+      "type": "string",
+      "default": "和の心を伝える",
+      "max_length": 40,
+      "description": "the main line of copy"
+    },
+    "subtitle": {
+      "type": "string",
+      "default": "日本の伝統美",
+      "max_length": 60,
+      "description": "a second, smaller line"
+    },
+    "background": {
+      "type": "color",
+      "default": "#f3ede2",
+      "description": "washi ground"
+    },
+    "primary": {
+      "type": "color",
+      "default": "#5b4636",
+      "description": "the subtitle"
+    },
+    "secondary": {
+      "type": "color",
+      "default": "#c9b99a",
+      "description": "the waves"
+    },
+    "accent": {
+      "type": "color",
+      "default": "#b7282e",
+      "description": "the seal"
+    },
+    "text_color": {
+      "type": "color",
+      "default": "#1f2a44",
+      "description": "the title (indigo)"
+    },
+    "bpm": {
+      "type": "number",
+      "default": 120,
+      "min": 60,
+      "max": 180,
+      "description": "tempo: every layer starts on a beat and the words step one beat apart (beat lock)"
+    },
+    "aspect": {
+      "type": "choice",
+      "default": "landscape",
+      "options": {
+        "landscape": {
+          "width": 1920,
+          "height": 1080,
+          "waves_x": 0,
+          "waves_y": 778,
+          "waves_w": 1920,
+          "waves_h": 302,
+          "title_x": 1114,
+          "title_y": 86,
+          "title_w": 422,
+          "title_h": 670,
+          "sub_x": 806,
+          "sub_y": 216,
+          "sub_w": 230,
+          "sub_h": 540,
+          "seal_x": 1190,
+          "seal_y": 680,
+          "seal_w": 76,
+          "seal_h": 76,
+          "title_size": 108,
+          "sub_size": 49
+        },
+        "portrait": {
+          "width": 1080,
+          "height": 1920,
+          "waves_x": 0,
+          "waves_y": 1382,
+          "waves_w": 1080,
+          "waves_h": 538,
+          "title_x": 626,
+          "title_y": 154,
+          "title_w": 238,
+          "title_h": 1190,
+          "sub_x": 454,
+          "sub_y": 384,
+          "sub_w": 130,
+          "sub_h": 960,
+          "seal_x": 670,
+          "seal_y": 1268,
+          "seal_w": 76,
+          "seal_h": 76,
+          "title_size": 108,
+          "sub_size": 49
+        },
+        "square": {
+          "width": 1080,
+          "height": 1080,
+          "waves_x": 0,
+          "waves_y": 778,
+          "waves_w": 1080,
+          "waves_h": 302,
+          "title_x": 626,
+          "title_y": 86,
+          "title_w": 238,
+          "title_h": 670,
+          "sub_x": 454,
+          "sub_y": 216,
+          "sub_w": 130,
+          "sub_h": 540,
+          "seal_x": 670,
+          "seal_y": 680,
+          "seal_w": 76,
+          "seal_h": 76,
+          "title_size": 108,
+          "sub_size": 49
+        }
+      },
+      "description": "landscape 1920x1080, portrait 1080x1920 or square 1080x1080"
+    }
+  },
+  "kit": {
+    "background": "colors.background",
+    "primary": "colors.primary",
+    "secondary": "colors.secondary",
+    "accent": "colors.accent",
+    "text_color": "colors.text"
+  },
+  "request": {
+    "scene_version": 1,
+    "id": "style-wafu",
+    "width": "{{aspect.width}}",
+    "height": "{{aspect.height}}",
+    "duration": 4,
+    "fps": 30,
+    "background": "{{background}}",
+    "lang": "ja",
+    "beat": {
+      "bpm": "{{bpm}}"
+    },
+    "layers": [
+      {
+        "type": "pattern",
+        "id": "waves",
+        "start": 0,
+        "duration": 4,
+        "box": {
+          "x": "{{aspect.waves_x}}",
+          "y": "{{aspect.waves_y}}",
+          "width": "{{aspect.waves_w}}",
+          "height": "{{aspect.waves_h}}"
+        },
+        "pattern": "rings",
+        "seed": 8,
+        "speed": 0.25,
+        "palette": [
+          "{{secondary}}",
+          "{{background}}"
+        ],
+        "params": {
+          "count": 6,
+          "line_width": 6
+        }
+      },
+      {
+        "type": "text",
+        "id": "title",
+        "start": 0.5,
+        "duration": 3.5,
+        "text": "{{title}}",
+        "box": {
+          "x": "{{aspect.title_x}}",
+          "y": "{{aspect.title_y}}",
+          "width": "{{aspect.title_w}}",
+          "height": "{{aspect.title_h}}"
+        },
+        "style": {
+          "font_family": "serif",
+          "font_size": "{{aspect.title_size}}",
+          "font_weight": 700,
+          "color": "{{text_color}}",
+          "align": "left",
+          "valign": "top",
+          "line_height": 1.1,
+          "writing_mode": "vertical"
+        },
+        "transition_in": {
+          "type": "words",
+          "duration": 0.4,
+          "stagger": 0.5,
+          "easing": "ease_out",
+          "effect": "slide",
+          "direction": "up",
+          "distance": 30
+        }
+      },
+      {
+        "type": "text",
+        "id": "subtitle",
+        "start": 2,
+        "duration": 2,
+        "text": "{{subtitle}}",
+        "box": {
+          "x": "{{aspect.sub_x}}",
+          "y": "{{aspect.sub_y}}",
+          "width": "{{aspect.sub_w}}",
+          "height": "{{aspect.sub_h}}"
+        },
+        "style": {
+          "font_family": "serif",
+          "font_size": "{{aspect.sub_size}}",
+          "font_weight": 400,
+          "color": "{{primary}}",
+          "align": "left",
+          "valign": "top",
+          "line_height": 1.1,
+          "writing_mode": "vertical"
+        },
+        "transition_in": {
+          "type": "fade",
+          "duration": 0.5
+        }
+      },
+      {
+        "type": "shape",
+        "id": "seal",
+        "start": 2.5,
+        "duration": 1.5,
+        "box": {
+          "x": "{{aspect.seal_x}}",
+          "y": "{{aspect.seal_y}}",
+          "width": "{{aspect.seal_w}}",
+          "height": "{{aspect.seal_h}}"
+        },
+        "shape": "rounded_rect",
+        "radius": 6,
+        "fill": "{{accent}}",
+        "keyframes": {
+          "scale": [
+            {
+              "t": 0,
+              "value": 1.6
+            },
+            {
+              "t": 0.2,
+              "value": 1
+            }
+          ],
+          "opacity": [
+            {
+              "t": 0,
+              "value": 0
+            },
+            {
+              "t": 0.2,
+              "value": 1
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

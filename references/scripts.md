@@ -152,6 +152,7 @@ Usage: `node scripts/template.mjs [name] [options]`
 | `--font` | string |  | font file (.otf/.ttf/.woff2) shipped with the scene and used first for all text, e.g. a Japanese font for Japanese glyph forms |
 | `--kit` | string |  | brand kit (Velisa kit@1 or ffmpeg-skill brand.json): fills the values the template maps to it (colours, logo) and font_file as --font; explicit values and --font win; unused kit fields are reported |
 | `--fit` | boolean |  | shrink each caller text to fit its box, down to the template's minimum size (needs --font or a kit's font_file); the size used is in scene's text_fit |
+| `--gallery` | boolean |  | render one still per style preset (or of the named one) into the -o directory, with --set / --values / --kit / --font applied to each, for choosing before a full render |
 | `--list` | boolean |  | list the templates and the values each takes |
 | `--overwrite` | boolean |  | replace an existing output file |
 

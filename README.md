@@ -179,6 +179,11 @@ program (particles, noise field, shader gradient, extruded 3D type from a shippe
 shader from a local file. HyperFrames' seek event sets the program's time for every captured frame, on
 SwiftShader, so a frame is the same however the render reaches it.
 
+Six style presets are templates built on these layers: `style-swiss`, `style-minimal`, `style-neon`,
+`style-glitch`, `style-corporate` (logo reveal) and `style-wafu` (Japanese, opt-in). Each takes a title,
+a subtitle, colours by brand-kit role, a `bpm` and an `aspect` (landscape, portrait, square).
+`template --gallery -o DIR [--kit KIT]` renders one still per preset to choose from before rendering.
+
 Optional top-level `segments` (`{"in": 0.5, "loop": 4, "out": 0.5}`, seconds, whole frames,
 adding up to the scene's duration) splits the scene into IN / LOOP / OUT, so an edit can hold a
 lower third for any length: IN, the loop repeated, OUT. `scene` writes each non-empty segment as its own

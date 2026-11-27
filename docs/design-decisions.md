@@ -468,3 +468,27 @@ Format:
 **Measured.** A 120 BPM scene with layers asked at 0.13, 1.27 and 2.2 s starts them at 0, 1.5 and 2 s, and its 0.2 s stagger becomes 0.5 s. Rendered with a 440 Hz tone from 0.5 s, the .mp4 and the .mov each carry a 3.000 s audio stream for the 3 s scene: silent below -60 dBFS before 0.5 s and the tone after. At 30 fps with eighths and a 0.1 s offset, the beat at 1.35 s (frame 40.5) becomes frame 41, 1.366667 s. A stinger with an audio layer writes `audio: true`.
 
 **Pinned by:** `tests/audio.test.mjs`.
+
+## D25. Style presets are plain templates over the typed layers; the gallery renders them; nothing was copied
+
+2026-11-27. Roadmap step 14.
+
+**Context.** A caller should be able to start from "make it neon" and compare stills before rendering, in the brand's colours and font.
+
+**Decision.**
+- **What a preset is.** Each preset is an ordinary template (`templates/style-*.json`) using only the request keys of steps 7 to 11: unit reveals, wipes, shape and pattern layers, vertical writing, beat lock. They are `style-swiss`, `style-minimal`, `style-neon`, `style-glitch`, `style-corporate` and `style-wafu`.
+  - Their values are typed: `title`, `subtitle`, colours named by the kit role they mean (`background`, `primary`, `secondary`, `accent`, `text_color`), `bpm` and `aspect`.
+  - Every colour in a preset's request is a placeholder of one of its colour values, so a kit with those roles decides every colour drawn.
+  - Each colour value is mapped from the kit role of the same name. This is the one-meaning rule of D15: here the value is called `primary` because it is the primary colour.
+- **Aspect.** It is a new `choice` value type. Its options carry named numbers (`width`, `height`, each box), placed as `{{aspect.width}}`. The layout per aspect is the template's, like its sizes.
+- **Gallery.** `template --gallery` fills every preset that declares `gallery: {at}` with the same values and kit, writes the scene, and renders frames up to `at` as a PNG sequence at 10 fps through `executeRender` (so it is verified like any render). It writes the frame at `at`, over the scene's background, as `<preset>.png`. The background step is needed because HyperFrames captures a PNG sequence with a transparent page.
+- **Check scenes in CI.** `tests/presets.test.mjs` is each preset's check scene: the gallery at the default values. It requires the preset's background in the corner and each of its colours drawn. Then the gallery with a six-colour kit and the block test font: over 97 % of every still's pixels are kit colours (the rest are anti-aliased edges between two of them), and every text names the kit's font first.
+- **Beat lock.** The presets are beat-locked at their `bpm`: at the default 120 BPM every layer already starts on a beat, and another tempo moves each start to its own beats (D24).
+
+**References and licences: ideas only, nothing used.** The presets were written here from the style names alone. No markup, code, asset, text or layout values were copied from any of the following, and nothing from them is bundled:
+- video-shotcraft recipe cards: Apache-2.0 (the repositories of that name on GitHub);
+- motion-video-kit's Gauntlet: MIT (`echris6/motion-video-kit`);
+- the official HyperFrames templates (`hyperframes` 0.8.61 `dist/templates`): Apache-2.0, as its `package.json` states;
+- the official Remotion templates: under the Remotion License, which is source-available, free for individuals, non-profits and companies of up to 3 employees, and needs a company license otherwise. Because of that licence, nothing of Remotion's was read for these presets beyond the names of styles.
+
+**Pinned by:** `tests/presets.test.mjs`, `tests/template.test.mjs`, `tests/kit.test.mjs`.
