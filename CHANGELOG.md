@@ -6,7 +6,7 @@ All notable changes. The stability guarantee and deprecation policy are in
 ## Unreleased
 ### Added
 
-- Kinetic typography (roadmap step 7, design-decisions D20). A text layer's `transition_in` /
+- Kinetic typography (roadmap step 7, #37, design-decisions D20). A text layer's `transition_in` /
   `transition_out` may be `chars`, `words` or `lines` with `duration` (each unit), `stagger` (from one
   unit's start to the next), `easing` and `effect` (`fade`, `slide` with `direction` + `distance`, `zoom`
   with `scale`): the units appear or leave one after another. Characters are extended grapheme clusters
