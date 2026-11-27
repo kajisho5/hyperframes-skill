@@ -3,7 +3,7 @@
 All notable changes. The stability guarantee and deprecation policy are in
 [docs/contract.md](docs/contract.md).
 
-## Unreleased
+## 0.12.0
 ### Added
 
 - International typesetting and text fit (roadmap step 8, design-decisions D21). A text layer takes its
