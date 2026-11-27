@@ -6,6 +6,31 @@ All notable changes. The stability guarantee and deprecation policy are in
 ## Unreleased
 ### Added
 
+- International typesetting and text fit (roadmap step 8, design-decisions D21). A text layer takes its
+  own `lang` (BCP 47), and its direction follows it: Arabic, Hebrew, Persian, Urdu and the other
+  right-to-left languages get `dir="rtl"`. `style.direction` (`auto`, `ltr`, `rtl`) states it, and
+  `style.align` also takes `start` / `end`. `style.line_break` (`normal`, `strict`, `loose`) is CSS
+  `line-break`, so `strict` is strict kinsoku. `style.phrases: true` breaks Japanese, Chinese and Thai
+  only between BudouX phrases (Apache-2.0, run locally).
+- `fit: {"mode": "shrink", "min_font_size": N}` finds the largest font size, from `style.font_size`
+  down to the minimum, at which the text fits its box. It lays the text out in the headless Chromium
+  the render uses. The size used is written into the HTML and reported in `text_fit` with the measured
+  line breaks. A text that does not fit at the minimum is an input error with the overflow in pixels,
+  and no scene is written. Text is never cut or ellipsised.
+- Opt-in regional profiles: `style.writing_mode: vertical` (vertical-rl) and `style.ruby: true`
+  (`{東京|とうきょう}` becomes ruby).
+- `template --fit` / `batch --fit` give every caller text of a title template (and the logo reveal's
+  text) a fit down to the template's own minimum. It needs `--font` or a kit's `font_file`.
+- Title material (`title.json`) carries each text layer's own `lang`, the font size used, and, for a
+  fitted layer, the text with its measured line breaks; ruby readings are left out of `text`.
+- New dependencies: `budoux` 0.10.3 (Apache-2.0) and `puppeteer-core` 25.11.0 (Apache-2.0). puppeteer-core
+  is already installed with HyperFrames.
+
+### Changed
+
+- A scene whose `lang` is a right-to-left language now writes `dir="rtl"` on its text layers. Its text
+  was laid out left to right before, which put punctuation on the wrong side.
+
 - Kinetic typography (roadmap step 7, #37, design-decisions D20). A text layer's `transition_in` /
   `transition_out` may be `chars`, `words` or `lines` with `duration` (each unit), `stagger` (from one
   unit's start to the next), `easing` and `effect` (`fade`, `slide` with `direction` + `distance`, `zoom`

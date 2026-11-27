@@ -21,6 +21,7 @@ Usage: `node scripts/batch.mjs <rows> [options]`
 | `--name-field` | string |  | column whose value names each file (<row number>-<value>); default: the row number only |
 | `--font` | string |  | font file shipped with every row's scene and used first for all text (see template --font) |
 | `--kit` | string |  | brand kit for every row (see template --kit); a row's own value and --font win |
+| `--fit` | boolean |  | shrink each row's text to fit its box (see template --fit) |
 | `--encoding` | utf-8 \| shift_jis | `utf-8` | text encoding of a CSV file |
 | `--codec` | h264 \| vp9 \| prores | `h264` | h264 (.mp4), vp9 (.webm) or prores (.mov, keeps alpha) |
 | `--quality` | integer |  | CRF, as render's --quality |
@@ -150,6 +151,7 @@ Usage: `node scripts/template.mjs [name] [options]`
 | `--set` | string[] |  | one template value; repeatable; overrides --values |
 | `--font` | string |  | font file (.otf/.ttf/.woff2) shipped with the scene and used first for all text, e.g. a Japanese font for Japanese glyph forms |
 | `--kit` | string |  | brand kit (Velisa kit@1 or ffmpeg-skill brand.json): fills the values the template maps to it (colours, logo) and font_file as --font; explicit values and --font win; unused kit fields are reported |
+| `--fit` | boolean |  | shrink each caller text to fit its box, down to the template's minimum size (needs --font or a kit's font_file); the size used is in scene's text_fit |
 | `--list` | boolean |  | list the templates and the values each takes |
 | `--overwrite` | boolean |  | replace an existing output file |
 

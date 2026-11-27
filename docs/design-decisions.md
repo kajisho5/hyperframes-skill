@@ -367,3 +367,31 @@ Format:
 **Known limits.** `chars` on Arabic or another joined script draws each letter in its isolated form, because each unit is its own box (use `words`). With `tracking`, the space added after the last letter shifts centred text by half of it, as `letter-spacing` does.
 
 **Pinned by:** `tests/kinetic.test.mjs`.
+
+## D21. Text is fitted by laying it out in the render's Chromium, before the scene is written
+
+2026-11-27. Roadmap step 8.
+
+**Context.** Long names, affiliations and talk titles must shrink and break cleanly in any language, so a lower third never overflows, and the size used must be data (`title.json`).
+
+**Decision.**
+- **Language and direction.** A text layer takes its own `lang`. Its direction follows the language: the right-to-left languages (`ar`, `he`, `fa`, `ur`, `ps`, `sd`, `ug`, `yi`, `dv`, ...) get `dir="rtl"`, and `style.direction` states it. `align` also takes `start` / `end`. The bidirectional algorithm is the browser's, so an English name inside Arabic keeps its order.
+- **Line breaking.** Line breaking is the browser's (UAX #14 with its rules per language). `line_break` is CSS `line-break`: `strict` is strict kinsoku, which forbids a small kana or ー at a line's start where `normal` allows it. `phrases: true` runs BudouX (Apache-2.0, its own models, in Node) for `ja`, `zh-Hans`, `zh-Hant` and `th`. Phrases are joined by `<wbr>` under `word-break: keep-all`, or for Thai each phrase is kept in a no-wrap span, since Chrome breaks Thai inside words itself. Other languages are refused, because BudouX has no model for them.
+- **Opt-in profiles.** `writing_mode: vertical` (vertical-rl, `text-orientation: mixed`) and `ruby: true`, which reads `{base|reading}`. A brace or bar outside a complete group is refused rather than drawn. Neither is on by default, whatever the language.
+- **Fit.** `fit: {mode: shrink, min_font_size}` is measured, not estimated:
+  - `scene` writes the page and its assets into a staging directory. It opens the page with puppeteer-core in the Chromium the render uses, with the capture flags that affect text layout (`--font-render-hinting=none`, `--force-color-profile=srgb`, `--hide-scrollbars`), and waits for every declared face.
+  - It tries `font_size` first, then the minimum, then a binary search over whole pixels for the largest size that fits.
+  - "Fits" means the text's box (`.hfs-t`: its rectangle and scroll size) does not reach past the layer's box on either axis. In a fitted layer `overflow-wrap` is `normal`, so a word longer than the line overflows and is measured instead of being broken anywhere.
+  - The scene is then written once, at the sizes found, and measured again as written: the `text_fit` step requires overflow 0, the computed size equal to the size in the HTML, and the same line breaks.
+  - A text that does not fit at its minimum is `kind: input`, with the overflow in pixels and its lines. Nothing is written.
+- **Fonts.** The first family of a fitted layer must be shipped in `fonts[]` (or `--font`). HyperFrames' compiler maps generic and well-known family names to its own bundled or downloaded faces, so a measurement in plain Chromium of `sans-serif` would not be the size rendered. A shipped `@font-face` is used as declared. Tracking and `font_variation` keyframes change the text's size while it plays, so they are refused with fit.
+- **Templates.** `--fit` on `template` / `batch` gives each caller text layer that declares `fit_min` in its template JSON a fit down to that minimum. These are the four title templates and the logo reveal's text, at about half the template's size. The minimum is part of the template's layout, like its sizes. `fit_min` is removed from the request, so without `--fit` every template's request is unchanged.
+- **title.json.** The Velisa title spec's `text[]` has `role`, `text`, `lang`, `font`, `font_size` and nothing more. So the size used goes in `font_size`, the layer's own language in `lang`, and the breaks into `text` as `\n` ("the text as drawn"). Ruby readings are left out of `text`. No field is added.
+
+**Why.** Only the engine that draws the text knows where its lines break: shaping, kerning, fallback fonts, kinsoku and bidi all decide them. A second layout model in Node (font metrics and a line breaker) would disagree with Chromium on exactly the hard cases: Arabic joining, Indic conjuncts, CJK punctuation. Measuring before the scene is written keeps the HTML the single source: what `text_fit` reports is what the page says and what the render draws. A page that fits itself at render time with a script would leave the size out of the HTML and out of `scene`'s result. Staging means a failed fit leaves nothing behind.
+
+**Changed behaviour.** A scene whose own `lang` is right to left used to lay its text out left to right. It now writes `dir="rtl"` on its text layers. Every other request without the new keys renders byte-identical markup.
+
+**Measured** (block test font, every OS). English, Arabic, Hindi and Japanese layers shrink from 48 px to 25, 25, 25 and 33 px. Each is the largest size whose lines fit: two lines of 1.2 x 25 px in a 60 px box, and BudouX's `国際学会で / 基調講演を行います` at 33 px in 100 px. The render's ink lies inside the four boxes. Arabic `start` hugs the right edge and English the left. `あいうえおょかきくけ` in a five-character line breaks before ょ with `normal` and before お with `strict`. A vertical layer reports its columns, with the ruby widening its base. At a 40 px minimum the English name overflows its box by 132 px (four lines), and the scene is refused.
+
+**Pinned by:** `tests/typeset.test.mjs`.

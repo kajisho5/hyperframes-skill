@@ -80,6 +80,7 @@
         "start": 0,
         "duration": "{{frame_duration}}",
         "text": "{{message}}",
+        "fit_min": 60,
         "box": {
           "x": 160,
           "y": 300,
@@ -100,6 +101,7 @@
         "start": 0,
         "duration": "{{frame_duration}}",
         "text": "{{resume}}",
+        "fit_min": 28,
         "box": {
           "x": 160,
           "y": 640,

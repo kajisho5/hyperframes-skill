@@ -1,0 +1,40 @@
+{
+  "scene_version": 1,
+  "id": "typeset-fit",
+  "width": 640,
+  "height": 360,
+  "duration": 0.2,
+  "fps": 10,
+  "background": "#000000",
+  "fonts": [{ "family": "Blocks", "src": "fonts/hfs-test-blocks.ttf" }],
+  "layers": [
+    {
+      "type": "text", "id": "en", "start": 0, "duration": 0.2, "lang": "en",
+      "text": "Professor Alexandra Montgomery-Wellington",
+      "box": { "x": 20, "y": 20, "width": 400, "height": 60 },
+      "style": { "font_family": "Blocks", "font_size": 48, "align": "start" },
+      "fit": { "mode": "shrink", "min_font_size": 12 }
+    },
+    {
+      "type": "text", "id": "ar", "start": 0, "duration": 0.2, "lang": "ar",
+      "text": "الجامعة الأمريكية في القاهرة",
+      "box": { "x": 20, "y": 100, "width": 300, "height": 60 },
+      "style": { "font_family": "Blocks", "font_size": 48, "align": "start" },
+      "fit": { "mode": "shrink", "min_font_size": 12 }
+    },
+    {
+      "type": "text", "id": "hi", "start": 0, "duration": 0.2, "lang": "hi",
+      "text": "डॉ. अनन्या कृष्णमूर्ति, भारतीय विज्ञान संस्थान",
+      "box": { "x": 340, "y": 100, "width": 280, "height": 60 },
+      "style": { "font_family": "Blocks", "font_size": 48, "align": "start" },
+      "fit": { "mode": "shrink", "min_font_size": 12 }
+    },
+    {
+      "type": "text", "id": "ja", "start": 0, "duration": 0.2, "lang": "ja",
+      "text": "国際学会で基調講演を行います",
+      "box": { "x": 20, "y": 180, "width": 300, "height": 100 },
+      "style": { "font_family": "Blocks", "font_size": 48, "align": "start", "phrases": true },
+      "fit": { "mode": "shrink", "min_font_size": 12 }
+    }
+  ]
+}

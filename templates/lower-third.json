@@ -74,6 +74,7 @@
         "start": 0,
         "duration": "{{frame_duration}}",
         "text": "{{name}}",
+        "fit_min": 28,
         "box": {
           "x": 120,
           "y": 800,
@@ -106,6 +107,7 @@
         "start": 0,
         "duration": "{{frame_duration}}",
         "text": "{{affiliation}}",
+        "fit_min": 20,
         "box": {
           "x": 120,
           "y": 890,

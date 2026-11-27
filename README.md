@@ -160,6 +160,14 @@ the shipped font file). Transitions, keyframes and
 loop animations are CSS animations that HyperFrames seeks frame by frame, so they
 stay deterministic and need no script or CDN.
 
+Text layers are typeset by their own `lang`: right-to-left for Arabic and Hebrew, the browser's
+Unicode line breaking with `line_break: strict` for strict kinsoku, and BudouX phrase breaks
+(`phrases`) for Japanese, Chinese and Thai. Vertical writing and ruby are opt-in profiles. `fit:
+{"mode": "shrink", "min_font_size": N}` shrinks a text until it fits its box, measured in the same
+headless Chromium, and reports the size used (`text_fit`); a text that does not fit at the minimum is
+an error with the overflow in pixels, never cut. `template --fit` does this for every caller text of
+a title template. The details are in [references/scene-request.md](references/scene-request.md).
+
 Optional top-level `segments` (`{"in": 0.5, "loop": 4, "out": 0.5}`, seconds, whole frames,
 adding up to the scene's duration) splits the scene into IN / LOOP / OUT, so an edit can hold a
 lower third for any length: IN, the loop repeated, OUT. `scene` writes each non-empty segment as its own
