@@ -5,6 +5,7 @@
       "dryRun",
       "encoding",
       "failFast",
+      "fit",
       "font",
       "kit",
       "nameField",
@@ -91,6 +92,7 @@
   "template": {
     "properties": [
       "dryRun",
+      "fit",
       "font",
       "kit",
       "list",

@@ -25,6 +25,10 @@
         "cli": "--fail-fast",
         "type": "boolean"
       },
+      "fit": {
+        "cli": "--fit",
+        "type": "boolean"
+      },
       "font": {
         "cli": "--font",
         "type": "string"
@@ -268,6 +272,10 @@
     "args": {
       "dryRun": {
         "cli": "--dry-run",
+        "type": "boolean"
+      },
+      "fit": {
+        "cli": "--fit",
         "type": "boolean"
       },
       "font": {

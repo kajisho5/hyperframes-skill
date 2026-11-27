@@ -82,6 +82,7 @@
         "start": 0,
         "duration": "{{frame_duration}}",
         "text": "{{title}}",
+        "fit_min": 48,
         "box": {
           "x": 160,
           "y": 260,
@@ -110,6 +111,7 @@
         "start": 0,
         "duration": "{{frame_duration}}",
         "text": "{{subtitle}}",
+        "fit_min": 24,
         "box": {
           "x": 160,
           "y": 680,

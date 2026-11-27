@@ -158,6 +158,7 @@
         "start": 0,
         "duration": "{{frame_duration}}",
         "text": "{{text}}",
+        "fit_min": 28,
         "box": {
           "x": 160,
           "y": 720,
