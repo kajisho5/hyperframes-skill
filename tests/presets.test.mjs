@@ -61,7 +61,8 @@ const share = (px, c, tol) => {
 
 test("template --gallery renders each preset's check still: its background, and each of its colours drawn", { skip: SKIP_RENDER }, () => {
   const dir = tmp();
-  const r = tool("template", ["--gallery", "-o", join(dir, "gallery"), "--json"], { timeout: 900000 });
+  // the block test font: every text draws on every OS (a runner may have no Japanese font for style-wafu)
+  const r = tool("template", ["--gallery", "-o", join(dir, "gallery"), "--font", FONT, "--json"], { timeout: 900000 });
   assert.equal(r.code, 0, r.stdout.slice(0, 2000));
   assert.deepEqual(r.doc.gallery.map((g) => [g.template, g.verified, g.width, g.height]), PRESETS.map((p) => [p, true, 1920, 1080]));
   for (const g of r.doc.gallery) {
