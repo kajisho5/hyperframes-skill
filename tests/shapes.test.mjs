@@ -42,7 +42,7 @@ test("shapes: each figure is a static SVG of its box; fill, gradient, stroke and
 
 test("shape keyframes animate the inner box on the composition's clock", () => {
   const html = renderHtml(validateRequest(scene([shape({ start: 0.5, duration: 0.5, shape: "rect", fill: "#ff0000", keyframes: { position: [{ t: 0, value: [0, 0] }, { t: 0.5, value: [50, -20] }], opacity: [{ t: 0.25, value: 1 }] } })]), FIXTURES));
-  assert.ok(html.includes("#s .hfs-k{position:absolute;inset:0;animation:hfs-s-kf-position 0.5s linear 0.5s 1 normal both,hfs-s-kf-opacity 0.5s linear 0.5s 1 normal both}"), html);
+  assert.ok(html.includes("#s .hfs-k{position:absolute;inset:0;animation:hfs-s-kf-position 0.5s linear 0.5s 1 normal both,hfs-s-kf-opacity 0.5s linear 0.5s 1 normal both;animation-play-state:paused}"), html);
   assert.ok(html.includes("@keyframes hfs-s-kf-position{0%{translate:0px 0px}0%{translate:0px 0px}100%{translate:50px -20px}100%{translate:50px -20px}}"));
 });
 
