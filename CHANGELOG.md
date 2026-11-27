@@ -3,6 +3,26 @@
 All notable changes. The stability guarantee and deprecation policy are in
 [docs/contract.md](docs/contract.md).
 
+## Unreleased
+### Added
+
+- Kinetic typography (roadmap step 7, #37, design-decisions D20). A text layer's `transition_in` /
+  `transition_out` may be `chars`, `words` or `lines` with `duration` (each unit), `stagger` (from one
+  unit's start to the next), `easing` and `effect` (`fade`, `slide` with `direction` + `distance`, `zoom`
+  with `scale`): the units appear or leave one after another. Characters are extended grapheme clusters
+  (Unicode UAX #29), so a base with its combining marks, an emoji sequence or an Indic / Thai cluster
+  moves whole; words come from the segmenter for the scene's `lang` (Japanese included) and take their
+  punctuation; lines are the text's own lines. Whitespace is never a unit.
+- `wipe` transition on any layer: a mask whose edge travels `left`, `right`, `up` or `down`.
+- `keyframes` on a text layer: `tracking` (letter-spacing, px), `scale`, and `font_variation`
+  (`{AXIS: [{t, value}]}`), linear between stops. The axes are read from the font file the layer's family
+  names in `fonts[]`; an axis the font does not have is refused with the font's real axes listed, and a
+  value outside the axis range is refused.
+- `scene` reports `text_units` (`layer`, `edge`, `type`, `units`, `span`) for each unit transition.
+  Additive: a request without these keys renders byte-identical markup. A seamless loop refuses a unit
+  reveal that runs into it and keyframes that change inside it. New dependency: `fontkit` (MIT, already
+  installed with HyperFrames) to read a font's variation axes.
+
 ## 0.11.1
 
 - fix: declare ffmpeg-skill 4.x (>=2.0.0 <5.0.0) (#36) (18b6826)

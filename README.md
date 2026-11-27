@@ -151,8 +151,12 @@ Optional top-level `fonts` ships font files with the scene (`[{"family", "src", 
 "style"?}]`), so text does not depend on the machine's fonts. Layers: `text`, `image`, `video` (muted), each with `start`/`duration` in seconds, an optional
 pixel `box`, painted in array order, and optional `transition_in` / `transition_out` (`fade`,
 `slide` with `direction` + `distance`, `zoom` with `scale`; `easing` linear / ease_in / ease_out /
-ease_in_out), and an optional `loop_animation` (`pulse` with `scale`, `bob` with `direction` +
-`distance`, `spin` with `direction` cw / ccw; each with a `period` in seconds). Transitions and
+ease_in_out; `wipe` with `direction`, a moving mask), and an optional `loop_animation` (`pulse` with `scale`, `bob` with `direction` +
+`distance`, `spin` with `direction` cw / ccw; each with a `period` in seconds). Text layers also take
+kinetic type: a `chars` / `words` / `lines` transition reveals the text unit by unit (`stagger` between
+units; characters are grapheme clusters, words come from the segmenter for the scene's `lang`), and
+`keyframes` animate tracking, scale and variable-font axes (`font_variation`, checked against the axes of
+the shipped font file). Transitions, keyframes and
 loop animations are CSS animations that HyperFrames seeks frame by frame, so they
 stay deterministic and need no script or CDN.
 
@@ -303,8 +307,8 @@ Not verified (said plainly rather than claimed):
   this skill; `bob` and `spin` and the other transitions were stable.
 - **The loop seam is not checked by qc-skill**: its loop seam check covers audio only (qc-skill
   1.3.0); `render --segments` measures the video seam itself (`loop_seam`).
-- Audio, free-form animation (anything beyond fade / slide / zoom transitions and pulse / bob /
-  spin loop animations), sub-compositions and captions are not implemented. `zoom` is checked in the markup and by lint only,
+- Audio, free-form animation (anything beyond the fade / slide / zoom / wipe / unit transitions, the
+  tracking / scale / axis keyframes and the pulse / bob / spin loop animations), sub-compositions and captions are not implemented. `zoom` is checked in the markup and by lint only,
   not by a pixel test.
 
 ## MCP server

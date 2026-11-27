@@ -343,3 +343,27 @@ Format:
 - **CI:** the matrix gains v4.0.0 on Linux, macOS and Windows. The v3.0.0 legs (every OS) and v2.23.1 (Linux) stay.
 - **Consequences:** the contract's `dependencies[ffmpeg-skill].version_range` changes (the contract file is
   regenerated), so a byte-for-byte pin of this contract needs a re-pin. No tool, argument or output changed.
+
+## D20. Kinetic type is CSS animations on generated spans; a unit runs on the composition's clock
+
+2026-11-27. Roadmap step 7.
+
+**Context.** Kinetic type for text-only promos and openings: text that appears per character, word or line, a mask wipe, and tracking, scale and variable-font axes that move. Renders must stay bit-exact on one machine, as the three transitions are.
+
+**Decision.**
+- A text layer's `transition_in` / `transition_out` may be `chars`, `words` or `lines`. `scene` writes the text as one span (the flex item) holding one span per unit. Unit k gets its own `animation-delay` (`stagger` x k after the first), and one shared rule holds the animation (`fade`, `slide` or `zoom`, the same keyframes as the layer transitions). The span of the whole run (duration + stagger x (units - 1)) must fit the layer, the in and out spans together too, and a seamless loop refuses one that runs into it.
+- Units are found with `Intl.Segmenter`, with Node's own ICU. `chars` are extended grapheme clusters (UAX #29), so a base with its combining marks, an emoji ZWJ sequence, a flag and an Indic conjunct (GB9c) or Thai cluster each move whole. `words` uses the scene's `lang`, which gives dictionary words for Japanese, Chinese and Thai. Punctuation joins the word before it, or the next one at the start of a line. `lines` are the text's own line breaks: where the browser wraps a line is not known when the markup is written. Whitespace is never a unit and stays plain text, so lines break where they did.
+- A unit that moves (`slide`, `zoom`) or is a line is an inline-block, since a transform does not apply to an inline box. In `chars` the graphemes of one word share a `white-space: nowrap` span, because each inline-block would otherwise be a break opportunity. A `fade` unit stays inline.
+- **The clock.** HyperFrames' CSS adapter sets each animated element's `currentTime` from its own `data-start`. A unit has none, so it runs on the composition's clock: a layer at 0.3 s showed three units at its first frame. Every unit delay is therefore offset by the layer's start in that composition, less what a segment cut off. `tests/kinetic.test.mjs` pins this: unit k is fully shown from frame 4 + k of a layer that starts at frame 3. Giving the spans `data-start` was not done, because that makes them timed clips with their own visibility. The unit rule also sets `animation-play-state: paused`: the seek sets `currentTime` whatever the play state, and before the first seek a unit rests at its start (the picture at time 0) instead of running on the browser's clock.
+- `wipe` (any layer) animates `clip-path: inset()` from fully hidden on the side the edge comes from to fully shown (in), or the reverse towards the side it goes to (out). It composes with the transforms and the opacity.
+- `keyframes` (text layers): `tracking` (`letter-spacing`), `scale` (the individual property, as `pulse` uses; so the two are exclusive) and `font_variation` (`font-variation-settings`). Each is one linear animation over the layer, with stops at `t / duration` and the first and last values held. `font-variation-settings` interpolates only between lists of the same axes, so the axes' stops are merged and each axis is interpolated there.
+- The axes are read from the font file (fvar) with fontkit. The first family of `font_family` must be shipped in `fonts[]`: a system font's file is not known when the request is checked, and only the file says which axes exist. An unknown axis is refused with the real ones listed (`wght 100..900 (default 400), wdth 50..200 (default 100)`), and so is a value outside an axis.
+- A request without these keys renders byte-identical markup (`tests/fixtures/*.index.html`).
+
+**Why.** CSS animations are what HyperFrames already seeks deterministically. A script timeline would need GSAP or a frame adapter, and both would mean shipping and pinning a second animation engine. Counting graphemes in Node with the same ICU as the scene keeps the count reported by `scene` (`text_units`) and the count drawn the same thing. Chrome's own segmentation could differ from Node's, but it is never asked: the units are fixed in the markup.
+
+**Measured.** `tests/fixtures/fonts/hfs-test-blocks.ttf` is a variable font of blocks (`build-test-font.py`, fontTools): every base character is one block and a combining mark has no advance and sits above its base, so each drawn grapheme is one run of lit columns on every OS. The per-character fixture ("C é Å ก้ M x̣̂", one frame per unit at 10 fps) renders 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 6, ... runs per frame, and two renders have the same framemd5. With `wght` 100 to 900 the same four blocks draw over three times the ink. A right-moving wipe over 0.8 s shows half the box at 0.4 s.
+
+**Known limits.** `chars` on Arabic or another joined script draws each letter in its isolated form, because each unit is its own box (use `words`). With `tracking`, the space added after the last letter shifts centred text by half of it, as `letter-spacing` does.
+
+**Pinned by:** `tests/kinetic.test.mjs`.
