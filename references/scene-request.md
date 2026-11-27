@@ -116,7 +116,7 @@ A text layer's `transition_in` / `transition_out` may reveal the text unit by un
 
 `"beat": {"bpm": 120, "offset": 0, "division": 1, "snap": "starts_and_staggers"}` or `"beat": {"grid": "beats.json"}`
 
-- Every visual layer's `start` moves to the nearest beat, rounded to a frame. A unit transition's `stagger` becomes a whole number of beats (at least one) when the beats are evenly spaced. `snap: "starts"` leaves staggers alone. Audio layers never move.
+- Every visual layer's `start` moves to the nearest beat, rounded to a frame, and its end stays where it was (its duration changes). A unit transition's `stagger` becomes a whole number of beats (at least one) when the beats are evenly spaced. `snap: "starts"` leaves staggers alone. Audio layers never move.
 - `division` subdivides the beat (2: eighths at a quarter-note BPM). `offset` is the first beat with `bpm`.
 - `grid` reads ffmpeg-skill `scenes --beats --json` (its `beat_grid.supported_beats`, the beats a measured onset supports), sound-design-skill's `<name>.beats.json` or `tempo_map`, or a JSON array of seconds.
-- `scene` reports `beat_lock` with every `given` and `snapped` start, the beat it went to, and the staggers. A layer that would end after the scene once moved is refused.
+- `scene` reports `beat_lock` with every `given` and `snapped` start, the beat it went to, and the staggers. A layer whose start would reach its end is refused.

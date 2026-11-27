@@ -458,7 +458,7 @@ Format:
 - **PNG and loops.** A PNG sequence has nowhere to put sound, so `--codec png` refuses a scene with audio rather than dropping it silently. An audio layer inside a seamless loop segment is refused, because sound does not repeat with the picture there. A segment that cuts an audio layer keeps only the fades of the edges it did not cut.
 - **Stingers.** `stinger.json` writes `audio: true` when the output carries sound. It was `false` while there was no audio.
 - **Beat lock.** A top-level `beat` is applied to the raw request before it is validated, so every later check (the layer ends inside the scene, a transition's span fits, a seamless loop) sees the snapped times.
-  - Each visual layer's `start` goes to the nearest beat, rounded to the nearest frame (within half a frame of the beat).
+  - Each visual layer's `start` goes to the nearest beat, rounded to the nearest frame (within half a frame of the beat). Its end stays where it was, so a layer that ran to the scene's end still does, and its duration changes by the move.
   - With evenly spaced beats, each `chars` / `words` / `lines` stagger becomes a whole number of beats, at least one. A grid that is not evenly spaced snaps starts only, and the report says why.
   - Beats come from `bpm` + `offset` + `division`, or from a grid file. For ffmpeg-skill `scenes --beats` this is `beat_grid.supported_beats`: its own rule is that a tool that moves things uses only the beats a measured onset supports. Or it is sound-design-skill's `beats.json` / `tempo_map` (`beats: [{time}]`), or a plain array.
   - `scene` reports `beat_lock`: every layer's `given` and `snapped` start, the beat index and time, the frame rounding, and every stagger.

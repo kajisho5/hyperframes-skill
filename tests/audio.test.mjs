@@ -57,7 +57,8 @@ test("at 120 BPM every start moves to the nearest beat (a multiple of 0.5 s, on 
   const s = validateRequest(req({ beat: { bpm: 120 } }), dir);
   const B = s.beat_lock;
   assert.deepEqual([B.source, B.bpm, B.interval, B.beats, B.snap], ["bpm", 120, 0.5, 7, "starts_and_staggers"]);
-  assert.deepEqual(B.layers.map((x) => [x.layer, x.given, x.snapped]), [["a", 0.13, 0], ["b", 1.27, 1.5], ["s", 2.2, 2]]);
+  assert.deepEqual(B.layers.map((x) => [x.layer, x.given, x.snapped, x.end, x.duration]), [["a", 0.13, 0, 1.63, 1.63], ["b", 1.27, 1.5, 2.27, 0.77], ["s", 2.2, 2, 3, 1]]);
+  assert.deepEqual(s.layers.filter((L) => L.type !== "audio").map((L) => [L.start, L.duration]), [[0, 1.63], [1.5, 0.77], [2, 1]], "each layer keeps its end");
   for (const L of s.layers.filter((x) => x.type !== "audio")) {
     assert.ok(Math.abs(L.start / 0.5 - Math.round(L.start / 0.5)) * 0.5 <= 1 / 30, `${L.id} ${L.start}`);
     assert.ok(Math.abs(L.start * 30 - Math.round(L.start * 30)) < 1e-6, "on a frame");
@@ -84,8 +85,8 @@ test("beat lock is refused when it cannot be applied as stated", () => {
   assert.ok(p({ bpm: 1000 }).some((m) => m.includes("beat.bpm must be a number 20..400")));
   assert.ok(p({ bpm: 120, division: 5 }).some((m) => m.includes("beat.division must be one of 1, 2, 3, 4, 6, 8")));
   assert.ok(p({ bpm: 120, swing: 0.2 }).some((m) => m.includes('beat: unknown key "swing"')));
-  // a layer that would end after the scene once moved
-  assert.ok(p({ bpm: 120 }, [{ type: "text", id: "late", start: 2.8, duration: 0.2, text: "x" }]).some((m) => m.includes('"late") snapped to 3s would end at 3.2s, after the scene\'s 3s')));
+  // a layer whose start would move onto its end
+  assert.ok(p({ bpm: 120 }, [{ type: "text", id: "late", start: 2.8, duration: 0.2, text: "x" }]).some((m) => m.includes('"late") snapped to 3s, at or after its end (3s)')));
 });
 
 test("beat grids: ffmpeg-skill scenes --beats (supported beats only), a sound-design-skill tempo map, an array", () => {

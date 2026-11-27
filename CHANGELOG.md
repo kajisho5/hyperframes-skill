@@ -14,7 +14,8 @@ All notable changes. The stability guarantee and deprecation policy are in
   stinger with sound writes `audio: true` in `stinger.json`.
 - A top-level `beat` (`bpm` with `offset`, or `grid`: ffmpeg-skill `scenes --beats --json`, whose
   `beat_grid.supported_beats` are used, a sound-design-skill `beats.json` / `tempo_map`, or an array of
-  seconds; `division`, `snap`) moves every visual layer's start to the nearest beat, on a frame. A unit
+  seconds; `division`, `snap`) moves every visual layer's start to the nearest beat, on a frame, keeping
+  its end. A unit
   transition's stagger becomes a whole number of beats when the beats are evenly spaced. `scene`
   reports every given and snapped time in `beat_lock`. An audio layer, and a layer inside a seamless
   loop that is not on the beat, are never moved.
