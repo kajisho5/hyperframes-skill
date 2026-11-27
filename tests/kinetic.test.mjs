@@ -54,7 +54,7 @@ test("the fixture: one unit per grapheme, delays offset by the layer's start, an
   assert.deepEqual(spans.map((m) => m[2]), ["C", "é", "Å", "ก้", "M", "x̣̂"]);
   // HyperFrames seeks a unit on the composition's clock: the first starts at the layer's 0.3 s
   assert.deepEqual(spans.map((m) => m[1]), ["0.3s", "0.4s", "0.5s", "0.6s", "0.7s", "0.8s"]);
-  assert.ok(html.includes("#t .hfs-u{display:inline;animation:hfs-t-uin 0.1s linear 0s 1 normal both}"));
+  assert.ok(html.includes("#t .hfs-u{display:inline;animation:hfs-t-uin 0.1s linear 0s 1 normal both;animation-play-state:paused}"));
   const dir = tmp();
   const r = tool("scene", [FIXTURE, "-o", join(dir, "s"), "--dry-run", "--json"]);
   assert.equal(r.code, 0, r.stderr);
@@ -70,7 +70,7 @@ test("moving units are inline-blocks; in chars a word's graphemes sit in a no-wr
   req.layers[0].transition_in = { type: "chars", duration: 0.1, stagger: 0.05, effect: "slide", direction: "down", distance: 20, easing: "ease_out" };
   req.layers[0].transition_out = { type: "chars", duration: 0.1, stagger: 0, effect: "zoom", scale: 2 };
   const html = renderHtml(validateRequest(req, FIXTURES));
-  assert.ok(html.includes("#t .hfs-u{display:inline-block;animation:hfs-t-uin 0.1s ease-out 0s 1 normal both,hfs-t-uout 0.1s linear 0s 1 normal forwards}"));
+  assert.ok(html.includes("#t .hfs-u{display:inline-block;animation:hfs-t-uin 0.1s ease-out 0s 1 normal both,hfs-t-uout 0.1s linear 0s 1 normal forwards;animation-play-state:paused}"));
   assert.ok(html.includes("@keyframes hfs-t-uin{from{opacity:0;transform:translate(0px,20px)}to{opacity:1;transform:translate(0px,0px)}}"));
   assert.ok(html.includes("@keyframes hfs-t-uout{from{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(2)}}"));
   // in: 0.3 + 0.05k; out: 0.3 + 1.3 - 0.1 (its span) + 0k
