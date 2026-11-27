@@ -6,6 +6,17 @@ All notable changes. The stability guarantee and deprecation policy are in
 ## Unreleased
 ### Added
 
+- Generative layers (roadmap step 10, design-decisions D23). `type: generative` runs one of the programs
+  this skill ships: `particles`, `noise_field`, `shader_gradient` and `type3d` (extruded 3D text from a
+  font in `fonts[]`). Or it runs `shader`, a user's fragment shader from a local `.frag` / `.glsl` / `.fs`
+  file, which is checked to be one self-contained GLSL file with no word for script, network or DOM access.
+  Each takes a `seed`, a `palette`, typed `params` and `time_start`. three.js 0.187.0 (MIT) is copied into
+  the scene, never fetched. The bundled runtime is the frame adapter: HyperFrames' `hf-seek` sets the
+  program's time from the frame being captured, so frame N renders the same whether or not frames
+  0..N-1 were rendered. Rendering stays on SwiftShader. `doctor` reports the WebGL backend (`webgl`:
+  version, vendor, renderer, `backend: swiftshader`). A generative layer is refused inside a seamless
+  loop segment. New dependency: `three` 0.187.0 (MIT).
+
 - Shape and pattern layers (roadmap step 9, design-decisions D22). `type: shape` draws a `rect`,
   `rounded_rect` (`radius`), `circle`, `line` (`points`) or `polygon` (`points` or `sides`), with `fill` (a
   colour or a `linear` / `radial` gradient), `stroke` and `rotation`. Its `keyframes` move, scale, turn

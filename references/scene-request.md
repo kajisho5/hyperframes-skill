@@ -87,3 +87,20 @@ A text layer's `transition_in` / `transition_out` may reveal the text unit by un
 - `seed` (integer) decides the colours, the phases and, for polygons, the places and shapes. The same seed draws the same picture; another seed changes nothing else.
 - `speed` is cycles per second (0 is still). A cycle ends on the picture it started with, so inside a seamless loop segment the cycle (1 / speed) must divide the loop.
 - `palette`: 1..8 colours. There is no raw CSS.
+
+## Generative layers
+
+```json
+{"type": "generative", "id": "fx", "start": 0, "duration": 4, "program": "particles", "seed": 11,
+ "palette": ["#ffffff", "#ff66cc"], "params": {"count": 600, "size": 3, "speed": 1, "depth": 1}, "time_start": 0}
+```
+
+- `program` and its `params` (all optional, with defaults):
+  - `particles`: `count` (1..20000), `size` (px), `speed`, `depth` (0 flat .. 1).
+  - `noise_field`: `scale`, `speed`, `octaves` (1..8). Needs 2+ palette colours, mapped low to high.
+  - `shader_gradient`: `speed`, `softness`. Needs 2+ colours, one moving blob each.
+  - `type3d`: `depth` (em), `spin` (turns per second), `tilt` (radians). It also needs `text` (up to 100 characters) and `font` (a family shipped in `fonts`); the text's outlines are extruded.
+  - `shader`: `src` is a local `.frag` / `.glsl` / `.fs` file, up to 64 KB, with `void main()`, writing `gl_FragColor`. It gets the uniforms `u_time` (s), `u_resolution` (px) and `u_seed`. It must be one self-contained file: no `#include` or `#extension`, and no word for script, network or DOM access (`fetch`, `document`, `window`, ...).
+- `seed` is an integer, `palette` up to 8 colours, and `time_start` is the program's time at the layer's first frame (s).
+- The program's time is the frame's own time, so frame N is the same whether or not frames 0..N-1 were rendered. three.js is copied into the scene, and rendering is on SwiftShader. `doctor`'s `webgl` names the backend.
+- A generative layer cannot run through a seamless loop segment.

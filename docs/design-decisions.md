@@ -419,3 +419,29 @@ Format:
 **Measured.** Each preset (320x180, 0.5 s at 10 fps) renders twice to the same framemd5. With another seed the framemd5 differs, while width, height, frame count, codec, fps and duration are equal. Changing the seed in the request changes only lines that belong to the pattern layer. A red square with a `position` track from 0 to 180 px moves its centroid from x 60 to 240 with the same 6400 pixels. A `lines` pattern and a `rings` pattern at 2.5 cycles per second in a 0.8 s loop segment pass the loop seam check while moving.
 
 **Pinned by:** `tests/shapes.test.mjs`.
+
+## D23. Generative layers: bundled three.js, a runtime driven by hf-seek, time as a pure input
+
+2026-11-27. Roadmap step 10.
+
+**Context.** Particles, shaders and 3D type in the same scene, with no separate tool and no network, and output that stays deterministic on one machine.
+
+**Decision.**
+- **What the scene contains.** A `generative` layer is a `<canvas>` in the layer's box, plus its configuration as an inline `<script type="application/json">`, with `<` escaped so it can never close the tag. The configuration holds the program, seed, palette, typed params, the time offset, and, for `type3d`, the text's outlines.
+- **What is copied, never fetched.** `scene` copies three.js 0.187.0 (`three.core.js` and `three.module.js`, MIT, from `node_modules`) and `lib/generative-runtime.js` (`assets/hfs-generative.js`) into the scene. The page loads them as an ES module, which works because HyperFrames serves the scene over local HTTP.
+- **The frame adapter.** The runtime listens for HyperFrames' `hf-seek` event and draws every canvas at the event's time plus the layer's offset (`time_start` less the layer's start in that composition, plus what a segment cut off). An inline script registers `window.__hf.buildReady.hfsGenerative` before the module loads, so the render waits until the runtime has drawn.
+- **Time is the only input that changes.** Every program is a pure function of seed, params and time:
+  - particles move by `wrap(p0 + v x t)`;
+  - the noise field and the gradient are fragment shaders of `uTime`;
+  - the 3D type turns by `spin x t`.
+  Nothing reads a clock or `Math.random`; a mulberry32 stream from the seed sets the initial state.
+- **`type3d` outlines.** The outlines come from the shipped font file, laid out with fontkit (kerning, ligatures), as path commands in em units. The page turns them into `THREE.Shape`s, with holes by winding and containment, and extrudes them.
+- **A user's shader.** It is accepted only as a local `.frag` / `.glsl` / `.fs` file of UTF-8 text, at most 64 KB, with `void main()` and a colour output. It may have no `#include` / `#extension`, and none of the words a script would need for network or DOM access (`fetch`, `XMLHttpRequest`, `WebSocket`, `import`, `document`, `window`, ...), outside comments. GLSL cannot reach the network, and the text reaches the page as a JSON string compiled by WebGL, never as markup or code. The word check makes that visible in the request, and refuses a file that is not a shader.
+- **Backend.** Rendering stays on SwiftShader: `render` already passes `--no-browser-gpu`, and HyperFrames then launches Chrome with ANGLE on SwiftShader. `doctor` runs Chromium with those flags and reports `webgl` (`version`, `vendor`, `renderer`, `backend: swiftshader | other`). It is optional for `render` and `preview`, when a scene has a generative layer.
+- **Loops.** A generative layer inside a seamless loop segment is refused: its time does not repeat.
+
+**Why.** HyperFrames' own frame adapters (`@hyperframes/core`, Apache-2.0) document `hf-seek` with `waitUntil` as the hook for Three.js. Using it keeps capture, timing and encoding in HyperFrames, and frame N depends on N alone. A program that integrated state from frame to frame would make frame N depend on whether frames 0..N-1 were drawn, and segment renders (which start mid-way) would differ from the full render. Copying three.js from the pinned dependency keeps the render offline and the version fixed.
+
+**Measured.** The particles fixture (600 particles, 320x180, 1 s at 10 fps) renders byte-identical twice (sha256 of the .mp4). As lossless PNG frames, a one-frame scene whose program starts at 0.7 s equals frame 7 of the full render, which differs from frame 6. On one frame, the noise field and the gradient cover their boxes, the extruded text covers part of its box, and a user's ring shader covers its box. `doctor` reports `WebGL 2.0 (OpenGL ES 3.0 Chromium)` on `ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero)), SwiftShader driver)`.
+
+**Pinned by:** `tests/generative.test.mjs`.

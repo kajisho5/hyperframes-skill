@@ -1,0 +1,15 @@
+{
+  "scene_version": 1,
+  "id": "generative-particles",
+  "width": 320,
+  "height": 180,
+  "duration": 1,
+  "fps": 10,
+  "background": "#000000",
+  "layers": [
+    {
+      "type": "generative", "id": "p", "start": 0, "duration": 1, "program": "particles", "seed": 11,
+      "palette": ["#ffffff", "#ff66cc", "#66ccff"], "params": { "count": 600, "size": 3, "speed": 2 }
+    }
+  ]
+}
