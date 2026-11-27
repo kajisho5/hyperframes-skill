@@ -104,3 +104,19 @@ A text layer's `transition_in` / `transition_out` may reveal the text unit by un
 - `seed` is an integer, `palette` up to 8 colours, and `time_start` is the program's time at the layer's first frame (s).
 - The program's time is the frame's own time, so frame N is the same whether or not frames 0..N-1 were rendered. three.js is copied into the scene, and rendering is on SwiftShader. `doctor`'s `webgl` names the backend.
 - A generative layer cannot run through a seamless loop segment.
+
+## Audio layers
+
+`{"type": "audio", "id": "music", "start": 0, "duration": 15, "src": "music.wav", "media_start": 0, "volume": 1, "fade_in": 0.5, "fade_out": 1}`
+
+- `src`: a local `.wav`, `.mp3`, `.m4a`, `.aac`, `.ogg`, `.opus` or `.flac`. `volume` is a gain, 0..3.98 (1 is 0 dB). The fades are in seconds. There is no `box`.
+- The output carries the sound: AAC in .mp4 and .mov, Opus in .webm. `render` verifies an `audio` step (a stream as long as the scene, within one frame). A PNG sequence cannot carry sound and is refused. An audio layer cannot play through a seamless loop segment.
+
+## Beat lock
+
+`"beat": {"bpm": 120, "offset": 0, "division": 1, "snap": "starts_and_staggers"}` or `"beat": {"grid": "beats.json"}`
+
+- Every visual layer's `start` moves to the nearest beat, rounded to a frame. A unit transition's `stagger` becomes a whole number of beats (at least one) when the beats are evenly spaced. `snap: "starts"` leaves staggers alone. Audio layers never move.
+- `division` subdivides the beat (2: eighths at a quarter-note BPM). `offset` is the first beat with `bpm`.
+- `grid` reads ffmpeg-skill `scenes --beats --json` (its `beat_grid.supported_beats`, the beats a measured onset supports), sound-design-skill's `<name>.beats.json` or `tempo_map`, or a JSON array of seconds.
+- `scene` reports `beat_lock` with every `given` and `snapped` start, the beat it went to, and the staggers. A layer that would end after the scene once moved is refused.

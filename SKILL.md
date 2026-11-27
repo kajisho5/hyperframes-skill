@@ -43,13 +43,13 @@ Shared flags, on every tool: `--json` (one result document on stdout: `status`, 
 - `src` is a local path (relative to the request file). URLs are refused: this skill never fetches.
 - Colours: `#rgb`, `#rrggbb`, `#rrggbbaa`, `rgb()`, `rgba()`, `transparent`. Text is escaped, `\n` breaks lines.
 - `transition_in` / `transition_out` (optional, any layer): `fade`; `slide` with `direction` (`left|right|up|down`: the side it enters from / leaves towards) and `distance` (px); `zoom` with `scale` (the scale it starts from / ends at). `duration` in seconds, `easing` `linear` (default), `ease_in`, `ease_out`, `ease_in_out`. In starts at the layer's start, out ends at the layer's end; the two together may not exceed the layer. Slide and zoom also fade.
-- Kinetic type and more motion (`chars` / `words` / `lines` and `wipe` transitions, text `keyframes` for tracking, scale and variable-font axes) and typesetting (a layer's `lang`, RTL, `line_break: strict` kinsoku, BudouX `phrases`, `writing_mode: vertical`, `ruby`, `fit: shrink` with `min_font_size`; `template --fit`): `references/scene-request.md`. Shapes (`type: shape`: rect, rounded_rect, circle, line, polygon, gradients, keyframes) seeded patterns (`type: pattern`) and generative layers (`type: generative`: particles, noise_field, shader_gradient, type3d, a local `.frag` shader; three.js bundled) are there too. Read it before using them. Report `text_fit` (the size used).
+- More in `references/scene-request.md` (read it before using them): kinetic type (`chars` / `words` / `lines`, `wipe`, text `keyframes`), typesetting (layer `lang`, RTL, `line_break: strict`, BudouX `phrases`, `writing_mode: vertical`, `ruby`, `fit: shrink`; `template --fit`), `shape`, seeded `pattern`, `generative` (three.js programs, a local `.frag`), `audio` and `beat` lock. Report `text_fit` and `beat_lock`.
 - `loop_animation` (optional, any layer): `pulse` (`scale` at mid-cycle), `bob` (`direction`, `distance` px), `spin` (`direction` `cw|ccw`), each with `period` (s, one full cycle) and `easing`. It composes with the transitions.
 - `segments` (optional, top level): `{"in": 0.5, "loop": 4, "out": 0.5}`, whole frames, adding up to `duration`; `in`/`out` may be 0. The loop must be seamless, so `scene` refuses a layer that starts or ends inside it, a transition or video running in it, or a `period` that does not divide it (the error lists periods that fit). `render --segments` also writes `<stem>.in|loop|out<ext>` (non-empty segments only); report each `segments[].probe.video.frames` and `loop_seam.ok`.
 - `stinger` (optional, top level): `{"cut_point": 0.5, "cover": {"start": 0.5, "end": 0.7}}`, each on a frame, cut point inside `[start, end)`. `render` then needs an alpha codec, measures every cover frame opaque (alpha >= 253 in every pixel: `stinger_cover`) and writes `<stem>.stinger.json`.
 - `title` (optional, top level): `{"safe_area": {"x", "y", "width", "height"}}`; needs `segments`, every text box inside it. `render` writes `<stem>.title.json` (segments, alpha, loop seam with `--segments`, safe area, text and font size).
 - The sidecars follow the Velisa title / stinger spec; pass `cut_point` and `cover` (or `segments`) on unrounded. `sidecar.fields` says which fields a receiver reads and which are only proposed.
-- Video layers are muted: the output has no audio in this release (a stinger's `audio` is `false`).
+- Video layers are muted; sound comes from `audio` layers.
 - `fonts` (optional, top level): `[{"family": "JP Gothic", "src": "fonts/NotoSansJP-Bold.otf", "weight": 700, "style": "normal"}]`; `.otf/.ttf/.woff/.woff2`, local file, copied into the scene; a layer uses it by `style.font_family`. Omit `weight` to use the file for every weight.
 - Unknown keys are errors, not ignored.
 
@@ -57,7 +57,7 @@ Shared flags, on every tool: `--json` (one result document on stdout: `status`, 
 
 It turns an explicit scene into markup, renders it, and reports what came out. It does not write copy, choose timing, pick or crop to a subject, choose fonts or colours you did not give it, judge whether a frame looks good, or add a transition you did not ask for. Same request + same flags on the same machine gives byte-identical output; anything that depends on taste belongs to the caller.
 
-If a request needs something the five tools do not expose (audio, animation beyond the transitions, keyframes and three loop animations listed here, captions, a layout no template has), say so. Never fall back to calling Chrome, ffmpeg or the `hyperframes` CLI directly: that bypasses every check here.
+If a request needs something the five tools do not expose (animation beyond the transitions, keyframes and three loop animations listed here, captions, a layout no template has), say so. Never fall back to calling Chrome, ffmpeg or the `hyperframes` CLI directly: that bypasses every check here.
 
 ## Gotchas
 
