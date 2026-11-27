@@ -81,9 +81,9 @@ A text layer's `transition_in` / `transition_out` may reveal the text unit by un
 - `pattern` and its `params` (all optional, with defaults):
   - `grid`: `count`, `line_width`. Lines shift diagonally.
   - `lines`: `count`, `line_width`, `angle`. Stripes shift across.
-  - `dots`: `count`, `size`. Each dot pulses.
+  - `dots`: `count`, `size`. Each dot pulses in opacity.
   - `rings`: `count`, `line_width`. Concentric rings grow outward.
-  - `polygons`: `count`, `size`, `sides`. Each polygon morphs and turns.
+  - `polygons`: `count`, `size`, `sides`. Each polygon morphs.
 - `seed` (integer) decides the colours, the phases and, for polygons, the places and shapes. The same seed draws the same picture; another seed changes nothing else.
 - `speed` is cycles per second (0 is still). A cycle ends on the picture it started with, so inside a seamless loop segment the cycle (1 / speed) must divide the loop.
 - `palette`: 1..8 colours. There is no raw CSS.
