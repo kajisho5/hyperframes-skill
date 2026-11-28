@@ -446,3 +446,26 @@ Format:
 **Measured.** The particles fixture (600 particles, 320x180, 1 s at 10 fps) renders byte-identical twice (sha256 of the .mp4). As lossless PNG frames, a one-frame scene whose program starts at 0.7 s equals frame 7 of the full render, which differs from frame 6. On one frame, the noise field and the gradient cover their boxes, the extruded text covers part of its box, and a user's ring shader covers its box. `doctor` reports `WebGL 2.0 (OpenGL ES 3.0 Chromium)` on `ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero)), SwiftShader driver)`.
 
 **Pinned by:** `tests/generative.test.mjs`.
+
+## D24. Sound is HyperFrames' own audio mix; beats move starts before anything is checked
+
+2026-11-27. Roadmap step 11.
+
+**Context.** "Neon, 120 BPM, 15 s, vertical" should land every move on the beat, with the music in the file.
+
+**Decision.**
+- **Audio layers.** An `audio` layer becomes `<audio class="clip" data-start data-duration data-media-start data-volume data-fade-in data-fade-out>`. HyperFrames mixes it into the encode itself: AAC 48 kHz stereo in .mp4 and .mov, Opus in .webm, silent before `data-start` (measured). No second encoder is added (D3).
+- **Verification.** `render` sees an `<audio>` element in the composition and adds `expected.audio` and a verification step `audio`: the output has an audio stream, and its duration (the stream's own, or the container's for WebM) is the scene's within one frame.
+- **PNG and loops.** A PNG sequence has nowhere to put sound, so `--codec png` refuses a scene with audio rather than dropping it silently. An audio layer inside a seamless loop segment is refused, because sound does not repeat with the picture there. A segment that cuts an audio layer keeps only the fades of the edges it did not cut.
+- **Stingers.** `stinger.json` writes `audio: true` when the output carries sound. It was `false` while there was no audio.
+- **Beat lock.** A top-level `beat` is applied to the raw request before it is validated, so every later check (the layer ends inside the scene, a transition's span fits, a seamless loop) sees the snapped times.
+  - Each visual layer's `start` goes to the nearest beat, rounded to the nearest frame (within half a frame of the beat). Its end stays where it was, so a layer that ran to the scene's end still does, and its duration changes by the move.
+  - With evenly spaced beats, each `chars` / `words` / `lines` stagger becomes a whole number of beats, at least one. A grid that is not evenly spaced snaps starts only, and the report says why.
+  - Beats come from `bpm` + `offset` + `division`, or from a grid file. For ffmpeg-skill `scenes --beats` this is `beat_grid.supported_beats`: its own rule is that a tool that moves things uses only the beats a measured onset supports. Or it is sound-design-skill's `beats.json` / `tempo_map` (`beats: [{time}]`), or a plain array.
+  - `scene` reports `beat_lock`: every layer's `given` and `snapped` start, the beat index and time, the frame rounding, and every stagger.
+
+**Why.** Snapping inside the markup step, after validation, would let a snapped layer run past the scene or into a loop unnoticed. Snapping first and validating the result keeps "a value outside the schema is refused, never fixed up" true for the times the scene actually uses. HyperFrames already implements `<audio>` with gain, fades and media offset, and mixes it in its encode, so this skill only states and checks it.
+
+**Measured.** A 120 BPM scene with layers asked at 0.13, 1.27 and 2.2 s starts them at 0, 1.5 and 2 s, and its 0.2 s stagger becomes 0.5 s. Rendered with a 440 Hz tone from 0.5 s, the .mp4 and the .mov each carry a 3.000 s audio stream for the 3 s scene: silent below -60 dBFS before 0.5 s and the tone after. At 30 fps with eighths and a 0.1 s offset, the beat at 1.35 s (frame 40.5) becomes frame 41, 1.366667 s. A stinger with an audio layer writes `audio: true`.
+
+**Pinned by:** `tests/audio.test.mjs`.

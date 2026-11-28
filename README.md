@@ -96,7 +96,7 @@ Both follow the Velisa spec for title and stinger metadata. No receiver opens th
 passes `cut_point` and `cover` to video-editing-skill's stinger transition or qc-skill's stinger
 check, and `segments` to motion-graphics-skill's `rendered_layer` (`in_duration`, `out_duration`,
 `loop`), unrounded. The other fields are the ones the spec marks proposed (`sidecar.fields` in the
-result lists both kinds). A stinger has no sound in this release (`audio: false`).
+result lists both kinds). A stinger with an `audio` layer carries its sound (`audio: true`).
 
 For Japanese names add `--font NotoSansJP-Bold.otf` (any .otf/.ttf/.woff2): the font is copied
 into every scene, so the glyphs do not depend on the machine's fonts (see "What is verified").
@@ -148,7 +148,7 @@ Every flag of every tool: [`references/scripts.md`](references/scripts.md). Ever
 ```
 
 Optional top-level `fonts` ships font files with the scene (`[{"family", "src", "weight"?,
-"style"?}]`), so text does not depend on the machine's fonts. Layers: `text`, `image`, `video` (muted), each with `start`/`duration` in seconds, an optional
+"style"?}]`), so text does not depend on the machine's fonts. Layers: `text`, `image`, `video` (muted), `audio` (a local sound file, mixed into the output), each with `start`/`duration` in seconds, an optional
 pixel `box`, painted in array order, and optional `transition_in` / `transition_out` (`fade`,
 `slide` with `direction` + `distance`, `zoom` with `scale`; `easing` linear / ease_in / ease_out /
 ease_in_out; `wipe` with `direction`, a moving mask), and an optional `loop_animation` (`pulse` with `scale`, `bob` with `direction` +
@@ -171,7 +171,10 @@ a title template. The details are in [references/scene-request.md](references/sc
 Two layer types draw without footage: `shape` (rect, rounded rect, circle, line, polygon; a colour or
 gradient fill, stroke, rotation, and keyframes for position, scale, rotation and opacity) and `pattern`
 (grid, lines, dots, rings or morphing polygons drawn from a `seed` with typed `speed`, `palette` and
-`params`). The same seed always draws the same picture. `generative` layers run a bundled three.js
+`params`). The same seed always draws the same picture. A top-level `beat` (`{"bpm": 120}`, or a beat
+grid file from ffmpeg-skill `scenes --beats` or sound-design-skill's tempo map) moves every visual layer's
+start to the nearest beat and every unit stagger to whole beats, and `scene` reports the snapped times
+(`beat_lock`). `generative` layers run a bundled three.js
 program (particles, noise field, shader gradient, extruded 3D type from a shipped font) or a fragment
 shader from a local file. HyperFrames' seek event sets the program's time for every captured frame, on
 SwiftShader, so a frame is the same however the render reaches it.
@@ -323,7 +326,7 @@ Not verified (said plainly rather than claimed):
   this skill; `bob` and `spin` and the other transitions were stable.
 - **The loop seam is not checked by qc-skill**: its loop seam check covers audio only (qc-skill
   1.3.0); `render --segments` measures the video seam itself (`loop_seam`).
-- Audio, free-form animation (anything beyond the fade / slide / zoom / wipe / unit transitions, the
+- Free-form animation (anything beyond the fade / slide / zoom / wipe / unit transitions, the
   tracking / scale / axis keyframes and the pulse / bob / spin loop animations), sub-compositions and captions are not implemented. `zoom` is checked in the markup and by lint only,
   not by a pixel test.
 

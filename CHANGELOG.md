@@ -3,6 +3,23 @@
 All notable changes. The stability guarantee and deprecation policy are in
 [docs/contract.md](docs/contract.md).
 
+## Unreleased
+### Added
+
+- Audio and beat lock (roadmap step 11, design-decisions D24). An `audio` layer (local `.wav`, `.mp3`,
+  `.m4a`, `.aac`, `.ogg`, `.opus` or `.flac`; `media_start`, `volume`, `fade_in`, `fade_out`) is mixed into
+  the output by HyperFrames: AAC in .mp4 / .mov, Opus in .webm. `render` then verifies an `audio` step:
+  an audio stream as long as the scene, within one frame. `probe`'s `audio` gains `duration` and
+  `duration_source`. A PNG sequence cannot carry sound, so `--codec png` refuses a scene with audio. A
+  stinger with sound writes `audio: true` in `stinger.json`.
+- A top-level `beat` (`bpm` with `offset`, or `grid`: ffmpeg-skill `scenes --beats --json`, whose
+  `beat_grid.supported_beats` are used, a sound-design-skill `beats.json` / `tempo_map`, or an array of
+  seconds; `division`, `snap`) moves every visual layer's start to the nearest beat, on a frame, keeping
+  its end. A unit
+  transition's stagger becomes a whole number of beats when the beats are evenly spaced. `scene`
+  reports every given and snapped time in `beat_lock`. An audio layer, and a layer inside a seamless
+  loop that is not on the beat, are never moved.
+
 ## 0.13.0
 
 - feat(layers): shape and pattern layers (roadmap step 9) (#39) (edeee22)
