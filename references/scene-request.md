@@ -33,16 +33,16 @@ A text layer's `transition_in` / `transition_out` may reveal the text unit by un
 
 - `t` is seconds from the layer's start, strictly increasing, within the layer. Values are linear between stops and held before the first and after the last.
 - `tracking` is letter-spacing in px (-1000..1000). `scale` is > 0 and <= 100. It cannot be combined with a `pulse` loop animation.
-- `font_variation` animates variable-font axes (`{AXIS: [{t, value}]}`, a four-character tag). The first family of the layer's `font_family` must be shipped in the request's `fonts`: the axes are read from that file. An axis the font does not have is refused with its real axes listed (for example `wght 100..900 (default 400), wdth 50..200 (default 100)`), and so is a value outside an axis.
+- `font_variation` animates variable-font axes (`{AXIS: [{t, value}]}`, a four-character tag). The first family of the layer's `font_family` must be shipped in the request's `fonts`: the axes are read from that file. When the family has several files, the axes are read from the face the layer uses, as CSS picks it: a normal face, else an italic one, and of those the weight nearest `font_weight`. An axis the font does not have is refused with its real axes listed (for example `wght 100..900 (default 400), wdth 50..200 (default 100)`), and so is a value outside an axis.
 - In a scene with `segments`, a track must hold one value through the loop segment.
 
 ## Typesetting (text layers)
 
-- `lang` on the layer (BCP 47, default the scene's `lang`). The direction follows it: `ar`, `he`, `fa`, `ur` and the other right-to-left languages run right to left. `style.direction` (`auto`, `ltr`, `rtl`) states it. `style.align` also takes `start` and `end`, which follow the direction.
+- `lang` on the layer (BCP 47, default the scene's `lang`; extension and private-use subtags such as `de-DE-u-co-phonebk` or `en-US-x-twain` are accepted). The direction follows it: `ar`, `he`, `fa`, `ur` and the other right-to-left languages run right to left. `style.direction` (`auto`, `ltr`, `rtl`) states it. `style.align` also takes `start` and `end`, which follow the direction.
 - `style.line_break`: `normal` (the browser's Unicode line breaking, UAX #14, with its rules for the language), `strict` (strict kinsoku: no small kana or prolonged sound mark at the start of a line) or `loose`.
-- `style.phrases: true` breaks Japanese, Chinese (`zh`, `zh-Hant` / `zh-TW` / `zh-HK`) and Thai only between phrases found by BudouX, which runs locally. Other languages are refused. It cannot be combined with a unit transition.
+- `style.phrases: true` breaks Japanese, Chinese (`zh`, `zh-Hant` / `zh-TW` / `zh-HK`) and Thai only between phrases found by BudouX, which runs locally. A phrase longer than the line is kept whole and runs past the box, so give such a layer a box that holds its longest phrase, or use `fit`. Other languages are refused. It cannot be combined with a unit transition.
 - Regional profiles (opt-in, never the default):
-  - `style.writing_mode: "vertical"` writes top to bottom, columns from the right. `align` then places the text along the column (`left` is the top), and `valign` places the columns (`top` is the right).
+  - `style.writing_mode: "vertical"` writes top to bottom, columns from the right. A layer whose direction resolves to right to left (stated, or from an `ar` / `he` / ... `lang`) is refused; set `style.direction: "ltr"`. `align` then places the text along the column (`left` is the top), and `valign` places the columns (`top` is the right).
   - `style.ruby: true` reads `{base|reading}` in the text as ruby: `{東京|とうきょう}`. A `{`, `}` or `|` outside a complete group is refused. `title.json` text leaves the readings out.
 
 ## Fit

@@ -53,8 +53,10 @@ test("phrases: BudouX for ja / zh / th, refused elsewhere; Japanese breaks only 
   assert.equal(phraseParser("zh").model, "zh-hans");
   assert.equal(phraseParser("en"), null);
   const html = renderHtml(validateRequest(fixture(), FIXTURES));
-  assert.ok(html.includes('<span class="hfs-t">国際学会で<wbr>基調講演を<wbr>行います</span>'), html);
+  // each phrase whole in a nowrap span (Thai and CJK alike), <wbr> between phrases
+  assert.ok(html.includes('<span class="hfs-t"><span class="hfs-p">国際学会で</span><wbr><span class="hfs-p">基調講演を</span><wbr><span class="hfs-p">行います</span></span>'), html);
   assert.match(html, /#ja\{[^}]*word-break:keep-all/);
+  assert.match(html, /#ja \.hfs-p\{white-space:nowrap\}/);
   const th = renderHtml(validateRequest(one({ lang: "th", text: "สวัสดีครับ ยินดีต้อนรับ", style: { font_family: "Blocks", phrases: true } }), FIXTURES));
   assert.match(th, /<span class="hfs-p">[^<]+<\/span><wbr>/);
   assert.match(th, /#t \.hfs-p\{white-space:nowrap\}/);
@@ -79,6 +81,59 @@ test("line_break, writing_mode and direction take only their values; strict is C
   const p = problems(one({ style: { font_family: "Blocks", line_break: "kinsoku", writing_mode: "sideways", direction: "up", phrases: "yes" } }));
   for (const m of ["line_break must be one of normal, strict, loose", "writing_mode must be horizontal or vertical", "direction must be one of auto, ltr, rtl", "phrases must be true or false"]) assert.ok(p.some((x) => x.includes(m)), m);
   assert.ok(problems(one({ lang: "en_US" })).some((m) => m.includes("lang must be a BCP 47 tag")));
+});
+
+test("lang takes BCP 47 extension and private-use sequences; a singleton with nothing after it is refused", () => {
+  for (const lang of ["de-DE-u-co-phonebk", "en-US-x-twain", "ja-JP-u-ca-japanese-x-private", "ar-u-nu-latn", "zh-Hant-TW", "en-x-a"]) {
+    assert.deepEqual(problems(one({ lang })), [], lang);
+    assert.deepEqual(problems(one({}, { lang })), [], `scene ${lang}`);
+  }
+  for (const lang of ["en-u", "en-x", "en-US-u", "de-u-co-x", "en--US", "e", "en-a-b"]) {
+    assert.ok(problems(one({ lang })).some((m) => m.includes("lang must be a BCP 47 tag")), lang);
+    assert.ok(problems(one({}, { lang })).some((m) => m.includes("lang must be a BCP 47 tag")), `scene ${lang}`);
+  }
+  // the primary subtag still decides direction and the phrase model
+  assert.equal(textDirection({ direction: "auto" }, "ar-u-nu-latn"), "rtl");
+  assert.equal(phraseParser("ja-JP-u-ca-japanese").model, "ja");
+});
+
+test("vertical writing is refused when the layer resolves to right to left, stated or from its lang", () => {
+  const v = (lang, direction, extra = {}) => problems(one({ lang, text: "x", style: { font_family: "Blocks", writing_mode: "vertical", ...(direction ? { direction } : {}) } }, extra));
+  assert.ok(v("ar").some((m) => m.includes("writing_mode vertical runs top to bottom; direction rtl (from lang ar) does not apply")));
+  assert.ok(v("he", "auto").some((m) => m.includes("(from lang he)")));
+  assert.ok(v("ja", "rtl").some((m) => m.includes("direction rtl does not apply")));
+  assert.deepEqual(v("ja"), []);
+  assert.deepEqual(v("ar", "ltr"), []);
+  // a scene in Arabic: a vertical layer without its own lang inherits it
+  assert.ok(problems(one({ text: "x", style: { font_family: "Blocks", writing_mode: "vertical" } }, { lang: "ar" })).some((m) => m.includes("(from lang ar)")));
+});
+
+test("a fitted layer next to a font entry whose family is not a string is an input problem, not a TypeError", () => {
+  for (const family of [null, 123]) {
+    const req = one({ fit: { mode: "shrink", min_font_size: 10 } });
+    req.fonts.unshift({ family, src: "fonts/hfs-test-blocks.ttf" });
+    const p = problems(req);
+    assert.ok(p.some((m) => m.includes("fonts[0].family must match")), p.join("\n"));
+  }
+});
+
+test("a CJK phrase longer than the line overflows whole instead of breaking inside it", { skip: SKIP_RENDER }, () => {
+  const dir = tmp();
+  // 40 px blocks: 国際学会で is 200 px, the box 80 px; before, overflow-wrap broke it after two characters
+  const req = { scene_version: 1, width: 320, height: 180, duration: 0.1, fps: 10, lang: "ja", background: "#000000",
+    fonts: [{ family: "Blocks", src: FONT }],
+    layers: [{ type: "text", id: "t", start: 0, duration: 0.1, text: "国際学会で基調講演を", box: { x: 0, y: 0, width: 80, height: 180 }, style: { font_family: "Blocks", font_size: 40, align: "left", valign: "top", line_height: 1, phrases: true } }] };
+  const s = tool("scene", [writeJson(join(dir, "r.json"), req), "-o", join(dir, "scene"), "--json"]);
+  assert.equal(s.code, 0, s.stdout);
+  const out = join(dir, "p.mp4");
+  const r = tool("render", [join(dir, "scene"), "-o", out, "--json"]);
+  assert.equal(r.code, 0, r.stderr);
+  const img = grey(out, 320, 180);
+  const first = ink(img, { x: 0, y: 0, width: 320, height: 40 });
+  const second = ink(img, { x: 0, y: 40, width: 320, height: 40 });
+  assert.ok(first.x1 >= 180, `the first line runs on past the box: ${JSON.stringify(first)}`);
+  assert.ok(second.x1 >= 180, `the second phrase is whole on the next line: ${JSON.stringify(second)}`);
+  assert.equal(ink(img, { x: 0, y: 80, width: 320, height: 100 }).n, 0, "nothing on a third line");
 });
 
 test("fit is refused unless it can be measured as rendered", () => {

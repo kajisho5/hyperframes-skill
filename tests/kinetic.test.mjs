@@ -4,10 +4,10 @@
 // drawn grapheme is one run of lit columns on every OS.
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { test } from "node:test";
-import { readAxes, textUnits, trackAt, trackConstant } from "../lib/kinetic.mjs";
+import { readAxes, selectedFaces, textUnits, trackAt, trackConstant } from "../lib/kinetic.mjs";
 import { renderHtml, validateRequest } from "../lib/scene-spec.mjs";
 import { ffmpeg, FIXTURES, SKIP_RENDER, tmp, tool, writeJson } from "./helpers.mjs";
 
@@ -151,6 +151,43 @@ test("an unknown axis is refused with the font's real axes listed", () => {
   req.layers[0].style.font_family = "sans-serif";
   req.layers[0].keyframes = { font_variation: { wght: [{ t: 0, value: 700 }] } };
   assert.ok(problems(req).some((m) => m.includes('style.font_family "sans-serif" must name a family shipped in fonts[]')));
+});
+
+test("axes are read from the face the layer selects: its style and nearest weight, as CSS matches them", () => {
+  const f = (style, weight, n) => ({ family: "Blocks", style, weight, n });
+  // a text layer is normal: an italic face is used only when the family has no normal face
+  assert.deepEqual(selectedFaces([f("normal", null, 1), f("italic", null, 2)], 400).map((x) => x.n), [1]);
+  assert.deepEqual(selectedFaces([f("italic", null, 2)], 400).map((x) => x.n), [2]);
+  // weights: an exact or all-weights face; 400..500 looks up to 500 first, then down; below 400 down first; above 500 up first
+  const ws = [f("normal", 300, 3), f("normal", 500, 5), f("normal", 700, 7)];
+  assert.deepEqual(selectedFaces(ws, 500).map((x) => x.n), [5]);
+  assert.deepEqual(selectedFaces(ws, 400).map((x) => x.n), [5]);
+  assert.deepEqual(selectedFaces([f("normal", 300, 3), f("normal", 700, 7)], 400).map((x) => x.n), [3]);
+  assert.deepEqual(selectedFaces(ws, 200).map((x) => x.n), [3]);
+  assert.deepEqual(selectedFaces([f("normal", 500, 5), f("normal", 700, 7)], 200).map((x) => x.n), [5]);
+  assert.deepEqual(selectedFaces(ws, 600).map((x) => x.n), [7]);
+  assert.deepEqual(selectedFaces([f("normal", 300, 3), f("normal", 500, 5)], 800).map((x) => x.n), [5]);
+  // a variable normal face and a static italic face (a file without the axis, here one that is not even a font):
+  // a normal layer's wght track is checked against the normal face only
+  const dir = tmp();
+  const italic = join(dir, "italic.ttf");
+  writeFileSync(italic, "not a font");
+  const req = base();
+  req.fonts = [{ family: "Blocks", src: FONT, style: "normal" }, { family: "Blocks", src: italic, style: "italic" }];
+  req.layers[0].keyframes = { font_variation: { wght: [{ t: 0, value: 100 }, { t: 1, value: 900 }] } };
+  assert.deepEqual(problems(req), []);
+  // a family with only that italic face: the layer uses it, and its file is read
+  req.fonts = [{ family: "Blocks", src: italic, style: "italic" }];
+  assert.ok(problems(req).some((m) => m.includes(`cannot read the font ${italic}`)));
+});
+
+test("a font entry whose family is not a string is an input problem, not a TypeError", () => {
+  for (const family of [null, 123]) {
+    const req = base();
+    req.fonts = [{ family, src: FONT }, ...(req.fonts ?? [])];
+    req.layers[0].keyframes = { font_variation: { wght: [{ t: 0, value: 700 }] } };
+    assert.ok(problems(req).some((m) => m.includes("fonts[0].family must match")), String(family));
+  }
 });
 
 test("keyframes are refused when their stops are out of order, outside the layer, or clash with pulse", () => {

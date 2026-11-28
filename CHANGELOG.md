@@ -3,6 +3,27 @@
 All notable changes. The stability guarantee and deprecation policy are in
 [docs/contract.md](docs/contract.md).
 
+## Unreleased
+### Fixed
+
+- `font_variation` keyframes read the axes of the face the layer uses. When a family ships several files,
+  that is the normal face (an italic face only when there is no normal one) of the weight nearest
+  `style.font_weight`, as CSS matches them. Before, the axes every file had in common were used, so a
+  family with a variable normal face and a static italic face refused a `wght` track.
+- A `fonts[]` entry whose `family` is not a valid name (`null`, a number) is reported as an input problem.
+  Before, a `font_variation` or `fit` layer next to it threw a TypeError.
+- `batch --fit --overwrite` removes a row's previous scene only once the new one has fitted, so a text
+  that does not fit leaves the previous scene as it was.
+- When headless Chromium fails while laying text out for `fit` (it does not start, it crashes, a page does
+  not load), the error is `render` with the Chromium message, not an internal error. `batch` then records
+  the row as failed and goes on to the next row unless `--fail-fast` is given.
+- `lang` (the scene's and a layer's) accepts BCP 47 extension and private-use sequences
+  (`de-DE-u-co-phonebk`, `en-US-x-twain`). A singleton with nothing after it is still refused.
+- `writing_mode: vertical` is refused when the layer's direction resolves to right to left, including from
+  its `lang` with `direction: auto`. Before, only an explicit `direction: rtl` was refused.
+- `style.phrases: true` keeps each Chinese or Japanese phrase whole in a nowrap span, as Thai phrases
+  already were. Before, the text's `overflow-wrap: break-word` broke a phrase longer than the line inside it.
+
 ## 0.15.0
 ### Added
 
