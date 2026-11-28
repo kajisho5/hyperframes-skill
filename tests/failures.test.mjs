@@ -5,7 +5,7 @@ import { spawn, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, symlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { test } from "node:test";
-import { ARGV_RECORDER, classifyFailure, hyperframesFailureMessage, readFailureLog, silentFailureMessage } from "../lib/render-core.mjs";
+import { ARGV_RECORDER, classifyFailure, hyperframesEnv, hyperframesFailureMessage, readFailureLog, silentFailureMessage } from "../lib/render-core.mjs";
 import { FIXTURES, ROOT, SKIP_RENDER, fakeTools, tmp, tool } from "./helpers.mjs";
 import { which } from "../lib/deps.mjs";
 
@@ -99,6 +99,16 @@ test("a HyperFrames exit with no failure message says what it did print, or that
   assert.equal(silent.kind, "render");
   assert.equal(silent.message, "no failure message from hyperframes; its last output: [Encoder] ffmpeg encoding frame 3");
   assert.equal(silent.evidence.hyperframes_message_names_encode, false);
+});
+
+test("a cancelled HyperFrames render names its reason; on Windows its ancestor watchdog is off (D26)", () => {
+  const out = "[INFO] [Render] Pipeline started\nRender cancelled: render_cancelled_parent_exited\n";
+  assert.equal(hyperframesFailureMessage(out), "Render cancelled: render_cancelled_parent_exited");
+  const c = classifyFailure([{ via: "hyperframes", role: "ffmpeg", exit_code: 1 }], out);
+  assert.deepEqual([c.kind, c.message], ["render", "Render cancelled: render_cancelled_parent_exited"]);
+  assert.equal(hyperframesFailureMessage("Render cancelled:"), null);
+  assert.equal(hyperframesEnv({}, "win32").HYPERFRAMES_RENDER_DETACHED, "1");
+  for (const p of ["linux", "darwin"]) assert.equal(hyperframesEnv({}, p).HYPERFRAMES_RENDER_DETACHED, process.env.HYPERFRAMES_RENDER_DETACHED, p);
 });
 
 test("the argv recorder keeps an exception a process's own handler swallows, and every recorded exit; it changes neither (D26)", () => {

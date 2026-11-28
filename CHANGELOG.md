@@ -6,6 +6,11 @@ All notable changes. The stability guarantee and deprecation policy are in
 ## Unreleased
 ### Fixed
 
+- Windows: a render is no longer cancelled at random with `render_cancelled_parent_exited`
+  (design-decisions D26). HyperFrames' ancestor watchdog takes an unrelated process for an ancestor
+  when Windows has reused a parent's PID, and cancels the render when that process exits. On Windows,
+  the skill now sets `HYPERFRAMES_RENDER_DETACHED=1`. Its own timeout and interrupt handling end the
+  whole process tree as before. The message of a cancelled render is now `Render cancelled: <reason>`.
 - A render that HyperFrames ends with exit 1 without a failure message now says why, as far as is known
   (design-decisions D26). HyperFrames 0.8.61 exits 1 silently when an exception reaches its
   `uncaughtException` handler mid-render. The argv recorder now keeps that exception (origin, code,
