@@ -1,10 +1,12 @@
 // batch: rows files, validation of every row before any render, per-row results that don't lie.
 import assert from "node:assert/strict";
-import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { test } from "node:test";
 import { loadRows, parseCsv, slug } from "../lib/rows.mjs";
-import { SKIP_RENDER, fakeTools, tmp, tool, writeJson } from "./helpers.mjs";
+import { FIXTURES, SKIP_RENDER, fakeTools, tmp, tool, writeJson } from "./helpers.mjs";
+
+const FONT = join(FIXTURES, "fonts", "hfs-test-blocks.ttf");
 
 test("CSV: RFC 4180 quoting, CRLF, embedded newlines and commas", () => {
   assert.deepEqual(parseCsv('a,b\r\n"x, y","say ""hi"""\r\n"two\nlines",\n'), [
@@ -112,4 +114,38 @@ test("a failing row is reported as failed, the batch as failed, and --fail-fast 
   assert.deepEqual(r.doc.rows.map((x) => x.status), ["failed", "skipped"]);
   const all = tool("batch", [rows, "--template", "break", "-o", join(dir, "out2"), "--json"], { env });
   assert.deepEqual(all.doc.summary, { total: 2, completed: 0, failed: 2, skipped: 0 }, "without --fail-fast every row is attempted");
+});
+
+test("batch --fit --overwrite keeps a row's previous scene when its new text does not fit", { skip: SKIP_RENDER }, () => {
+  const dir = tmp();
+  const out = join(dir, "out");
+  const rows = writeJson(join(dir, "rows.json"), [{ title: "M".repeat(80) }]);
+  const plan = tool("batch", [rows, "--template", "title-card", "--fit", "--font", FONT, "-o", out, "--dry-run", "--json"]);
+  assert.equal(plan.code, 0, plan.stderr);
+  const sceneDir = join(out, "scenes", plan.doc.rows[0].name);
+  mkdirSync(sceneDir, { recursive: true });
+  writeFileSync(join(sceneDir, "index.html"), "previous scene\n");
+  const r = tool("batch", [rows, "--template", "title-card", "--fit", "--font", FONT, "-o", out, "--overwrite", "--json"]);
+  assert.equal(r.code, 1, r.stderr);
+  assert.equal(r.doc.rows[0].status, "failed");
+  assert.equal(r.doc.rows[0].error.kind, "input");
+  assert.match(r.doc.rows[0].error.message, /does not fit its box at the minimum font size/);
+  assert.equal(readFileSync(join(sceneDir, "index.html"), "utf8"), "previous scene\n", "the previous scene is still there");
+});
+
+test("batch --fit: a Chromium that fails while fitting fails that row; without --fail-fast the batch goes on and reports", { skip: SKIP_RENDER }, () => {
+  const dir = tmp();
+  const f = fakeTools([{ name: "chrome", exit: 1, stderr: "fake chrome crash" }], dir);
+  const rows = writeJson(join(dir, "rows.json"), [{ title: "One" }, { title: "Two" }]);
+  const r = tool("batch", [rows, "--template", "title-card", "--fit", "--font", FONT, "-o", join(dir, "out"), "--json"], { env: { ...f.env, HYPERFRAMES_BROWSER_PATH: f.rules[0].path } });
+  assert.equal(r.code, 1, r.stderr);
+  assert.equal(r.doc.status, "failed");
+  assert.deepEqual(r.doc.summary, { total: 2, completed: 0, failed: 2, skipped: 0 });
+  for (const row of r.doc.rows) {
+    assert.equal(row.status, "failed");
+    assert.equal(row.error.kind, "render");
+    assert.match(row.error.message, /^fit: headless Chromium did not start for fitting the text: /);
+  }
+  const ff = tool("batch", [rows, "--template", "title-card", "--fit", "--font", FONT, "-o", join(dir, "out2"), "--fail-fast", "--json"], { env: { ...f.env, HYPERFRAMES_BROWSER_PATH: f.rules[0].path } });
+  assert.deepEqual(ff.doc.rows.map((x) => x.status), ["failed", "skipped"]);
 });
