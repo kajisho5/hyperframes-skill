@@ -20,6 +20,10 @@ All notable changes. The stability guarantee and deprecation policy are in
   reports every given and snapped time in `beat_lock`. An audio layer, and a layer inside a seamless
   loop that is not on the beat, are never moved.
 
+## 0.13.0
+
+- feat(layers): shape and pattern layers (roadmap step 9) (#39) (edeee22)
+
 ## 0.12.0
 ### Added
 
