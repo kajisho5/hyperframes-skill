@@ -3,7 +3,7 @@
 All notable changes. The stability guarantee and deprecation policy are in
 [docs/contract.md](docs/contract.md).
 
-## Unreleased
+## 0.14.0
 ### Added
 
 - Audio and beat lock (roadmap step 11, design-decisions D24). An `audio` layer (local `.wav`, `.mp3`,
