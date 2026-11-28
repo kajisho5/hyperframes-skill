@@ -1,0 +1,421 @@
+{
+  "template_version": 1,
+  "name": "style-glitch",
+  "description": "Glitch: a title split into two offset colour copies that jitter, wiped in over a fast-moving grid band, with bars that jump. Flat colours only.",
+  "gallery": {
+    "at": 2.5
+  },
+  "values": {
+    "title": {
+      "type": "string",
+      "default": "SIGNAL LOST",
+      "max_length": 40,
+      "description": "the main line of copy"
+    },
+    "subtitle": {
+      "type": "string",
+      "default": "reconnecting",
+      "max_length": 60,
+      "description": "a second, smaller line"
+    },
+    "background": {
+      "type": "color",
+      "default": "#000000",
+      "description": "the screen"
+    },
+    "primary": {
+      "type": "color",
+      "default": "#ff0040",
+      "description": "the left copy and the grid"
+    },
+    "secondary": {
+      "type": "color",
+      "default": "#00f0ff",
+      "description": "the right copy"
+    },
+    "accent": {
+      "type": "color",
+      "default": "#f0f000",
+      "description": "the bars"
+    },
+    "text_color": {
+      "type": "color",
+      "default": "#ffffff",
+      "description": "the title"
+    },
+    "bpm": {
+      "type": "number",
+      "default": 120,
+      "min": 60,
+      "max": 180,
+      "description": "tempo: every layer starts on a beat and the words step one beat apart (beat lock)"
+    },
+    "aspect": {
+      "type": "choice",
+      "default": "landscape",
+      "options": {
+        "landscape": {
+          "width": 1920,
+          "height": 1080,
+          "band_x": 0,
+          "band_y": 162,
+          "band_w": 1920,
+          "band_h": 756,
+          "tl_x": 186,
+          "tl_y": 324,
+          "tl_w": 1536,
+          "tl_h": 432,
+          "tr_x": 198,
+          "tr_y": 324,
+          "tr_w": 1536,
+          "tr_h": 432,
+          "title_x": 192,
+          "title_y": 324,
+          "title_w": 1536,
+          "title_h": 432,
+          "sub_x": 192,
+          "sub_y": 778,
+          "sub_w": 1536,
+          "sub_h": 86,
+          "bar1_x": 96,
+          "bar1_y": 259,
+          "bar1_w": 576,
+          "bar1_h": 22,
+          "bar2_x": 1152,
+          "bar2_y": 842,
+          "bar2_w": 614,
+          "bar2_h": 16,
+          "title_size": 140,
+          "sub_size": 43
+        },
+        "portrait": {
+          "width": 1080,
+          "height": 1920,
+          "band_x": 0,
+          "band_y": 288,
+          "band_w": 1080,
+          "band_h": 1344,
+          "tl_x": 102,
+          "tl_y": 576,
+          "tl_w": 864,
+          "tl_h": 768,
+          "tr_x": 114,
+          "tr_y": 576,
+          "tr_w": 864,
+          "tr_h": 768,
+          "title_x": 108,
+          "title_y": 576,
+          "title_w": 864,
+          "title_h": 768,
+          "sub_x": 108,
+          "sub_y": 1382,
+          "sub_w": 864,
+          "sub_h": 154,
+          "bar1_x": 54,
+          "bar1_y": 461,
+          "bar1_w": 324,
+          "bar1_h": 38,
+          "bar2_x": 648,
+          "bar2_y": 1498,
+          "bar2_w": 346,
+          "bar2_h": 29,
+          "title_size": 140,
+          "sub_size": 43
+        },
+        "square": {
+          "width": 1080,
+          "height": 1080,
+          "band_x": 0,
+          "band_y": 162,
+          "band_w": 1080,
+          "band_h": 756,
+          "tl_x": 102,
+          "tl_y": 324,
+          "tl_w": 864,
+          "tl_h": 432,
+          "tr_x": 114,
+          "tr_y": 324,
+          "tr_w": 864,
+          "tr_h": 432,
+          "title_x": 108,
+          "title_y": 324,
+          "title_w": 864,
+          "title_h": 432,
+          "sub_x": 108,
+          "sub_y": 778,
+          "sub_w": 864,
+          "sub_h": 86,
+          "bar1_x": 54,
+          "bar1_y": 259,
+          "bar1_w": 324,
+          "bar1_h": 22,
+          "bar2_x": 648,
+          "bar2_y": 842,
+          "bar2_w": 346,
+          "bar2_h": 16,
+          "title_size": 140,
+          "sub_size": 43
+        }
+      },
+      "description": "landscape 1920x1080, portrait 1080x1920 or square 1080x1080"
+    }
+  },
+  "kit": {
+    "background": "colors.background",
+    "primary": "colors.primary",
+    "secondary": "colors.secondary",
+    "accent": "colors.accent",
+    "text_color": "colors.text"
+  },
+  "request": {
+    "scene_version": 1,
+    "id": "style-glitch",
+    "width": "{{aspect.width}}",
+    "height": "{{aspect.height}}",
+    "duration": 4,
+    "fps": 30,
+    "background": "{{background}}",
+    "lang": "en",
+    "beat": {
+      "bpm": "{{bpm}}"
+    },
+    "layers": [
+      {
+        "type": "pattern",
+        "id": "grid",
+        "start": 0,
+        "duration": 4,
+        "box": {
+          "x": "{{aspect.band_x}}",
+          "y": "{{aspect.band_y}}",
+          "width": "{{aspect.band_w}}",
+          "height": "{{aspect.band_h}}"
+        },
+        "pattern": "grid",
+        "seed": 5,
+        "speed": 2,
+        "palette": [
+          "{{primary}}",
+          "{{background}}",
+          "{{background}}"
+        ],
+        "params": {
+          "count": 24,
+          "line_width": 2
+        }
+      },
+      {
+        "type": "text",
+        "id": "left",
+        "start": 0.5,
+        "duration": 3.5,
+        "text": "{{title}}",
+        "box": {
+          "x": "{{aspect.tl_x}}",
+          "y": "{{aspect.tl_y}}",
+          "width": "{{aspect.tl_w}}",
+          "height": "{{aspect.tl_h}}"
+        },
+        "style": {
+          "font_family": "sans-serif",
+          "font_size": "{{aspect.title_size}}",
+          "font_weight": 900,
+          "color": "{{primary}}",
+          "align": "center",
+          "valign": "middle",
+          "line_height": 1.1
+        },
+        "transition_in": {
+          "type": "wipe",
+          "duration": 0.25,
+          "direction": "right"
+        },
+        "loop_animation": {
+          "type": "bob",
+          "period": 0.25,
+          "direction": "left",
+          "distance": 6
+        }
+      },
+      {
+        "type": "text",
+        "id": "right",
+        "start": 0.5,
+        "duration": 3.5,
+        "text": "{{title}}",
+        "box": {
+          "x": "{{aspect.tr_x}}",
+          "y": "{{aspect.tr_y}}",
+          "width": "{{aspect.tr_w}}",
+          "height": "{{aspect.tr_h}}"
+        },
+        "style": {
+          "font_family": "sans-serif",
+          "font_size": "{{aspect.title_size}}",
+          "font_weight": 900,
+          "color": "{{secondary}}",
+          "align": "center",
+          "valign": "middle",
+          "line_height": 1.1
+        },
+        "transition_in": {
+          "type": "wipe",
+          "duration": 0.25,
+          "direction": "left"
+        },
+        "loop_animation": {
+          "type": "bob",
+          "period": 0.5,
+          "direction": "right",
+          "distance": 6
+        }
+      },
+      {
+        "type": "text",
+        "id": "title",
+        "start": 0.5,
+        "duration": 3.5,
+        "text": "{{title}}",
+        "box": {
+          "x": "{{aspect.title_x}}",
+          "y": "{{aspect.title_y}}",
+          "width": "{{aspect.title_w}}",
+          "height": "{{aspect.title_h}}"
+        },
+        "style": {
+          "font_family": "sans-serif",
+          "font_size": "{{aspect.title_size}}",
+          "font_weight": 900,
+          "color": "{{text_color}}",
+          "align": "center",
+          "valign": "middle",
+          "line_height": 1.1
+        },
+        "transition_in": {
+          "type": "wipe",
+          "duration": 0.25,
+          "direction": "down"
+        }
+      },
+      {
+        "type": "text",
+        "id": "subtitle",
+        "start": 2,
+        "duration": 2,
+        "text": "{{subtitle}}",
+        "box": {
+          "x": "{{aspect.sub_x}}",
+          "y": "{{aspect.sub_y}}",
+          "width": "{{aspect.sub_w}}",
+          "height": "{{aspect.sub_h}}"
+        },
+        "style": {
+          "font_family": "sans-serif",
+          "font_size": "{{aspect.sub_size}}",
+          "font_weight": 400,
+          "color": "{{text_color}}",
+          "align": "center",
+          "valign": "top",
+          "line_height": 1.1
+        },
+        "transition_in": {
+          "type": "wipe",
+          "duration": 0.25,
+          "direction": "right"
+        }
+      },
+      {
+        "type": "shape",
+        "id": "bar1",
+        "start": 1,
+        "duration": 3,
+        "box": {
+          "x": "{{aspect.bar1_x}}",
+          "y": "{{aspect.bar1_y}}",
+          "width": "{{aspect.bar1_w}}",
+          "height": "{{aspect.bar1_h}}"
+        },
+        "shape": "rect",
+        "fill": "{{accent}}",
+        "keyframes": {
+          "position": [
+            {
+              "t": 0,
+              "value": [
+                0,
+                0
+              ]
+            },
+            {
+              "t": 0.5,
+              "value": [
+                0,
+                0
+              ]
+            },
+            {
+              "t": 0.52,
+              "value": [
+                80,
+                0
+              ]
+            },
+            {
+              "t": 1.5,
+              "value": [
+                80,
+                0
+              ]
+            },
+            {
+              "t": 1.52,
+              "value": [
+                -40,
+                0
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "type": "shape",
+        "id": "bar2",
+        "start": 1.5,
+        "duration": 2.5,
+        "box": {
+          "x": "{{aspect.bar2_x}}",
+          "y": "{{aspect.bar2_y}}",
+          "width": "{{aspect.bar2_w}}",
+          "height": "{{aspect.bar2_h}}"
+        },
+        "shape": "rect",
+        "fill": "{{accent}}",
+        "keyframes": {
+          "position": [
+            {
+              "t": 0,
+              "value": [
+                0,
+                0
+              ]
+            },
+            {
+              "t": 0.5,
+              "value": [
+                0,
+                0
+              ]
+            },
+            {
+              "t": 0.52,
+              "value": [
+                -120,
+                0
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

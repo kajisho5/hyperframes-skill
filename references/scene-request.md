@@ -120,3 +120,16 @@ A text layer's `transition_in` / `transition_out` may reveal the text unit by un
 - `division` subdivides the beat (2: eighths at a quarter-note BPM). `offset` is the first beat with `bpm`.
 - `grid` reads ffmpeg-skill `scenes --beats --json` (its `beat_grid.supported_beats`, the beats a measured onset supports), sound-design-skill's `<name>.beats.json` or `tempo_map`, or a JSON array of seconds.
 - `scene` reports `beat_lock` with every `given` and `snapped` start, the beat it went to, and the staggers. A layer whose start would reach its end is refused.
+
+## Style presets (templates)
+
+`template --list` shows them. Each one is a template whose values are typed:
+
+- `title` and `subtitle`;
+- the colours `background`, `primary`, `secondary`, `accent` and `text_color` (each preset uses the ones it lists), which `--kit` fills from the same kit roles;
+- `bpm` (beat lock; the words step one beat apart);
+- `aspect`: `landscape` 1920x1080, `portrait` 1080x1920 or `square` 1080x1080.
+
+`style-corporate` also takes an optional `logo`. `style-wafu` is Japanese (`lang: ja`, vertical title); pass `--font` with a Japanese font for Japanese glyph forms.
+
+`template --gallery -o DIR [--set ...] [--kit KIT] [--font FILE]` renders `DIR/<preset>.png` for every preset, at the preset's own still time, through the same scene and render path as a full render. Choose one, then `template style-NAME ... -o REQUEST.json` as usual.

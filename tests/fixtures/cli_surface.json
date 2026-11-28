@@ -282,6 +282,10 @@
         "cli": "--font",
         "type": "string"
       },
+      "gallery": {
+        "cli": "--gallery",
+        "type": "boolean"
+      },
       "json": {
         "cli": "--json",
         "type": "boolean"

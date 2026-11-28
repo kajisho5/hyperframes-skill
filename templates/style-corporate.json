@@ -1,0 +1,285 @@
+{
+  "template_version": 1,
+  "name": "style-corporate",
+  "description": "Corporate logo reveal: a band wipes across, the logo (when given) scales in, then the company name word by word and a tagline over a gold rule.",
+  "gallery": {
+    "at": 3
+  },
+  "values": {
+    "title": {
+      "type": "string",
+      "default": "Northwind Partners",
+      "max_length": 40,
+      "description": "the main line of copy"
+    },
+    "subtitle": {
+      "type": "string",
+      "default": "Building what lasts",
+      "max_length": 60,
+      "description": "a second, smaller line"
+    },
+    "background": {
+      "type": "color",
+      "default": "#ffffff",
+      "description": "page colour"
+    },
+    "primary": {
+      "type": "color",
+      "default": "#0b3d91",
+      "description": "the band"
+    },
+    "secondary": {
+      "type": "color",
+      "default": "#5b6b82",
+      "description": "the tagline"
+    },
+    "accent": {
+      "type": "color",
+      "default": "#f2a900",
+      "description": "the rule"
+    },
+    "text_color": {
+      "type": "color",
+      "default": "#ffffff",
+      "description": "the company name, on the band"
+    },
+    "bpm": {
+      "type": "number",
+      "default": 120,
+      "min": 60,
+      "max": 180,
+      "description": "tempo: every layer starts on a beat and the words step one beat apart (beat lock)"
+    },
+    "aspect": {
+      "type": "choice",
+      "default": "landscape",
+      "options": {
+        "landscape": {
+          "width": 1920,
+          "height": 1080,
+          "band_x": 0,
+          "band_y": 454,
+          "band_w": 1920,
+          "band_h": 173,
+          "logo_x": 830,
+          "logo_y": 151,
+          "logo_w": 259,
+          "logo_h": 259,
+          "title_x": 154,
+          "title_y": 454,
+          "title_w": 1613,
+          "title_h": 173,
+          "rule_x": 806,
+          "rule_y": 670,
+          "rule_w": 307,
+          "rule_h": 4,
+          "sub_x": 154,
+          "sub_y": 702,
+          "sub_w": 1613,
+          "sub_h": 86,
+          "title_size": 81,
+          "sub_size": 38
+        },
+        "portrait": {
+          "width": 1080,
+          "height": 1920,
+          "band_x": 0,
+          "band_y": 806,
+          "band_w": 1080,
+          "band_h": 307,
+          "logo_x": 410,
+          "logo_y": 269,
+          "logo_w": 259,
+          "logo_h": 259,
+          "title_x": 86,
+          "title_y": 806,
+          "title_w": 907,
+          "title_h": 307,
+          "rule_x": 454,
+          "rule_y": 1190,
+          "rule_w": 173,
+          "rule_h": 4,
+          "sub_x": 86,
+          "sub_y": 1248,
+          "sub_w": 907,
+          "sub_h": 154,
+          "title_size": 81,
+          "sub_size": 38
+        },
+        "square": {
+          "width": 1080,
+          "height": 1080,
+          "band_x": 0,
+          "band_y": 454,
+          "band_w": 1080,
+          "band_h": 173,
+          "logo_x": 410,
+          "logo_y": 151,
+          "logo_w": 259,
+          "logo_h": 259,
+          "title_x": 86,
+          "title_y": 454,
+          "title_w": 907,
+          "title_h": 173,
+          "rule_x": 454,
+          "rule_y": 670,
+          "rule_w": 173,
+          "rule_h": 4,
+          "sub_x": 86,
+          "sub_y": 702,
+          "sub_w": 907,
+          "sub_h": 86,
+          "title_size": 81,
+          "sub_size": 38
+        }
+      },
+      "description": "landscape 1920x1080, portrait 1080x1920 or square 1080x1080"
+    },
+    "logo": {
+      "type": "string",
+      "required": false,
+      "max_length": 1000,
+      "description": "logo image file (png, svg, ...); left out: no logo"
+    }
+  },
+  "kit": {
+    "background": "colors.background",
+    "primary": "colors.primary",
+    "secondary": "colors.secondary",
+    "accent": "colors.accent",
+    "text_color": "colors.text",
+    "logo": "logo"
+  },
+  "request": {
+    "scene_version": 1,
+    "id": "style-corporate",
+    "width": "{{aspect.width}}",
+    "height": "{{aspect.height}}",
+    "duration": 4,
+    "fps": 30,
+    "background": "{{background}}",
+    "lang": "en",
+    "beat": {
+      "bpm": "{{bpm}}"
+    },
+    "layers": [
+      {
+        "type": "shape",
+        "id": "band",
+        "start": 0,
+        "duration": 4,
+        "box": {
+          "x": "{{aspect.band_x}}",
+          "y": "{{aspect.band_y}}",
+          "width": "{{aspect.band_w}}",
+          "height": "{{aspect.band_h}}"
+        },
+        "shape": "rect",
+        "fill": "{{primary}}",
+        "transition_in": {
+          "type": "wipe",
+          "duration": 0.5,
+          "direction": "right",
+          "easing": "ease_in_out"
+        }
+      },
+      {
+        "when": "logo",
+        "type": "image",
+        "id": "logo",
+        "start": 0.5,
+        "duration": 3.5,
+        "src": "{{logo}}",
+        "box": {
+          "x": "{{aspect.logo_x}}",
+          "y": "{{aspect.logo_y}}",
+          "width": "{{aspect.logo_w}}",
+          "height": "{{aspect.logo_h}}"
+        },
+        "fit": "contain",
+        "transition_in": {
+          "type": "zoom",
+          "duration": 0.5,
+          "scale": 0.6,
+          "easing": "ease_out"
+        }
+      },
+      {
+        "type": "text",
+        "id": "title",
+        "start": 1,
+        "duration": 3,
+        "text": "{{title}}",
+        "box": {
+          "x": "{{aspect.title_x}}",
+          "y": "{{aspect.title_y}}",
+          "width": "{{aspect.title_w}}",
+          "height": "{{aspect.title_h}}"
+        },
+        "style": {
+          "font_family": "sans-serif",
+          "font_size": "{{aspect.title_size}}",
+          "font_weight": 700,
+          "color": "{{text_color}}",
+          "align": "center",
+          "valign": "middle",
+          "line_height": 1.1
+        },
+        "transition_in": {
+          "type": "words",
+          "duration": 0.4,
+          "stagger": 0.5,
+          "easing": "ease_out",
+          "effect": "slide",
+          "direction": "up",
+          "distance": 30
+        }
+      },
+      {
+        "type": "shape",
+        "id": "rule",
+        "start": 2,
+        "duration": 2,
+        "box": {
+          "x": "{{aspect.rule_x}}",
+          "y": "{{aspect.rule_y}}",
+          "width": "{{aspect.rule_w}}",
+          "height": "{{aspect.rule_h}}"
+        },
+        "shape": "rect",
+        "fill": "{{accent}}",
+        "transition_in": {
+          "type": "wipe",
+          "duration": 0.5,
+          "direction": "right"
+        }
+      },
+      {
+        "type": "text",
+        "id": "subtitle",
+        "start": 2.5,
+        "duration": 1.5,
+        "text": "{{subtitle}}",
+        "box": {
+          "x": "{{aspect.sub_x}}",
+          "y": "{{aspect.sub_y}}",
+          "width": "{{aspect.sub_w}}",
+          "height": "{{aspect.sub_h}}"
+        },
+        "style": {
+          "font_family": "sans-serif",
+          "font_size": "{{aspect.sub_size}}",
+          "font_weight": 400,
+          "color": "{{secondary}}",
+          "align": "center",
+          "valign": "top",
+          "line_height": 1.1
+        },
+        "transition_in": {
+          "type": "fade",
+          "duration": 0.5
+        }
+      }
+    ]
+  }
+}

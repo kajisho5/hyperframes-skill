@@ -1,0 +1,217 @@
+{
+  "template_version": 1,
+  "name": "style-minimal",
+  "description": "Minimal: one centred title that fades in word by word, a hairline that draws itself under it, a quiet subtitle, wide empty space.",
+  "gallery": {
+    "at": 2.5
+  },
+  "values": {
+    "title": {
+      "type": "string",
+      "default": "Less, but better",
+      "max_length": 40,
+      "description": "the main line of copy"
+    },
+    "subtitle": {
+      "type": "string",
+      "default": "A short film",
+      "max_length": 60,
+      "description": "a second, smaller line"
+    },
+    "background": {
+      "type": "color",
+      "default": "#0e0e0e",
+      "description": "page colour"
+    },
+    "secondary": {
+      "type": "color",
+      "default": "#8a8a8a",
+      "description": "the subtitle"
+    },
+    "accent": {
+      "type": "color",
+      "default": "#f5f5f5",
+      "description": "the hairline"
+    },
+    "text_color": {
+      "type": "color",
+      "default": "#f5f5f5",
+      "description": "the title"
+    },
+    "bpm": {
+      "type": "number",
+      "default": 120,
+      "min": 60,
+      "max": 180,
+      "description": "tempo: every layer starts on a beat and the words step one beat apart (beat lock)"
+    },
+    "aspect": {
+      "type": "choice",
+      "default": "landscape",
+      "options": {
+        "landscape": {
+          "width": 1920,
+          "height": 1080,
+          "title_x": 192,
+          "title_y": 324,
+          "title_w": 1536,
+          "title_h": 324,
+          "line_x": 768,
+          "line_y": 670,
+          "line_w": 384,
+          "line_h": 2,
+          "sub_x": 192,
+          "sub_y": 713,
+          "sub_w": 1536,
+          "sub_h": 86,
+          "title_size": 86,
+          "sub_size": 35
+        },
+        "portrait": {
+          "width": 1080,
+          "height": 1920,
+          "title_x": 108,
+          "title_y": 576,
+          "title_w": 864,
+          "title_h": 576,
+          "line_x": 432,
+          "line_y": 1190,
+          "line_w": 216,
+          "line_h": 2,
+          "sub_x": 108,
+          "sub_y": 1267,
+          "sub_w": 864,
+          "sub_h": 154,
+          "title_size": 86,
+          "sub_size": 35
+        },
+        "square": {
+          "width": 1080,
+          "height": 1080,
+          "title_x": 108,
+          "title_y": 324,
+          "title_w": 864,
+          "title_h": 324,
+          "line_x": 432,
+          "line_y": 670,
+          "line_w": 216,
+          "line_h": 2,
+          "sub_x": 108,
+          "sub_y": 713,
+          "sub_w": 864,
+          "sub_h": 86,
+          "title_size": 86,
+          "sub_size": 35
+        }
+      },
+      "description": "landscape 1920x1080, portrait 1080x1920 or square 1080x1080"
+    }
+  },
+  "kit": {
+    "background": "colors.background",
+    "secondary": "colors.secondary",
+    "accent": "colors.accent",
+    "text_color": "colors.text"
+  },
+  "request": {
+    "scene_version": 1,
+    "id": "style-minimal",
+    "width": "{{aspect.width}}",
+    "height": "{{aspect.height}}",
+    "duration": 4,
+    "fps": 30,
+    "background": "{{background}}",
+    "lang": "en",
+    "beat": {
+      "bpm": "{{bpm}}"
+    },
+    "layers": [
+      {
+        "type": "text",
+        "id": "title",
+        "start": 0,
+        "duration": 4,
+        "text": "{{title}}",
+        "box": {
+          "x": "{{aspect.title_x}}",
+          "y": "{{aspect.title_y}}",
+          "width": "{{aspect.title_w}}",
+          "height": "{{aspect.title_h}}"
+        },
+        "style": {
+          "font_family": "sans-serif",
+          "font_size": "{{aspect.title_size}}",
+          "font_weight": 300,
+          "color": "{{text_color}}",
+          "align": "center",
+          "valign": "bottom",
+          "line_height": 1.1
+        },
+        "transition_in": {
+          "type": "words",
+          "duration": 0.4,
+          "stagger": 0.5,
+          "easing": "ease_out"
+        },
+        "transition_out": {
+          "type": "fade",
+          "duration": 0.5
+        }
+      },
+      {
+        "type": "shape",
+        "id": "line",
+        "start": 1.5,
+        "duration": 2.5,
+        "box": {
+          "x": "{{aspect.line_x}}",
+          "y": "{{aspect.line_y}}",
+          "width": "{{aspect.line_w}}",
+          "height": "{{aspect.line_h}}"
+        },
+        "shape": "rect",
+        "fill": "{{accent}}",
+        "transition_in": {
+          "type": "wipe",
+          "duration": 0.5,
+          "direction": "right",
+          "easing": "ease_in_out"
+        },
+        "transition_out": {
+          "type": "fade",
+          "duration": 0.5
+        }
+      },
+      {
+        "type": "text",
+        "id": "subtitle",
+        "start": 2,
+        "duration": 2,
+        "text": "{{subtitle}}",
+        "box": {
+          "x": "{{aspect.sub_x}}",
+          "y": "{{aspect.sub_y}}",
+          "width": "{{aspect.sub_w}}",
+          "height": "{{aspect.sub_h}}"
+        },
+        "style": {
+          "font_family": "sans-serif",
+          "font_size": "{{aspect.sub_size}}",
+          "font_weight": 400,
+          "color": "{{secondary}}",
+          "align": "center",
+          "valign": "top",
+          "line_height": 1.1
+        },
+        "transition_in": {
+          "type": "fade",
+          "duration": 0.5
+        },
+        "transition_out": {
+          "type": "fade",
+          "duration": 0.5
+        }
+      }
+    ]
+  }
+}

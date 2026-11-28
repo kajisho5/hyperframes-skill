@@ -1,0 +1,258 @@
+{
+  "template_version": 1,
+  "name": "style-neon",
+  "description": "Neon: a dark stage, moving diagonal stripes in two neon colours along the bottom, an outlined frame and a title that zooms in word by word on the beat.",
+  "gallery": {
+    "at": 2.5
+  },
+  "values": {
+    "title": {
+      "type": "string",
+      "default": "Night drive",
+      "max_length": 40,
+      "description": "the main line of copy"
+    },
+    "subtitle": {
+      "type": "string",
+      "default": "Live at 120 BPM",
+      "max_length": 60,
+      "description": "a second, smaller line"
+    },
+    "background": {
+      "type": "color",
+      "default": "#07020f",
+      "description": "the stage"
+    },
+    "primary": {
+      "type": "color",
+      "default": "#ff2bd6",
+      "description": "stripes, first colour"
+    },
+    "secondary": {
+      "type": "color",
+      "default": "#20e3ff",
+      "description": "stripes, second colour"
+    },
+    "accent": {
+      "type": "color",
+      "default": "#ff2bd6",
+      "description": "the frame's outline"
+    },
+    "text_color": {
+      "type": "color",
+      "default": "#ffffff",
+      "description": "the type"
+    },
+    "bpm": {
+      "type": "number",
+      "default": 120,
+      "min": 60,
+      "max": 180,
+      "description": "tempo: every layer starts on a beat and the words step one beat apart (beat lock)"
+    },
+    "aspect": {
+      "type": "choice",
+      "default": "landscape",
+      "options": {
+        "landscape": {
+          "width": 1920,
+          "height": 1080,
+          "band_x": 0,
+          "band_y": 864,
+          "band_w": 1920,
+          "band_h": 216,
+          "frame_x": 192,
+          "frame_y": 238,
+          "frame_w": 1536,
+          "frame_h": 497,
+          "title_x": 269,
+          "title_y": 281,
+          "title_w": 1382,
+          "title_h": 302,
+          "sub_x": 269,
+          "sub_y": 594,
+          "sub_w": 1382,
+          "sub_h": 108,
+          "title_size": 119,
+          "sub_size": 43,
+          "stroke": 9
+        },
+        "portrait": {
+          "width": 1080,
+          "height": 1920,
+          "band_x": 0,
+          "band_y": 1536,
+          "band_w": 1080,
+          "band_h": 384,
+          "frame_x": 108,
+          "frame_y": 422,
+          "frame_w": 864,
+          "frame_h": 883,
+          "title_x": 151,
+          "title_y": 499,
+          "title_w": 778,
+          "title_h": 538,
+          "sub_x": 151,
+          "sub_y": 1056,
+          "sub_w": 778,
+          "sub_h": 192,
+          "title_size": 119,
+          "sub_size": 43,
+          "stroke": 9
+        },
+        "square": {
+          "width": 1080,
+          "height": 1080,
+          "band_x": 0,
+          "band_y": 864,
+          "band_w": 1080,
+          "band_h": 216,
+          "frame_x": 108,
+          "frame_y": 238,
+          "frame_w": 864,
+          "frame_h": 497,
+          "title_x": 151,
+          "title_y": 281,
+          "title_w": 778,
+          "title_h": 302,
+          "sub_x": 151,
+          "sub_y": 594,
+          "sub_w": 778,
+          "sub_h": 108,
+          "title_size": 119,
+          "sub_size": 43,
+          "stroke": 9
+        }
+      },
+      "description": "landscape 1920x1080, portrait 1080x1920 or square 1080x1080"
+    }
+  },
+  "kit": {
+    "background": "colors.background",
+    "primary": "colors.primary",
+    "secondary": "colors.secondary",
+    "accent": "colors.accent",
+    "text_color": "colors.text"
+  },
+  "request": {
+    "scene_version": 1,
+    "id": "style-neon",
+    "width": "{{aspect.width}}",
+    "height": "{{aspect.height}}",
+    "duration": 4,
+    "fps": 30,
+    "background": "{{background}}",
+    "lang": "en",
+    "beat": {
+      "bpm": "{{bpm}}"
+    },
+    "layers": [
+      {
+        "type": "pattern",
+        "id": "stripes",
+        "start": 0,
+        "duration": 4,
+        "box": {
+          "x": "{{aspect.band_x}}",
+          "y": "{{aspect.band_y}}",
+          "width": "{{aspect.band_w}}",
+          "height": "{{aspect.band_h}}"
+        },
+        "pattern": "lines",
+        "seed": 3,
+        "speed": 0.5,
+        "palette": [
+          "{{primary}}",
+          "{{background}}",
+          "{{secondary}}",
+          "{{background}}"
+        ],
+        "params": {
+          "count": 16,
+          "line_width": 14,
+          "angle": 30
+        }
+      },
+      {
+        "type": "shape",
+        "id": "frame",
+        "start": 0,
+        "duration": 4,
+        "box": {
+          "x": "{{aspect.frame_x}}",
+          "y": "{{aspect.frame_y}}",
+          "width": "{{aspect.frame_w}}",
+          "height": "{{aspect.frame_h}}"
+        },
+        "shape": "rounded_rect",
+        "radius": 24,
+        "stroke": {
+          "color": "{{accent}}",
+          "width": 6
+        },
+        "transition_in": {
+          "type": "zoom",
+          "duration": 0.5,
+          "scale": 1.2,
+          "easing": "ease_out"
+        }
+      },
+      {
+        "type": "text",
+        "id": "title",
+        "start": 0.5,
+        "duration": 3.5,
+        "text": "{{title}}",
+        "box": {
+          "x": "{{aspect.title_x}}",
+          "y": "{{aspect.title_y}}",
+          "width": "{{aspect.title_w}}",
+          "height": "{{aspect.title_h}}"
+        },
+        "style": {
+          "font_family": "sans-serif",
+          "font_size": "{{aspect.title_size}}",
+          "font_weight": 800,
+          "color": "{{text_color}}",
+          "align": "center",
+          "valign": "bottom",
+          "line_height": 1.1
+        },
+        "transition_in": {
+          "type": "words",
+          "duration": 0.4,
+          "stagger": 0.5,
+          "easing": "ease_out",
+          "effect": "zoom",
+          "scale": 2.5
+        }
+      },
+      {
+        "type": "text",
+        "id": "subtitle",
+        "start": 2,
+        "duration": 2,
+        "text": "{{subtitle}}",
+        "box": {
+          "x": "{{aspect.sub_x}}",
+          "y": "{{aspect.sub_y}}",
+          "width": "{{aspect.sub_w}}",
+          "height": "{{aspect.sub_h}}"
+        },
+        "style": {
+          "font_family": "sans-serif",
+          "font_size": "{{aspect.sub_size}}",
+          "font_weight": 600,
+          "color": "{{secondary}}",
+          "align": "center",
+          "valign": "top",
+          "line_height": 1.1
+        },
+        "transition_in": {
+          "type": "fade",
+          "duration": 0.5
+        }
+      }
+    ]
+  }
+}
