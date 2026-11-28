@@ -6,7 +6,7 @@ All notable changes. The stability guarantee and deprecation policy are in
 ## 0.15.0
 ### Added
 
-- Style presets and the gallery (roadmap step 14, design-decisions D25). There are six templates built
+- Style presets and the gallery (roadmap step 14, #41, design-decisions D25). There are six templates built
   on the layers above: `style-swiss`, `style-minimal`, `style-neon`, `style-glitch`, `style-corporate`
   (a logo reveal) and `style-wafu` (Japanese, a regional option: vertical title, waves, a seal). Each
   takes typed values: `title`, `subtitle`, colours by kit role, `bpm` (beat lock) and `aspect`
@@ -19,39 +19,23 @@ All notable changes. The stability guarantee and deprecation policy are in
 ## 0.14.0
 ### Added
 
-- Audio and beat lock (roadmap step 11, design-decisions D24). An `audio` layer (local `.wav`, `.mp3`,
-  `.m4a`, `.aac`, `.ogg`, `.opus` or `.flac`; `media_start`, `volume`, `fade_in`, `fade_out`) is mixed into
-  the output by HyperFrames: AAC in .mp4 / .mov, Opus in .webm. `render` then verifies an `audio` step:
-  an audio stream as long as the scene, within one frame. `probe`'s `audio` gains `duration` and
-  `duration_source`. A PNG sequence cannot carry sound, so `--codec png` refuses a scene with audio. A
+- Audio and beat lock (roadmap step 11, #40, design-decisions D24). An `audio` layer (local `.wav`,
+  `.mp3`, `.m4a`, `.aac`, `.ogg`, `.opus` or `.flac`; `media_start`, `volume`, `fade_in`, `fade_out`) is
+  mixed into the output by HyperFrames: AAC in .mp4 / .mov, Opus in .webm. `render` then verifies an
+  `audio` step: an audio stream as long as the scene, within one frame. `probe`'s `audio` gains `duration`
+  and `duration_source`. A PNG sequence cannot carry sound, so `--codec png` refuses a scene with audio. A
   stinger with sound writes `audio: true` in `stinger.json`.
 - A top-level `beat` (`bpm` with `offset`, or `grid`: ffmpeg-skill `scenes --beats --json`, whose
   `beat_grid.supported_beats` are used, a sound-design-skill `beats.json` / `tempo_map`, or an array of
   seconds; `division`, `snap`) moves every visual layer's start to the nearest beat, on a frame, keeping
-  its end. A unit
-  transition's stagger becomes a whole number of beats when the beats are evenly spaced. `scene`
-  reports every given and snapped time in `beat_lock`. An audio layer, and a layer inside a seamless
-  loop that is not on the beat, are never moved.
+  its end. A unit transition's stagger becomes a whole number of beats when the beats are evenly spaced.
+  `scene` reports every given and snapped time in `beat_lock`. An audio layer, and a layer inside a
+  seamless loop that is not on the beat, are never moved.
 
 ## 0.13.0
-
-- feat(layers): shape and pattern layers (roadmap step 9) (#39) (edeee22)
-
-## 0.12.0
 ### Added
 
-- Generative layers (roadmap step 10, design-decisions D23). `type: generative` runs one of the programs
-  this skill ships: `particles`, `noise_field`, `shader_gradient` and `type3d` (extruded 3D text from a
-  font in `fonts[]`). Or it runs `shader`, a user's fragment shader from a local `.frag` / `.glsl` / `.fs`
-  file, which is checked to be one self-contained GLSL file with no word for script, network or DOM access.
-  Each takes a `seed`, a `palette`, typed `params` and `time_start`. three.js 0.187.0 (MIT) is copied into
-  the scene, never fetched. The bundled runtime is the frame adapter: HyperFrames' `hf-seek` sets the
-  program's time from the frame being captured, so frame N renders the same whether or not frames
-  0..N-1 were rendered. Rendering stays on SwiftShader. `doctor` reports the WebGL backend (`webgl`:
-  version, vendor, renderer, `backend: swiftshader`). A generative layer is refused inside a seamless
-  loop segment. New dependency: `three` 0.187.0 (MIT).
-
-- Shape and pattern layers (roadmap step 9, design-decisions D22). `type: shape` draws a `rect`,
+- Shape and pattern layers (roadmap step 9, #39, design-decisions D22). `type: shape` draws a `rect`,
   `rounded_rect` (`radius`), `circle`, `line` (`points`) or `polygon` (`points` or `sides`), with `fill` (a
   colour or a `linear` / `radial` gradient), `stroke` and `rotation`. Its `keyframes` move, scale, turn
   and fade it (`position`, `scale`, `rotation`, `opacity`). `type: pattern` draws one of the presets
@@ -60,9 +44,38 @@ All notable changes. The stability guarantee and deprecation policy are in
   no raw CSS. A cycle ends on the picture it started with, so a pattern can run in a seamless loop
   segment when its cycle divides the loop. The same seed draws the same picture, and another seed changes
   only the pattern's own markup.
+- Generative layers (roadmap step 10, design-decisions D23; shipped in #39 together with step 9).
+  `type: generative` runs one of the programs this skill ships: `particles`, `noise_field`, `shader_gradient` and
+  `type3d` (extruded 3D text from a font in `fonts[]`). Or it runs `shader`, a user's fragment shader from
+  a local `.frag` / `.glsl` / `.fs` file, which is checked to be one self-contained GLSL file with no word
+  for script, network or DOM access. Each takes a `seed`, a `palette`, typed `params` and `time_start`.
+  three.js 0.187.0 (MIT) is copied into the scene, never fetched. The bundled runtime is the frame
+  adapter: HyperFrames' `hf-seek` sets the program's time from the frame being captured, so frame N
+  renders the same whether or not frames 0..N-1 were rendered. Rendering stays on SwiftShader. `doctor`
+  reports the WebGL backend (`webgl`: version, vendor, renderer, `backend: swiftshader`). A generative
+  layer is refused inside a seamless loop segment. New dependency: `three` 0.187.0 (MIT).
 
-- International typesetting and text fit (roadmap step 8, design-decisions D21). A text layer takes its
-  own `lang` (BCP 47), and its direction follows it: Arabic, Hebrew, Persian, Urdu and the other
+## 0.12.0
+### Added
+
+- Kinetic typography (roadmap step 7, #37, design-decisions D20). A text layer's `transition_in` /
+  `transition_out` may be `chars`, `words` or `lines` with `duration` (each unit), `stagger` (from one
+  unit's start to the next), `easing` and `effect` (`fade`, `slide` with `direction` + `distance`, `zoom`
+  with `scale`): the units appear or leave one after another. Characters are extended grapheme clusters
+  (Unicode UAX #29), so a base with its combining marks, an emoji sequence or an Indic / Thai cluster
+  moves whole; words come from the segmenter for the scene's `lang` (Japanese included) and take their
+  punctuation; lines are the text's own lines. Whitespace is never a unit.
+- `wipe` transition on any layer: a mask whose edge travels `left`, `right`, `up` or `down`.
+- `keyframes` on a text layer: `tracking` (letter-spacing, px), `scale`, and `font_variation`
+  (`{AXIS: [{t, value}]}`), linear between stops. The axes are read from the font file the layer's family
+  names in `fonts[]`; an axis the font does not have is refused with the font's real axes listed, and a
+  value outside the axis range is refused.
+- `scene` reports `text_units` (`layer`, `edge`, `type`, `units`, `span`) for each unit transition.
+  Additive: a request without these keys renders byte-identical markup. A seamless loop refuses a unit
+  reveal that runs into it and keyframes that change inside it. New dependency: `fontkit` (MIT, already
+  installed with HyperFrames) to read a font's variation axes.
+- International typesetting and text fit (roadmap step 8, #38, design-decisions D21). A text layer takes
+  its own `lang` (BCP 47), and its direction follows it: Arabic, Hebrew, Persian, Urdu and the other
   right-to-left languages get `dir="rtl"`. `style.direction` (`auto`, `ltr`, `rtl`) states it, and
   `style.align` also takes `start` / `end`. `style.line_break` (`normal`, `strict`, `loose`) is CSS
   `line-break`, so `strict` is strict kinsoku. `style.phrases: true` breaks Japanese, Chinese and Thai
@@ -85,23 +98,6 @@ All notable changes. The stability guarantee and deprecation policy are in
 
 - A scene whose `lang` is a right-to-left language now writes `dir="rtl"` on its text layers. Its text
   was laid out left to right before, which put punctuation on the wrong side.
-
-- Kinetic typography (roadmap step 7, #37, design-decisions D20). A text layer's `transition_in` /
-  `transition_out` may be `chars`, `words` or `lines` with `duration` (each unit), `stagger` (from one
-  unit's start to the next), `easing` and `effect` (`fade`, `slide` with `direction` + `distance`, `zoom`
-  with `scale`): the units appear or leave one after another. Characters are extended grapheme clusters
-  (Unicode UAX #29), so a base with its combining marks, an emoji sequence or an Indic / Thai cluster
-  moves whole; words come from the segmenter for the scene's `lang` (Japanese included) and take their
-  punctuation; lines are the text's own lines. Whitespace is never a unit.
-- `wipe` transition on any layer: a mask whose edge travels `left`, `right`, `up` or `down`.
-- `keyframes` on a text layer: `tracking` (letter-spacing, px), `scale`, and `font_variation`
-  (`{AXIS: [{t, value}]}`), linear between stops. The axes are read from the font file the layer's family
-  names in `fonts[]`; an axis the font does not have is refused with the font's real axes listed, and a
-  value outside the axis range is refused.
-- `scene` reports `text_units` (`layer`, `edge`, `type`, `units`, `span`) for each unit transition.
-  Additive: a request without these keys renders byte-identical markup. A seamless loop refuses a unit
-  reveal that runs into it and keyframes that change inside it. New dependency: `fontkit` (MIT, already
-  installed with HyperFrames) to read a font's variation axes.
 
 ## 0.11.1
 
