@@ -6,6 +6,27 @@ All notable changes. The stability guarantee and deprecation policy are in
 ## 0.12.0
 ### Added
 
+- Generative layers (roadmap step 10, design-decisions D23). `type: generative` runs one of the programs
+  this skill ships: `particles`, `noise_field`, `shader_gradient` and `type3d` (extruded 3D text from a
+  font in `fonts[]`). Or it runs `shader`, a user's fragment shader from a local `.frag` / `.glsl` / `.fs`
+  file, which is checked to be one self-contained GLSL file with no word for script, network or DOM access.
+  Each takes a `seed`, a `palette`, typed `params` and `time_start`. three.js 0.187.0 (MIT) is copied into
+  the scene, never fetched. The bundled runtime is the frame adapter: HyperFrames' `hf-seek` sets the
+  program's time from the frame being captured, so frame N renders the same whether or not frames
+  0..N-1 were rendered. Rendering stays on SwiftShader. `doctor` reports the WebGL backend (`webgl`:
+  version, vendor, renderer, `backend: swiftshader`). A generative layer is refused inside a seamless
+  loop segment. New dependency: `three` 0.187.0 (MIT).
+
+- Shape and pattern layers (roadmap step 9, design-decisions D22). `type: shape` draws a `rect`,
+  `rounded_rect` (`radius`), `circle`, `line` (`points`) or `polygon` (`points` or `sides`), with `fill` (a
+  colour or a `linear` / `radial` gradient), `stroke` and `rotation`. Its `keyframes` move, scale, turn
+  and fade it (`position`, `scale`, `rotation`, `opacity`). `type: pattern` draws one of the presets
+  `grid`, `lines`, `dots`, `rings` and `polygons` from a `seed`, with `speed` (cycles per second),
+  `palette` and the preset's typed `params` (`count`, `line_width`, `angle`, `size`, `sides`). There is
+  no raw CSS. A cycle ends on the picture it started with, so a pattern can run in a seamless loop
+  segment when its cycle divides the loop. The same seed draws the same picture, and another seed changes
+  only the pattern's own markup.
+
 - International typesetting and text fit (roadmap step 8, design-decisions D21). A text layer takes its
   own `lang` (BCP 47), and its direction follows it: Arabic, Hebrew, Persian, Urdu and the other
   right-to-left languages get `dir="rtl"`. `style.direction` (`auto`, `ltr`, `rtl`) states it, and
