@@ -493,3 +493,38 @@ Format:
 - the official Remotion templates: under the Remotion License, which is source-available, free for individuals, non-profits and companies of up to 3 employees, and needs a company license otherwise. Because of that licence, nothing of Remotion's was read for these presets beyond the names of styles.
 
 **Pinned by:** `tests/presets.test.mjs`, `tests/template.test.mjs`, `tests/kit.test.mjs`.
+
+## D26. A HyperFrames exit with no failure message keeps its evidence
+
+2026-11-28.
+
+**Context.** On Windows CI, a render now and then fails as `hyperframes render exited 1: no failure message from hyperframes`. It happened three times in two runs on main (runs 46104608221 and 46118875058, attempt 1), in three different places, and each passed when re-run. In HyperFrames 0.8.61, `uncaughtException` is handled by `exitAfterCliFailure`, which calls `process.exit(1)` and prints nothing while a render is still running. Only its telemetry, which is off here, would carry the error. An exception that reaches the top of the process therefore ends the render with exit 1, no `✗ Render failed` box and no stack. This was measured: an exception thrown from a preload mid-render gives exactly that exit. The failure message carried nothing that could tell the cases apart, and the test output showed only that message.
+
+**Found with the diagnostics below.** The first Windows run of this change failed the same way, in `tests/presets.test.mjs` (`template --gallery`). This time the message named the cause: `Render cancelled: render_cancelled_parent_exited`. That message comes from HyperFrames' render cancellation scope (`src/utils/renderCancellation.ts` in 0.8.61):
+- On Windows and macOS, it takes a snapshot of the process's ancestors at start. On Windows that is `Get-CimInstance Win32_Process`, then a walk up `ParentProcessId`.
+- Every 2 s it cancels the render if any of those ancestors is no longer alive.
+- On Windows, a `ParentProcessId` can name a parent that has exited and whose PID was reused. The walk checks neither creation times nor, after the snapshot, identity. So an unrelated short-lived process can be taken for an ancestor, and the render is cancelled when that process exits.
+- The real ancestors were all alive: the test runner, the skill's CLI and HyperFrames. Only the `chrome --version` probe had run.
+- A cancelled render prints `Render cancelled: <reason>` and no `✗` box, which is why it read as "no failure message".
+
+**Decision.**
+- **Windows: HyperFrames' ancestor watchdog is off.** `hyperframesEnv` sets `HYPERFRAMES_RENDER_DETACHED=1` (HyperFrames' documented switch) on Windows only.
+  - The skill already owns the render's lifetime: `runChild` ends the whole process tree on a timeout or an interrupt (`taskkill /T`).
+  - What is given up: if the skill's own process is killed outright, HyperFrames runs to the end of that render instead of stopping.
+  - Linux keeps the watchdog. There it checks each ancestor's start time in `/proc`, which a reused PID cannot pass. macOS keeps it too. No macOS failure has been seen, and macOS reuses PIDs far less.
+- **A cancelled render names its reason.** `Render cancelled: <reason>` counts as HyperFrames' own failure message.
+
+The rest is diagnostics. The render path, the classification and the exit codes are unchanged, and nothing is retried.
+- The argv recorder (D10), which already runs inside HyperFrames, listens on `uncaughtExceptionMonitor`. That event observes the exception before the process's own handler and changes nothing about how the process ends. The recorder writes `<pid>-fatal.json` (origin, name, code, message, the first stack lines) into the log directory.
+- The recorder also writes every recorded process's exit code and signal (`.exit`), chrome included. `commands[]` still has `exit_code: null` for chrome (docs/contract.md).
+- When HyperFrames prints no `✗` line, the message says what is known:
+  - the uncaught exception and the first frame of its stack, or
+  - HyperFrames' last three output lines, or
+  - that it printed nothing.
+
+  `details` gains `stdout_tail`, `hyperframes_fatal` and `process_exits`. Like `stderr_tail`, these are free-text diagnostics, not covered by the contract.
+- `encode` still needs HyperFrames' own failure message to name the encode. Output lines and exception text are never read as its verdict.
+
+**Not proven.** The earlier silent exits printed no output in the logs that are kept. They match the cancelled render: exit 1, no `✗`, a second render soon after another on the same runner. Whether every one of them was a cancellation is not known. Any other cause now shows its exception or its last output in the message.
+
+**Pinned by:** `tests/failures.test.mjs`.

@@ -48,7 +48,7 @@ major.
 | Behaviour of a tool for the same input and arguments | may change only to fix a defect or to track a HyperFrames / Chrome / FFmpeg change, and every such change gets a CHANGELOG line |
 
 Not covered: the wording of `--help`, descriptions, stderr messages and free-text fields
-(`detail`, `message`, `hint`, `details.stderr_tail`); the argv HyperFrames chooses for Chrome
+(`detail`, `message`, `hint`, `details.stderr_tail`, and the diagnostics a failed render adds: `details.stdout_tail`, `details.hyperframes_fatal`, `details.process_exits`, design-decisions D26); the argv HyperFrames chooses for Chrome
 and ffmpeg (reported in `commands`, never promised); the internals under `lib/`.
 
 The promise is enforced, not remembered: `tests/contract.test.mjs` pins every tool's argument
