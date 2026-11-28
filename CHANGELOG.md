@@ -16,6 +16,9 @@ All notable changes. The stability guarantee and deprecation policy are in
   PNG still per preset (at its own `gallery.at`, through the same scene and render path), with `--set`,
   `--values`, `--kit` and `--font` applied to each. `template --list` shows each preset's `gallery`.
 
+## 0.14.0
+### Added
+
 - Audio and beat lock (roadmap step 11, design-decisions D24). An `audio` layer (local `.wav`, `.mp3`,
   `.m4a`, `.aac`, `.ogg`, `.opus` or `.flac`; `media_start`, `volume`, `fade_in`, `fade_out`) is mixed into
   the output by HyperFrames: AAC in .mp4 / .mov, Opus in .webm. `render` then verifies an `audio` step:
@@ -29,6 +32,13 @@ All notable changes. The stability guarantee and deprecation policy are in
   transition's stagger becomes a whole number of beats when the beats are evenly spaced. `scene`
   reports every given and snapped time in `beat_lock`. An audio layer, and a layer inside a seamless
   loop that is not on the beat, are never moved.
+
+## 0.13.0
+
+- feat(layers): shape and pattern layers (roadmap step 9) (#39) (edeee22)
+
+## 0.12.0
+### Added
 
 - Generative layers (roadmap step 10, design-decisions D23). `type: generative` runs one of the programs
   this skill ships: `particles`, `noise_field`, `shader_gradient` and `type3d` (extruded 3D text from a
