@@ -3,6 +3,10 @@
 All notable changes. The stability guarantee and deprecation policy are in
 [docs/contract.md](docs/contract.md).
 
+## 0.13.0
+
+- feat(layers): shape and pattern layers (roadmap step 9) (#39) (edeee22)
+
 ## 0.12.0
 ### Added
 
