@@ -20,6 +20,9 @@ All notable changes. The stability guarantee and deprecation policy are in
   reports every given and snapped time in `beat_lock`. An audio layer, and a layer inside a seamless
   loop that is not on the beat, are never moved.
 
+## 0.12.0
+### Added
+
 - Generative layers (roadmap step 10, design-decisions D23). `type: generative` runs one of the programs
   this skill ships: `particles`, `noise_field`, `shader_gradient` and `type3d` (extruded 3D text from a
   font in `fonts[]`). Or it runs `shader`, a user's fragment shader from a local `.frag` / `.glsl` / `.fs`
