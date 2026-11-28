@@ -493,3 +493,24 @@ Format:
 - the official Remotion templates: under the Remotion License, which is source-available, free for individuals, non-profits and companies of up to 3 employees, and needs a company license otherwise. Because of that licence, nothing of Remotion's was read for these presets beyond the names of styles.
 
 **Pinned by:** `tests/presets.test.mjs`, `tests/template.test.mjs`, `tests/kit.test.mjs`.
+
+## D26. A HyperFrames exit with no failure message keeps its evidence
+
+2026-11-28.
+
+**Context.** On Windows CI, a render now and then fails as `hyperframes render exited 1: no failure message from hyperframes`. It happened three times in two runs on main (runs 46104608221 and 46118875058, attempt 1), in three different places, and each passed when re-run. In HyperFrames 0.8.61, `uncaughtException` is handled by `exitAfterCliFailure`, which calls `process.exit(1)` and prints nothing while a render is still running. Only its telemetry, which is off here, would carry the error. An exception that reaches the top of the process therefore ends the render with exit 1, no `✗ Render failed` box and no stack. This was measured: an exception thrown from a preload mid-render gives exactly that exit. The failure message carried nothing that could tell the cases apart, and the test output showed only that message.
+
+**Decision.** This is diagnostics only. The render path, the classification and the exit codes are unchanged, and nothing is retried.
+- The argv recorder (D10), which already runs inside HyperFrames, listens on `uncaughtExceptionMonitor`. That event observes the exception before the process's own handler and changes nothing about how the process ends. The recorder writes `<pid>-fatal.json` (origin, name, code, message, the first stack lines) into the log directory.
+- The recorder also writes every recorded process's exit code and signal (`.exit`), chrome included. `commands[]` still has `exit_code: null` for chrome (docs/contract.md).
+- When HyperFrames prints no `✗` line, the message says what is known:
+  - the uncaught exception and the first frame of its stack, or
+  - HyperFrames' last three output lines, or
+  - that it printed nothing.
+
+  `details` gains `stdout_tail`, `hyperframes_fatal` and `process_exits`. Like `stderr_tail`, these are free-text diagnostics, not covered by the contract.
+- `encode` still needs HyperFrames' own failure message to name the encode. Output lines and exception text are never read as its verdict.
+
+**Not decided yet.** The cause of the Windows exits is not known. The next failure will name the exception.
+
+**Pinned by:** `tests/failures.test.mjs`.

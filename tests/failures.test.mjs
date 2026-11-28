@@ -1,11 +1,11 @@
 // Result documents that don't lie: every failure path ends in status "failed", the right
 // error.kind, retryable false, verified false and the documented exit code.
 import assert from "node:assert/strict";
-import { spawn } from "node:child_process";
-import { existsSync, symlinkSync, writeFileSync } from "node:fs";
+import { spawn, spawnSync } from "node:child_process";
+import { existsSync, mkdirSync, readdirSync, symlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { test } from "node:test";
-import { classifyFailure, hyperframesFailureMessage } from "../lib/render-core.mjs";
+import { ARGV_RECORDER, classifyFailure, hyperframesFailureMessage, readFailureLog, silentFailureMessage } from "../lib/render-core.mjs";
 import { FIXTURES, ROOT, SKIP_RENDER, fakeTools, tmp, tool } from "./helpers.mjs";
 import { which } from "../lib/deps.mjs";
 
@@ -84,6 +84,49 @@ test("classification: an ffmpeg torn down after a capture failure is not an enco
   const enc = "✗  Render failed\n   Streaming encode failed: FFmpeg exited with code 1\n";
   assert.equal(classifyFailure(cmds, enc).kind, "encode");
   assert.equal(classifyFailure([], enc).kind, "render", "no recorded ffmpeg failure: not claimed as encode");
+});
+
+test("a HyperFrames exit with no failure message says what it did print, or that it printed nothing (D26)", () => {
+  assert.equal(silentFailureMessage(""), "no failure message from hyperframes, and nothing on its stdout or stderr");
+  assert.equal(silentFailureMessage("\n  \r\n"), "no failure message from hyperframes, and nothing on its stdout or stderr");
+  assert.equal(silentFailureMessage("a\nb\r\n  c  \nd\n"), "no failure message from hyperframes; its last output: b | c | d");
+  const fatal = [{ pid: 42, origin: "uncaughtException", name: "Error", code: "EOF", message: "write EOF", stack: "Error: write EOF\n    at afterWriteDispatched (node:internal/stream_base_commons:161:15)\n    at x" }];
+  assert.equal(silentFailureMessage("ignored", fatal), "no failure message from hyperframes; uncaught exception (uncaughtException, pid 42): Error [EOF]: write EOF (at afterWriteDispatched (node:internal/stream_base_commons:161:15))");
+  // HyperFrames' own message still wins, and only its own words can make a failure an encode failure
+  assert.equal(classifyFailure([], "✗  Render failed\n   boom\n", { fatal }).message, "Render failed | boom");
+  const cmds = [{ via: "hyperframes", role: "ffmpeg", exit_code: 1 }];
+  const silent = classifyFailure(cmds, "[Encoder] ffmpeg encoding frame 3\n");
+  assert.equal(silent.kind, "render");
+  assert.equal(silent.message, "no failure message from hyperframes; its last output: [Encoder] ffmpeg encoding frame 3");
+  assert.equal(silent.evidence.hyperframes_message_names_encode, false);
+});
+
+test("the argv recorder keeps an exception a process's own handler swallows, and every recorded exit; it changes neither (D26)", () => {
+  const dir = tmp();
+  const log = join(dir, "log");
+  mkdirSync(log);
+  const env = { ...process.env, HYPERFRAMES_SKILL_ARGV_LOG: log, HYPERFRAMES_SKILL_ARGV_TOOLS: JSON.stringify({ [process.execPath]: { role: "chrome", rc: false } }) };
+  // HyperFrames' pattern: an uncaughtException handler that exits 1 and prints nothing
+  const script = [
+    'process.on("uncaughtException", () => process.exit(1));',
+    'const c = require("node:child_process").spawn(process.execPath, ["-e", "process.exit(3)"]);',
+    'c.on("exit", () => setTimeout(() => { throw Object.assign(new Error("write EOF"), { code: "EOF" }); }));',
+  ].join("\n");
+  const r = spawnSync(process.execPath, ["--require", ARGV_RECORDER, "-e", script], { env, encoding: "utf8" });
+  assert.equal(r.status, 1);
+  assert.equal(r.stderr, "", "the process still ends as its own handler decides, silently");
+  const { fatal, exits } = readFailureLog(log);
+  assert.equal(fatal.length, 1, readdirSync(log).join());
+  assert.deepEqual([fatal[0].origin, fatal[0].name, fatal[0].code, fatal[0].message, fatal[0].pid > 0], ["uncaughtException", "Error", "EOF", "write EOF", true]);
+  assert.match(fatal[0].stack, /^Error: write EOF\n\s+at /);
+  assert.deepEqual(exits, [{ role: "chrome", exit_code: 3, signal: null }]);
+  assert.ok(!readdirSync(log).some((f) => f.endsWith(".rc")), "chrome's exit is not an .rc record (commands[] keeps exit_code null)");
+  // without a handler of its own, a process still crashes as Node does: the stack on stderr, exit 1
+  const plain = spawnSync(process.execPath, ["--require", ARGV_RECORDER, "-e", 'throw new Error("plain")'], { env, encoding: "utf8" });
+  assert.equal(plain.status, 1);
+  assert.match(plain.stderr, /Error: plain/);
+  assert.equal(readFailureLog(log).fatal.length, 2);
+  assert.deepEqual(readFailureLog(join(dir, "absent")), { fatal: [], exits: [] });
 });
 
 test("timeout: exit 124, kind timeout, the process group is killed", { skip: SKIP_RENDER }, () => {

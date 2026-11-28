@@ -3,6 +3,17 @@
 All notable changes. The stability guarantee and deprecation policy are in
 [docs/contract.md](docs/contract.md).
 
+## Unreleased
+### Fixed
+
+- A render that HyperFrames ends with exit 1 without a failure message now says why, as far as is known
+  (design-decisions D26). HyperFrames 0.8.61 exits 1 silently when an exception reaches its
+  `uncaughtException` handler mid-render. The argv recorder now keeps that exception (origin, code,
+  message, stack) and every recorded process's exit, Chrome's included. The error message names the
+  exception, or else HyperFrames' last output lines, or else says that it printed nothing. `details`
+  gains `stdout_tail`, `hyperframes_fatal` and `process_exits` (free-text diagnostics). The render, its
+  classification and exit codes are unchanged, and nothing is retried.
+
 ## 0.15.0
 ### Added
 
