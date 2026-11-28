@@ -3,7 +3,7 @@
 All notable changes. The stability guarantee and deprecation policy are in
 [docs/contract.md](docs/contract.md).
 
-## Unreleased
+## 0.15.0
 ### Added
 
 - Style presets and the gallery (roadmap step 14, design-decisions D25). There are six templates built
